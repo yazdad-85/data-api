@@ -1,6 +1,14 @@
 # Rencana Pusat Data (Data Center)
 
-Dokumen ini adalah kesepakatan desain sebelum implementasi kode.
+Dokumen ini adalah **riwayat kesepakatan diskusi awal**.
+
+Untuk review & koreksi aktif, gunakan:
+
+- [PLAN.md](./PLAN.md)
+- [SPEC.md](./SPEC.md)
+- [RULES.md](./RULES.md)
+
+Kode **belum** dimulai sampai ketiga dokumen itu disetujui.
 
 ## Tujuan
 
