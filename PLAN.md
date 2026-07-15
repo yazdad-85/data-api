@@ -1,8 +1,11 @@
 # PLAN — Pusat Data
 
 Status: **DRAFT untuk koreksi bersama** (detail field/API masih bisa dikoreksi)  
-Stack: **DISETUJUI** — Laravel + PostgreSQL + Nginx di VPS (15 Jul 2026)  
+Stack: **DISETUJUI** — Laravel + PostgreSQL + **Apache** di VPS  
+(Laravel disetujui 15 Jul 2026; web server dikoreksi ke Apache)  
 Kode: **belum dimulai** sampai Plan, Spec, Rule disetujui keseluruhan
+Keamanan: standar **data center** (lihat RULES B4) — termasuk anti-abuse/DDoS berlapis
+Proses kode nanti: tulis → **review jujur & jelas** → perbaiki temuan → **baru tes**
 
 ---
 
@@ -61,24 +64,29 @@ Di luar fase 1: realtime push, ubah master dari app lain, OAuth/SSO, modul bisni
 - Setup repo Laravel
 - Setup database PostgreSQL
 - Desain migrasi sesuai SPEC
-- Setup deploy VPS (Nginx + PHP-FPM + Postgres)
+- Setup deploy VPS (**Apache** + PHP + Postgres)
+- Hardening keamanan sesuai RULES B4 (HTTPS, firewall, rate limit, anti-DDoS/abuse)
 
 ### Tahap C — Inti Admin
 
 - Auth Super Admin & Admin Lembaga
 - CRUD Lembaga + API key
 - CRUD Guru, Siswa, Karyawan, Kelas, Tahun ajaran (scoped lembaga)
+- Audit log aksi kritis (user/API key)
 
-### Tahap D — API konsumsi
+### Tahap D — API konsumsi + keamanan API
 
 - Endpoint tarik penuh
 - Endpoint sinkron delta (`since`)
+- Rate limiting & proteksi abuse
 - Dokumentasi integrasi untuk app lain
 
-### Tahap E — UAT & go-live VPS
+### Tahap E — Review, tes, UAT & go-live VPS
 
+- Review kode (jelas & jujur) → perbaiki temuan → baru tes
 - Uji alur Super Admin → Admin Lembaga → App tarik/sinkron
-- Hardening dasar (HTTPS, backup DB, env secrets)
+- Checklist keamanan (HTTPS, firewall, throttle, isolasi lembaga)
+- Hardening produksi (backup DB, env secrets)
 
 ---
 
@@ -98,8 +106,10 @@ Di luar fase 1: realtime push, ubah master dari app lain, OAuth/SSO, modul bisni
 |--------|----------|
 | Field master kurang/berlebih | Koreksi SPEC sebelum coding |
 | App lama sulit pakai delta | Sediakan juga tarik penuh |
-| API key bocor | Rotate key di Super Admin; HTTPS wajib di VPS |
-| Admin lembaga lihat data lembaga lain | Enforce scope `lembaga_id` di RULES |
+| API key bocor | Rotate key; hash di DB; HTTPS; audit log |
+| Admin lembaga lihat data lembaga lain | Enforce scope `lembaga_id` di RULES + tes wajib |
+| DDoS / abuse API | Rate limit app + Apache + firewall/fail2ban / anti-DDoS VPS |
+| Skip review → bug lolos ke tes | RULES B1/B2: review wajib sebelum tes |
 
 ---
 

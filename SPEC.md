@@ -1,8 +1,9 @@
 # SPEC — Pusat Data
 
 Status: **DRAFT untuk koreksi bersama** (field & detail API masih bisa dikoreksi)  
-Stack: **DISETUJUI** — Laravel + PostgreSQL + Nginx di VPS (15 Jul 2026)  
-Tujuan: spesifikasi fungsional & teknis sebelum coding.
+Stack: **DISETUJUI** — Laravel + PostgreSQL + **Apache** di VPS  
+Tujuan: spesifikasi fungsional & teknis sebelum coding.  
+Keamanan operasional: lihat juga RULES B4 (wajib untuk data center).
 
 ---
 
@@ -302,13 +303,30 @@ Boleh ditunda jika ingin scope lebih kecil; default cukup per-resource.
 | Komponen | Spesifikasi target |
 |----------|--------------------|
 | OS | Ubuntu LTS |
-| Web | Nginx |
+| Web | **Apache** (mod_php atau php-fpm + proxy sesuai setup VPS) |
 | App | Laravel (PHP 8.3+) |
-| DB | PostgreSQL 16 |
-| TLS | HTTPS (Let's Encrypt) |
-| Backup | Dump DB harian |
+| DB | PostgreSQL 16 (hanya jaringan privat / localhost) |
+| TLS | HTTPS (Let's Encrypt); HTTP → HTTPS |
+| Proteksi abuse | Rate limit Laravel + limit Apache + firewall VPS + fail2ban (dan anti-DDoS provider bila ada) |
+| Backup | Dump DB harian; tidak publik |
 
 ENV rahasia: `APP_KEY`, DB password, tidak commit ke git.
+
+**Catatan:** Nginx **tidak** digunakan.
+
+---
+
+## 6.1 Keamanan (ringkas — detail di RULES B4)
+
+Wajib sebelum produksi:
+
+1. HTTPS + header keamanan dasar
+2. Isolasi multi-tenant di server
+3. API key hashed + read-only
+4. Throttle login & API
+5. DB tidak terbuka ke publik
+6. Proteksi DDoS/abuse berlapis (aplikasi + Apache + jaringan/VPS)
+7. Backup + rencana rotate key saat insiden
 
 ---
 
@@ -331,5 +349,6 @@ Mohon cek terutama:
 3. Apakah Admin Lembaga boleh melihat/rotate API key?
 4. Apakah `export` multi-resource perlu di fase 1?
 5. Nama field lokal (mis. lebih suka `no_induk` daripada `nis`)?
+6. Detail proteksi DDoS di VPS Anda (sudah ada Cloudflare/anti-DDoS provider, atau hanya firewall VPS)?
 
 Tandai koreksi dengan merujuk **§ nomor bagian**.

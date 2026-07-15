@@ -91,26 +91,26 @@ Kredensial: **API key per lembaga** (cukup untuk fase 1).
 | 1 | Siswa di fase 1 | **Ya, ikut** |
 | 2 | Kredensial app | **API key per lembaga** |
 | 3 | Strategi sinkron | **Delta — hanya yang berubah** |
-| 4 | Stack teknis | **Laravel + PostgreSQL + Nginx — DISETUJUI (15 Jul 2026)** |
+| 4 | Stack teknis | **Laravel + PostgreSQL + Apache — DISETUJUI** |
 | 5 | Deployment | **VPS** |
 
 ---
 
 ## Stack resmi (untuk VPS)
 
-**Disetujui pemilik kebutuhan.** Dipilih agar sederhana dioperasikan di satu VPS, tahan lama, dan mudah diintegrasikan aplikasi lain.
+**Disetujui pemilik kebutuhan** (Laravel; web server dikoreksi ke **Apache**).
 
 | Lapisan | Pilihan | Alasan |
 |---------|---------|--------|
-| Backend API | **Laravel (PHP)** | Cepat bangun CRUD admin + API, ekosistem matang, mudah di VPS biasa (Nginx + PHP-FPM) |
-| Database | **PostgreSQL** | Kuat untuk data master & query sync delta (`updated_at`) |
-| Dashboard admin | **Laravel Blade + Livewire** (atau Inertia sederhana) | Satu codebase dengan API; Super Admin & Admin Lembaga tanpa proyek frontend terpisah di fase 1 |
-| Auth admin | Session login + role (super_admin / admin_lembaga) | Sesuai alur pengelola manusia |
-| Auth aplikasi | Header `X-API-Key` per lembaga | Sesuai keputusan “cukup API key” |
-| Sync delta | Endpoint `GET /sync/{resource}?since=ISO8601` | App kirim waktu sinkron terakhir; pusat kembalikan record berubah |
-| Web server | **Nginx** | Standar VPS |
-| Process | **PHP-FPM** + queue opsional nanti | Sederhana untuk fase 1 |
-| Contahener opsional | Docker Compose (Nginx + app + Postgres) | Memudahkan install ulang di VPS |
+| Backend API | **Laravel (PHP)** | Cepat bangun CRUD admin + API; cocok VPS |
+| Database | **PostgreSQL** | Kuat untuk master & sync delta |
+| Dashboard admin | **Laravel Blade + Livewire** (atau Inertia sederhana) | Satu codebase dengan API |
+| Auth admin | Session login + role | Super Admin / Admin Lembaga |
+| Auth aplikasi | Header `X-API-Key` per lembaga | Read-only |
+| Sync delta | `GET /sync/{resource}?since=...` | Hanya yang berubah |
+| Web server | **Apache** | Sesuai lingkungan pemilik (bukan Nginx) |
+| Process | PHP sesuai setup Apache VPS | Fase 1 |
+| Keamanan | HTTPS, firewall, rate limit, anti-DDoS/abuse berlapis | Wajib data center |
 
 **Alternatif Python/Node tidak dipakai** — stack sudah dikunci ke Laravel.
 
@@ -171,8 +171,10 @@ Kredensial: **API key per lembaga** (cukup untuk fase 1).
 - [x] App tarik/sinkron via tombol; sinkron **delta**
 - [x] Kredensial: **API key per lembaga**
 - [x] Deploy: **VPS**
-- [x] Stack **disetujui**: **Laravel + PostgreSQL + Nginx** (15 Jul 2026)
+- [x] Stack **disetujui**: **Laravel + PostgreSQL + Apache** di VPS
+- [x] Proses kode: review jujur & jelas → perbaiki → baru tes
+- [x] Keamanan data center wajib (termasuk proteksi DDoS/abuse)
 - [x] Ubah master hanya di Data Center
 - [x] ID unik pusat untuk semua aplikasi
 
-Dokumen ini **masih bukan implementasi kode**. Stack sudah dikunci. Berikutnya: koreksi field/detail di SPEC & RULES, lalu approve keseluruhan PLAN/SPEC/RULES sebelum coding.
+Dokumen ini **masih bukan implementasi kode**. Koreksi berikutnya ada di PLAN/SPEC/RULES.
