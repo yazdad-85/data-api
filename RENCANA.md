@@ -30,68 +30,103 @@ Aplikasi lain (administrasi guru, perangkat, absensi, dll.) **menarik / menyinkr
 | Peran | Siapa | Kewenangan |
 |-------|--------|------------|
 | **Super Admin Data Center** | Pengelola pusat | Kelola seluruh sistem; buat/ubah lembaga; buat Admin Lembaga; kelola data lintas lembaga bila perlu |
-| **Admin Lembaga** | Ditunjuk oleh Super Admin | Kelola data master **milik lembaganya saja** (guru, karyawan, kelas, tahun ajaran, dll.) |
-| **Aplikasi konsumen** | Sistem lain | Hanya **tarik / sinkron** data; tidak boleh ubah master di Data Center lewat UI app tersebut |
+| **Admin Lembaga** | Ditunjuk oleh Super Admin | Kelola data master **milik lembaganya saja** (guru, siswa, karyawan, kelas, tahun ajaran) |
+| **Aplikasi konsumen** | Sistem lain | Hanya **tarik / sinkron** data lewat API key lembaga; tidak boleh ubah master di Data Center |
 
 ---
 
 ## Master data (fase 1)
 
-Data yang dikelola di Data Center:
-
-1. **Lembaga** — sekolah / institusi
+1. **Lembaga**
 2. **Guru**
-3. **Karyawan**
-4. **Kelas**
-5. **Tahun ajaran**
+3. **Siswa**
+4. **Karyawan**
+5. **Kelas**
+6. **Tahun ajaran**
 
-Setiap entitas punya **ID pusat unik** (contoh: `lembaga_id`, `guru_id`, `karyawan_id`, `kelas_id`, `tahun_ajaran_id`) yang dipakai semua aplikasi.
+Setiap entitas punya **ID pusat unik** (`lembaga_id`, `guru_id`, `siswa_id`, `karyawan_id`, `kelas_id`, `tahun_ajaran_id`) yang dipakai semua aplikasi.
 
 ### Relasi inti (konsep)
 
-- Satu **Lembaga** memiliki banyak Guru, Karyawan, Kelas, Tahun ajaran
-- **Kelas** dan data personal terkait ke **Lembaga** (+ Tahun ajaran bila relevan)
+- Satu **Lembaga** memiliki banyak Guru, Siswa, Karyawan, Kelas, Tahun ajaran
+- **Kelas** terkait **Lembaga** dan **Tahun ajaran**
+- **Siswa** dapat tertaut ke **Kelas** (+ Tahun ajaran)
 
-*(Detail field per entitas ditentukan saat desain skema berikutnya.)*
+*(Detail field per entitas ditentukan di langkah desain skema berikutnya.)*
 
 ---
 
 ## Aturan perubahan data
 
-1. **Ubah data master hanya di Data Center** (oleh Super Admin atau Admin Lembaga).
-2. Aplikasi lain **tidak boleh** mengedit master guru/siswa/dll. sebagai sumber utama.
-3. Setelah ada perubahan di Data Center, operator di aplikasi lain menekan **tombol Sinkron** untuk memperbarui salinan lokal.
-4. Aplikasi boleh menyimpan **salinan lokal** hasil tarik/sinkron untuk dipakai offline/cepat, tetapi salinan itu mengikuti Data Center.
+1. Ubah data master **hanya di Data Center** (Super Admin atau Admin Lembaga).
+2. Aplikasi lain **tidak boleh** mengedit master.
+3. Setelah perubahan di Data Center, operator di app menekan **Sinkron**.
+4. App boleh menyimpan salinan lokal; salinan itu mengikuti Data Center.
 
 ---
 
 ## Cara aplikasi mengambil data
 
-Di aplikasi konsumen (absensi, perangkat, administrasi, dll.):
+| Tombol | Fungsi |
+|--------|--------|
+| **Tarik data dari Data Center** | Ambil data pertama kali / ulang penuh |
+| **Sinkron** | Ambil **hanya yang berubah** sejak sinkron terakhir (delta, berbasis `updated_at` / cursor) |
 
-1. Tombol **"Tarik data dari Data Center"** — ambil data yang dibutuhkan pertama kali / ulang penuh.
-2. Tombol **"Sinkron"** — perbarui salinan lokal mengikuti perubahan terbaru di Data Center.
+Kredensial: **API key per lembaga** (cukup untuk fase 1).
 
-Teknisnya: aplikasi memanggil **API baca** Data Center (dengan kredensial lembaga/aplikasi), bukan API “push master” dari app ke pusat.
+---
+
+## Keputusan terkunci
+
+| No | Topik | Keputusan |
+|----|--------|-----------|
+| 1 | Siswa di fase 1 | **Ya, ikut** |
+| 2 | Kredensial app | **API key per lembaga** |
+| 3 | Strategi sinkron | **Delta — hanya yang berubah** |
+| 4 | Stack teknis | **Lihat usulan di bawah** |
+| 5 | Deployment | **VPS** |
+
+---
+
+## Usulan stack (untuk VPS)
+
+Dipilih agar sederhana dioperasikan di satu VPS, tahan lama, dan mudah diintegrasikan aplikasi lain.
+
+| Lapisan | Pilihan | Alasan |
+|---------|---------|--------|
+| Backend API | **Laravel (PHP)** | Cepat bangun CRUD admin + API, ekosistem matang, mudah di VPS biasa (Nginx + PHP-FPM) |
+| Database | **PostgreSQL** | Kuat untuk data master & query sync delta (`updated_at`) |
+| Dashboard admin | **Laravel Blade + Livewire** (atau Inertia sederhana) | Satu codebase dengan API; Super Admin & Admin Lembaga tanpa proyek frontend terpisah di fase 1 |
+| Auth admin | Session login + role (super_admin / admin_lembaga) | Sesuai alur pengelola manusia |
+| Auth aplikasi | Header `X-API-Key` per lembaga | Sesuai keputusan “cukup API key” |
+| Sync delta | Endpoint `GET /sync/{resource}?since=ISO8601` | App kirim waktu sinkron terakhir; pusat kembalikan record berubah |
+| Web server | **Nginx** | Standar VPS |
+| Process | **PHP-FPM** + queue opsional nanti | Sederhana untuk fase 1 |
+| Contahener opsional | Docker Compose (Nginx + app + Postgres) | Memudahkan install ulang di VPS |
+
+**Alternatif yang juga bagus:** FastAPI (Python) + Postgres + dashboard terpisah. Tidak dipilih sebagai default karena untuk tim yang fokus “admin lembaga + banyak CRUD master”, Laravel biasanya lebih cepat selesai dan lebih mudah di-maintain di VPS shared/umum Indonesia.
+
+Jika Anda lebih nyaman Python/Node, stack bisa diganti sebelum coding — inti desain (API key, delta sync, role) tetap sama.
 
 ---
 
 ## Batas ruang lingkup fase 1
 
-**Masuk ruang lingkup**
+**Masuk**
 
-- Autentikasi Super Admin & Admin Lembaga
-- CRUD master: Lembaga, Guru, Karyawan, Kelas, Tahun ajaran
-- API baca untuk aplikasi konsumen (filter per lembaga)
-- Mekanisme kredensial aplikasi / lembaga untuk tarik & sinkron
-- Dokumen cara integrasi tombol Tarik / Sinkron
+- Login Super Admin & Admin Lembaga
+- CRUD: Lembaga, Guru, Siswa, Karyawan, Kelas, Tahun ajaran
+- API key per lembaga
+- API tarik penuh + API sinkron delta
+- Deploy ke VPS
+- Dokumentasi integrasi tombol Tarik / Sinkron untuk app lain
 
-**Belum masuk fase 1 (bisa fase berikutnya)**
+**Belum (fase berikutnya)**
 
-- Data siswa (belum ada di daftar kesepakatan fase 1)
-- Push otomatis realtime ke semua app tanpa tombol sinkron
-- Perubahan master dari dalam aplikasi konsumen
-- Modul transaksi bisnis spesifik (nilai, absensi harian, inventaris perangkat, dll.) — itu milik masing-masing app
+- Push realtime otomatis tanpa tombol sinkron
+- Ubah master dari aplikasi konsumen
+- OAuth / SSO antar app
+- Modul bisnis spesifik app (absensi, inventaris, nilai, dll.)
 
 ---
 
@@ -99,49 +134,39 @@ Teknisnya: aplikasi memanggil **API baca** Data Center (dengan kredensial lembag
 
 ### A. Pengisian data
 
-1. Super Admin membuat **Lembaga**.
-2. Super Admin membuat **Admin Lembaga**.
-3. Admin Lembaga mengisi **Guru, Karyawan, Kelas, Tahun ajaran**.
+1. Super Admin buat **Lembaga** + **API key lembaga**.
+2. Super Admin buat **Admin Lembaga**.
+3. Admin Lembaga isi **Guru, Siswa, Karyawan, Kelas, Tahun ajaran**.
 
 ### B. Pemakaian di aplikasi lain
 
-1. App meminta akses/kredensial ke Data Center (per lembaga).
-2. User di app klik **Tarik data** → salinan lokal terisi.
-3. Jika master berubah di Data Center → user klik **Sinkron** di app.
+1. App menyimpan API key lembaga.
+2. Klik **Tarik data** → salinan lokal terisi.
+3. Ada perubahan di Data Center → klik **Sinkron** → hanya data yang berubah ikut diperbarui.
 
 ---
 
-## Keputusan terbuka (untuk dikunci sebelum coding)
+## Urutan kerja berikutnya
 
-| No | Topik | Opsi | Status |
-|----|--------|------|--------|
-| 1 | Siswa apakah ditambah ke master fase 1? | Ya / Tidak (saat ini belum) | Belum dikunci |
-| 2 | Format kredensial app | API key per lembaga / OAuth / token app | Belum dikunci |
-| 3 | Sinkron | Full replace vs hanya yang berubah (delta) | Belum dikunci — default usulan: delta bila ada `updated_at` |
-| 4 | Stack teknis | Mis. API + DB + dashboard admin | Belum dikunci |
-| 5 | Deployment | Lokal / VPS / cloud | Belum dikunci |
-
----
-
-## Urutan kerja berikutnya (setelah dokumen ini disetujui)
-
-1. Kunci keputusan terbuka di atas
-2. Desain skema field per entitas (kolom Guru, Kelas, dll.)
-3. Desain kontrak API baca (endpoint tarik/sinkron)
-4. Wireframe kasar: dashboard Super Admin & Admin Lembaga
-5. Baru mulai implementasi kode
+1. ~~Kunci keputusan terbuka~~ ✅
+2. Desain skema field per entitas (kolom Guru, Siswa, Kelas, dll.)
+3. Desain kontrak API (tarik penuh + sync delta)
+4. Wireframe kasar dashboard Super Admin & Admin Lembaga
+5. Setup proyek + deploy awal ke VPS
+6. Implementasi kode
 
 ---
 
 ## Status kesepakatan
 
-Disepakati oleh pemilik kebutuhan (Seinarth Ar):
-
-- [x] Data Center adalah sumber kebenaran
-- [x] Pengisi data: Super Admin + Admin Lembaga
-- [x] Master fase 1: Guru, Karyawan, Lembaga, Kelas, Tahun ajaran
-- [x] App lain tarik/sinkron lewat tombol, bukan kirim master ke pusat
+- [x] Data Center = sumber kebenaran
+- [x] Pengisi: Super Admin + Admin Lembaga
+- [x] Master fase 1: Lembaga, Guru, **Siswa**, Karyawan, Kelas, Tahun ajaran
+- [x] App tarik/sinkron via tombol; sinkron **delta**
+- [x] Kredensial: **API key per lembaga**
+- [x] Deploy: **VPS**
+- [x] Stack diusulkan: **Laravel + PostgreSQL + Nginx** (bisa diganti sebelum coding)
 - [x] Ubah master hanya di Data Center
-- [x] ID unik pusat dipakai semua aplikasi
+- [x] ID unik pusat untuk semua aplikasi
 
-Dokumen ini **bukan implementasi**. Coding baru dilakukan setelah rencana dan keputusan terbuka disetujui.
+Dokumen ini **masih bukan implementasi kode**. Langkah berikutnya: desain field & kontrak API — konfirmasi jika setuju stack Laravel, atau minta ganti stack dulu.
