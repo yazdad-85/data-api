@@ -1,6 +1,7 @@
 # SPEC — Pusat Data
 
-Status: **DRAFT untuk koreksi bersama**  
+Status: **DRAFT untuk koreksi bersama** (field & detail API masih bisa dikoreksi)  
+Stack: **DISETUJUI** — Laravel + PostgreSQL + Nginx di VPS (15 Jul 2026)  
 Tujuan: spesifikasi fungsional & teknis sebelum coding.
 
 ---

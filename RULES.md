@@ -85,7 +85,7 @@ Aturan ini berlaku **setelah** dokumen disetujui dan coding dimulai. Bukan undan
 
 ### B2. Stack & struktur
 
-1. Stack fase 1: **Laravel + PostgreSQL + Nginx** di VPS (kecuali dokumen ini dikoreksi).
+1. Stack fase 1: **Laravel + PostgreSQL + Nginx** di VPS — **DISETUJUI pemilik kebutuhan (15 Jul 2026)**.
 2. Satu aplikasi Laravel untuk dashboard admin + API konsumen.
 3. Pemisahan jelas: route/web admin vs route/api.
 

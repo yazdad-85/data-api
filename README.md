@@ -6,6 +6,8 @@ Repositori perencanaan & (nanti) implementasi **Pusat Data** lembaga pendidikan.
 
 **Perencanaan / review dokumen saja. Belum ada implementasi kode aplikasi.**
 
+Stack: **Laravel + PostgreSQL + Nginx (VPS) — disetujui 15 Jul 2026.**
+
 | Dokumen | Fungsi |
 |---------|--------|
 | [PLAN.md](./PLAN.md) | Rencana fase, deliverable, urutan kerja |

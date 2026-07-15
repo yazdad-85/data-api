@@ -91,14 +91,14 @@ Kredensial: **API key per lembaga** (cukup untuk fase 1).
 | 1 | Siswa di fase 1 | **Ya, ikut** |
 | 2 | Kredensial app | **API key per lembaga** |
 | 3 | Strategi sinkron | **Delta — hanya yang berubah** |
-| 4 | Stack teknis | **Lihat usulan di bawah** |
+| 4 | Stack teknis | **Laravel + PostgreSQL + Nginx — DISETUJUI (15 Jul 2026)** |
 | 5 | Deployment | **VPS** |
 
 ---
 
-## Usulan stack (untuk VPS)
+## Stack resmi (untuk VPS)
 
-Dipilih agar sederhana dioperasikan di satu VPS, tahan lama, dan mudah diintegrasikan aplikasi lain.
+**Disetujui pemilik kebutuhan.** Dipilih agar sederhana dioperasikan di satu VPS, tahan lama, dan mudah diintegrasikan aplikasi lain.
 
 | Lapisan | Pilihan | Alasan |
 |---------|---------|--------|
@@ -112,9 +112,7 @@ Dipilih agar sederhana dioperasikan di satu VPS, tahan lama, dan mudah diintegra
 | Process | **PHP-FPM** + queue opsional nanti | Sederhana untuk fase 1 |
 | Contahener opsional | Docker Compose (Nginx + app + Postgres) | Memudahkan install ulang di VPS |
 
-**Alternatif yang juga bagus:** FastAPI (Python) + Postgres + dashboard terpisah. Tidak dipilih sebagai default karena untuk tim yang fokus “admin lembaga + banyak CRUD master”, Laravel biasanya lebih cepat selesai dan lebih mudah di-maintain di VPS shared/umum Indonesia.
-
-Jika Anda lebih nyaman Python/Node, stack bisa diganti sebelum coding — inti desain (API key, delta sync, role) tetap sama.
+**Alternatif Python/Node tidak dipakai** — stack sudah dikunci ke Laravel.
 
 ---
 
@@ -173,8 +171,8 @@ Jika Anda lebih nyaman Python/Node, stack bisa diganti sebelum coding — inti d
 - [x] App tarik/sinkron via tombol; sinkron **delta**
 - [x] Kredensial: **API key per lembaga**
 - [x] Deploy: **VPS**
-- [x] Stack diusulkan: **Laravel + PostgreSQL + Nginx** (bisa diganti sebelum coding)
+- [x] Stack **disetujui**: **Laravel + PostgreSQL + Nginx** (15 Jul 2026)
 - [x] Ubah master hanya di Data Center
 - [x] ID unik pusat untuk semua aplikasi
 
-Dokumen ini **masih bukan implementasi kode**. Langkah berikutnya: desain field & kontrak API — konfirmasi jika setuju stack Laravel, atau minta ganti stack dulu.
+Dokumen ini **masih bukan implementasi kode**. Stack sudah dikunci. Berikutnya: koreksi field/detail di SPEC & RULES, lalu approve keseluruhan PLAN/SPEC/RULES sebelum coding.

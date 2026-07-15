@@ -1,8 +1,8 @@
 # PLAN — Pusat Data
 
-Status: **DRAFT untuk koreksi bersama**  
-Stack disepakati (usulan terkunci): Laravel + PostgreSQL + Nginx di VPS  
-Kode: **belum dimulai** sampai Plan, Spec, Rule disetujui
+Status: **DRAFT untuk koreksi bersama** (detail field/API masih bisa dikoreksi)  
+Stack: **DISETUJUI** — Laravel + PostgreSQL + Nginx di VPS (15 Jul 2026)  
+Kode: **belum dimulai** sampai Plan, Spec, Rule disetujui keseluruhan
 
 ---
 
