@@ -110,7 +110,7 @@ Kredensial: **API key per lembaga** (cukup untuk fase 1).
 | Sync delta | `GET /sync/{resource}?since=...` | Hanya yang berubah |
 | Web server | **Apache** | Sesuai lingkungan pemilik (bukan Nginx) |
 | Process | PHP sesuai setup Apache VPS | Fase 1 |
-| Keamanan | HTTPS, firewall, rate limit, anti-DDoS/abuse berlapis | Wajib data center |
+| Keamanan | HTTPS, Cloudflare (akan ditambah), rate limit, firewall, harden origin | Wajib data center |
 
 **Alternatif Python/Node tidak dipakai** — stack sudah dikunci ke Laravel.
 

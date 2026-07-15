@@ -307,12 +307,13 @@ Boleh ditunda jika ingin scope lebih kecil; default cukup per-resource.
 | App | Laravel (PHP 8.3+) |
 | DB | PostgreSQL 16 (hanya jaringan privat / localhost) |
 | TLS | HTTPS (Let's Encrypt); HTTP → HTTPS |
-| Proteksi abuse | Rate limit Laravel + limit Apache + firewall VPS + fail2ban (dan anti-DDoS provider bila ada) |
+| Proteksi edge | **Cloudflare** (akan ditambahkan pemilik; wajib sebelum produksi publik) |
+| Proteksi abuse | Rate limit Laravel + limit Apache + firewall/fail2ban VPS + Cloudflare |
 | Backup | Dump DB harian; tidak publik |
 
 ENV rahasia: `APP_KEY`, DB password, tidak commit ke git.
 
-**Catatan:** Nginx **tidak** digunakan.
+**Catatan:** Nginx **tidak** digunakan. Cloudflare belum aktif saat ini; direncanakan ditambahkan sebelum go-live publik.
 
 ---
 
@@ -325,8 +326,9 @@ Wajib sebelum produksi:
 3. API key hashed + read-only
 4. Throttle login & API
 5. DB tidak terbuka ke publik
-6. Proteksi DDoS/abuse berlapis (aplikasi + Apache + jaringan/VPS)
+6. Proteksi DDoS/abuse berlapis: **Cloudflare** (direncanakan) + rate limit app + Apache + firewall/fail2ban VPS
 7. Backup + rencana rotate key saat insiden
+8. Origin VPS di-harden agar tidak mudah di-bypass dari Cloudflare
 
 ---
 
@@ -349,6 +351,6 @@ Mohon cek terutama:
 3. Apakah Admin Lembaga boleh melihat/rotate API key?
 4. Apakah `export` multi-resource perlu di fase 1?
 5. Nama field lokal (mis. lebih suka `no_induk` daripada `nis`)?
-6. Detail proteksi DDoS di VPS Anda (sudah ada Cloudflare/anti-DDoS provider, atau hanya firewall VPS)?
+6. Detail Cloudflare: kapan ditambahkan relatif ke go-live; apakah full proxy (orange cloud) sejak awal?
 
 Tandai koreksi dengan merujuk **§ nomor bagian**.

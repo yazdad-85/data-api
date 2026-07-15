@@ -127,10 +127,12 @@ Karena ini **Pusat Data**, keamanan harus dijaga dari **semua sisi**. Keamanan b
 4. PostgreSQL tidak boleh expose ke publik; hanya localhost / private network.
 5. Update OS & paket keamanan secara berkala.
 6. Proteksi **DDoS / abuse** berlapis:
+   - **Cloudflare** di depan VPS (DNS/proxy) — pemilik akan menambahkan; wajib sebelum produksi publik
    - Rate limiting aplikasi (Laravel) pada login & API
    - Limit request di **Apache** (atau modul setara)
-   - Proteksi jaringan/VPS (firewall rate, fail2ban, dan/atau layanan anti-DDoS provider bila tersedia)
-7. Backup DB terjadwal + uji restore berkala; backup tidak boleh diakses publik.
+   - Firewall VPS + fail2ban (SSH & abuse lokal)
+7. Origin VPS sebaiknya hanya menerima traffic dari Cloudflare (batasi IP / Authenticated Origin Pull bila memungkinkan) agar penyerang tidak bypass Cloudflare.
+8. Backup DB terjadwal + uji restore berkala; backup tidak boleh diakses publik.
 
 #### B4.2 Autentikasi & sesi admin
 
@@ -211,6 +213,6 @@ Karena ini **Pusat Data**, keamanan harus dijaga dari **semua sisi**. Keamanan b
 | D2 | Admin Lembaga boleh rotate API key? | Tidak; hanya Super Admin |
 | D3 | Hapus kelas yang masih berisi siswa? | Diblok |
 | D4 | Unik NIS/NISN per lembaga? | Ya, jika field terisi |
-| D5 | Import Excel di fase 1? | Tidak |
+| D6 | Cloudflare kapan aktif? | Belum ada; **akan ditambahkan** sebelum produksi publik |
 
 Isi koreksi Anda terhadap tabel D (dan bagian lain) untuk kita revisi sebelum approve.

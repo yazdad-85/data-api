@@ -4,7 +4,7 @@ Status: **DRAFT untuk koreksi bersama** (detail field/API masih bisa dikoreksi)
 Stack: **DISETUJUI** — Laravel + PostgreSQL + **Apache** di VPS  
 (Laravel disetujui 15 Jul 2026; web server dikoreksi ke Apache)  
 Kode: **belum dimulai** sampai Plan, Spec, Rule disetujui keseluruhan
-Keamanan: standar **data center** (lihat RULES B4) — termasuk anti-abuse/DDoS berlapis
+Keamanan: standar **data center** (lihat RULES B4) — Cloudflare (akan ditambah) + rate limit + firewall + harden origin
 Proses kode nanti: tulis → **review jujur & jelas** → perbaiki temuan → **baru tes**
 
 ---
@@ -108,7 +108,7 @@ Di luar fase 1: realtime push, ubah master dari app lain, OAuth/SSO, modul bisni
 | App lama sulit pakai delta | Sediakan juga tarik penuh |
 | API key bocor | Rotate key; hash di DB; HTTPS; audit log |
 | Admin lembaga lihat data lembaga lain | Enforce scope `lembaga_id` di RULES + tes wajib |
-| DDoS / abuse API | Rate limit app + Apache + firewall/fail2ban / anti-DDoS VPS |
+| DDoS / abuse API | Cloudflare (direncanakan) + rate limit app + Apache + firewall/fail2ban; origin jangan dibypass |
 | Skip review → bug lolos ke tes | RULES B1/B2: review wajib sebelum tes |
 
 ---

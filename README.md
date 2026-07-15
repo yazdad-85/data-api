@@ -7,7 +7,7 @@ Repositori perencanaan & (nanti) implementasi **Pusat Data** lembaga pendidikan.
 **Perencanaan / review dokumen saja. Belum ada implementasi kode aplikasi.**
 
 Stack: **Laravel + PostgreSQL + Apache (VPS)** — disetujui; web server = Apache.  
-Keamanan: standar data center (RULES B4). Proses kode: review wajib sebelum tes.
+Keamanan: standar data center (RULES B4) + **Cloudflare** (akan ditambahkan). Proses kode: review wajib sebelum tes.
 
 | Dokumen | Fungsi |
 |---------|--------|
