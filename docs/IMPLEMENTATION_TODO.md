@@ -82,29 +82,31 @@ Test wajib:
 
 ## Milestone 2 - Audit log, utility security, dan bootstrap Super Admin
 
+Status: **Selesai**
+
 Tujuan: tindakan penting tercatat sejak awal.
 
-- [ ] Buat service audit log append-only.
-- [ ] Buat middleware/request helper `request_id`.
-- [ ] Buat redaction helper untuk secret/PII di metadata.
-- [ ] Buat command `install:super-admin`.
-- [ ] Command hanya boleh membuat Super Admin pertama jika belum ada.
-- [ ] Password policy minimal 12 karakter.
-- [ ] Siapkan struktur TOTP/MFA Super Admin.
-- [ ] Simpan recovery code MFA dalam bentuk hash.
+- [x] Buat service audit log append-only.
+- [x] Buat middleware/request helper `request_id`.
+- [x] Buat redaction helper untuk secret/PII di metadata.
+- [x] Buat command `install:super-admin`.
+- [x] Command hanya boleh membuat Super Admin pertama jika belum ada.
+- [x] Password policy minimal 12 karakter.
+- [x] Siapkan struktur TOTP/MFA Super Admin.
+- [x] Simpan recovery code MFA dalam bentuk hash.
 
 Review wajib:
 
-- [ ] Review command bootstrap agar tidak bisa overwrite Super Admin.
-- [ ] Review audit log agar tidak menyimpan password/API key/PII penuh.
-- [ ] Perbaiki semua temuan review sebelum test.
+- [x] Review command bootstrap agar tidak bisa overwrite Super Admin.
+- [x] Review audit log agar tidak menyimpan password/API key/PII penuh.
+- [x] Perbaiki semua temuan review sebelum test.
 
 Test wajib:
 
-- [ ] `install:super-admin` sukses saat belum ada Super Admin.
-- [ ] `install:super-admin` ditolak saat Super Admin sudah ada.
-- [ ] Audit log mencatat aksi kritis tanpa secret.
-- [ ] Password pendek ditolak.
+- [x] `install:super-admin` sukses saat belum ada Super Admin.
+- [x] `install:super-admin` ditolak saat Super Admin sudah ada.
+- [x] Audit log mencatat aksi kritis tanpa secret.
+- [x] Password pendek ditolak.
 
 ## Milestone 3 - Auth admin dan authorization multi-tenant
 

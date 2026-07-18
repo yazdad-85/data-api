@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use RuntimeException;
 
 class AuditLog extends Model
 {
@@ -32,6 +33,17 @@ class AuditLog extends Model
             'metadata' => 'array',
             'created_at' => 'datetime',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::updating(function (): void {
+            throw new RuntimeException('Audit log bersifat append-only dan tidak boleh diubah.');
+        });
+
+        static::deleting(function (): void {
+            throw new RuntimeException('Audit log bersifat append-only dan tidak boleh dihapus.');
+        });
     }
 
     public function user(): BelongsTo
