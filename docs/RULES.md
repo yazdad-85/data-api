@@ -128,11 +128,19 @@ Jika ada kesalahan / risiko → perbaiki langsung
 Review ulang sampai bersih
         ↓
 Baru dilakukan tes
+        ↓
+Jika tes lulus: update IMPLEMENTATION_TODO.md
+        ↓
+Commit dengan pesan jelas
+        ↓
+Push ke remote
 ```
 
 4. **Dilarang** langsung tes tanpa review kode.
 5. **Dilarang** menunda perbaikan temuan review “nanti saja”; temuan harus diperbaiki sebelum tes.
-6. Commit message jelas; rahasia (`.env`, API key plain) tidak masuk git.
+6. Checklist di `docs/IMPLEMENTATION_TODO.md` hanya boleh dicentang setelah review bersih dan test terkait lulus.
+7. Commit message jelas; rahasia (`.env`, API key plain) tidak masuk git.
+8. Setelah commit selesai, push ke remote agar progress tersimpan di GitHub.
 
 ### B2. Aturan review kode
 

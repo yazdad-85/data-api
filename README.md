@@ -47,6 +47,7 @@ Semua dokumen konsep dan audit ada di folder [docs](./docs/).
 | [RULES.md](./docs/RULES.md) | Aturan bisnis & aturan implementasi |
 | [RENCANA.md](./docs/RENCANA.md) | Riwayat kesepakatan diskusi awal |
 | [AUDIT_LENGKAP_2026-07-18.md](./docs/AUDIT_LENGKAP_2026-07-18.md) | Hasil audit jujur dan revisi penguatan sebelum coding |
+| [IMPLEMENTATION_TODO.md](./docs/IMPLEMENTATION_TODO.md) | Checklist rencana kerja coding fase 1 |
 
 ## Cara koreksi bersama
 

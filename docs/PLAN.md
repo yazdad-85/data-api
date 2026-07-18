@@ -26,6 +26,7 @@ Dokumen terkait:
 | [RULES.md](./RULES.md) | Aturan bisnis & aturan implementasi |
 | [RENCANA.md](./RENCANA.md) | Catatan kesepakatan awal (riwayat diskusi) |
 | [AUDIT_LENGKAP_2026-07-18.md](./AUDIT_LENGKAP_2026-07-18.md) | Audit lanjutan sebelum coding dan dasar revisi penguatan |
+| [IMPLEMENTATION_TODO.md](./IMPLEMENTATION_TODO.md) | Checklist rencana kerja coding fase 1 |
 
 ---
 
