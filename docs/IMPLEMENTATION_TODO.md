@@ -43,40 +43,42 @@ Status: **Selesai**
 
 ## Milestone 1 - Fondasi database dan model
 
+Status: **Selesai**
+
 Tujuan: struktur data kuat sebelum UI/API.
 
-- [ ] Buat migration UUID helper/pattern untuk semua tabel master.
-- [ ] Update tabel `users`: role, `lembaga_id`, `is_active`, field MFA, constraint role.
-- [ ] Buat tabel `lembaga`.
-- [ ] Buat tabel `api_clients`.
-- [ ] Buat tabel `tahun_ajaran`.
-- [ ] Buat tabel `guru`.
-- [ ] Buat tabel `kelas`.
-- [ ] Buat tabel `siswa`.
-- [ ] Buat tabel `karyawan`.
-- [ ] Buat tabel `audit_logs`.
-- [ ] Tambahkan soft delete di semua master.
-- [ ] Tambahkan partial unique NIS/NISN siswa per lembaga.
-- [ ] Tambahkan unique tahun ajaran per lembaga.
-- [ ] Tambahkan unique kelas per lembaga + tahun ajaran + nama.
-- [ ] Tambahkan composite unique `(lembaga_id, id)` pada tabel tenant.
-- [ ] Tambahkan composite FK tenant untuk relasi kelas, siswa, wali kelas, tahun ajaran.
-- [ ] Tambahkan index sync `(lembaga_id, updated_at, id)` dan `(lembaga_id, deleted_at, id)`.
-- [ ] Buat Eloquent model, relation, casts, fillable/guarded, hidden field sensitif.
+- [x] Buat migration UUID helper/pattern untuk semua tabel master.
+- [x] Update tabel `users`: role, `lembaga_id`, `is_active`, field MFA, constraint role.
+- [x] Buat tabel `lembaga`.
+- [x] Buat tabel `api_clients`.
+- [x] Buat tabel `tahun_ajaran`.
+- [x] Buat tabel `guru`.
+- [x] Buat tabel `kelas`.
+- [x] Buat tabel `siswa`.
+- [x] Buat tabel `karyawan`.
+- [x] Buat tabel `audit_logs`.
+- [x] Tambahkan soft delete di semua master.
+- [x] Tambahkan partial unique NIS/NISN siswa per lembaga.
+- [x] Tambahkan unique tahun ajaran per lembaga.
+- [x] Tambahkan unique kelas per lembaga + tahun ajaran + nama.
+- [x] Tambahkan composite unique `(lembaga_id, id)` pada tabel tenant.
+- [x] Tambahkan composite FK tenant untuk relasi kelas, siswa, wali kelas, tahun ajaran.
+- [x] Tambahkan index sync `(lembaga_id, updated_at, id)` dan `(lembaga_id, deleted_at, id)`.
+- [x] Buat Eloquent model, relation, casts, fillable/guarded, hidden field sensitif.
 
 Review wajib:
 
-- [ ] Review migration untuk tenant isolation dan constraint DB.
-- [ ] Review model agar field sensitif tidak keluar di array/JSON.
-- [ ] Perbaiki semua temuan review sebelum test.
+- [x] Review migration untuk tenant isolation dan constraint DB.
+- [x] Review model agar field sensitif tidak keluar di array/JSON.
+- [x] Perbaiki semua temuan review sebelum test.
 
 Test wajib:
 
-- [ ] Migration fresh berhasil di PostgreSQL.
-- [ ] Constraint role user bekerja.
-- [ ] Composite FK menolak relasi lintas lembaga.
-- [ ] Partial unique NIS/NISN bekerja.
-- [ ] Hanya satu tahun ajaran aktif per lembaga.
+- [x] Migration fresh berhasil di PostgreSQL.
+- [x] Constraint role user bekerja.
+- [x] Composite FK menolak relasi lintas lembaga.
+- [x] Partial unique NIS/NISN bekerja.
+- [x] Hanya satu tahun ajaran aktif per lembaga.
 
 ## Milestone 2 - Audit log, utility security, dan bootstrap Super Admin
 

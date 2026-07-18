@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class Kelas extends Model
+{
+    use HasUuids, SoftDeletes;
+
+    protected $table = 'kelas';
+
+    protected $fillable = [
+        'lembaga_id',
+        'tahun_ajaran_id',
+        'nama',
+        'tingkat',
+        'wali_kelas_guru_id',
+    ];
+
+    public function lembaga(): BelongsTo
+    {
+        return $this->belongsTo(Lembaga::class);
+    }
+
+    public function tahunAjaran(): BelongsTo
+    {
+        return $this->belongsTo(TahunAjaran::class);
+    }
+
+    public function waliKelas(): BelongsTo
+    {
+        return $this->belongsTo(Guru::class, 'wali_kelas_guru_id');
+    }
+
+    public function siswa(): HasMany
+    {
+        return $this->hasMany(Siswa::class);
+    }
+}
