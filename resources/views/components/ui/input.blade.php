@@ -14,7 +14,7 @@
     $describedBy = $error ? $id.'-error' : ($hint ? $id.'-hint' : null);
 @endphp
 
-<div {{ $attributes->class(['field']) }}>
+<div class="field">
     @if ($label)
         <label for="{{ $id }}" class="field-label">
             {{ $label }}
@@ -29,10 +29,10 @@
         type="{{ $type }}"
         name="{{ $name }}"
         value="{{ old($name, $value) }}"
-        class="field-control"
         @required($required)
         @if ($error) aria-invalid="true" @endif
         @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
+        {{ $attributes->class(['field-control']) }}
     >
 
     @if ($error)

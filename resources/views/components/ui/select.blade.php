@@ -13,7 +13,7 @@
     $describedBy = $error ? $id.'-error' : ($hint ? $id.'-hint' : null);
 @endphp
 
-<div {{ $attributes->class(['field']) }}>
+<div class="field">
     @if ($label)
         <label for="{{ $id }}" class="field-label">
             {{ $label }}
@@ -23,13 +23,14 @@
         </label>
     @endif
 
+    {{-- Options slot: callers mark selected, e.g. @selected(old('status', $current) === 'active'). The value prop is for documentation / caller convenience only (slot evaluates in parent scope). --}}
     <select
         id="{{ $id }}"
         name="{{ $name }}"
-        class="field-control"
         @required($required)
         @if ($error) aria-invalid="true" @endif
         @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
+        {{ $attributes->class(['field-control']) }}
     >
         {{ $slot }}
     </select>
