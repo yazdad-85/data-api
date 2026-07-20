@@ -13,7 +13,7 @@
     <form method="POST" action="{{ route('login.mfa') }}">
         @csrf
         <label for="code">Kode autentikasi</label>
-        <input id="code" type="text" name="code" inputmode="numeric" autocomplete="one-time-code" required autofocus>
+        <input id="code" type="text" name="code" inputmode="text" autocomplete="one-time-code" required autofocus>
 
         <button type="submit">Verifikasi</button>
     </form>

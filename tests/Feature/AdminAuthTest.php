@@ -34,6 +34,9 @@ class AdminAuthTest extends TestCase
             'password' => 'StrongPassword123',
         ]);
 
+        $this->get(route('login'));
+        $sessionIdBefore = $this->app['session']->getId();
+
         $response = $this->post('/login', [
             'email' => 'admin@example.test',
             'password' => 'StrongPassword123',
@@ -41,6 +44,7 @@ class AdminAuthTest extends TestCase
 
         $response->assertRedirect(route('admin.dashboard'));
         $this->assertAuthenticatedAs($user);
+        $this->assertNotSame($sessionIdBefore, $this->app['session']->getId());
 
         $this->get(route('admin.dashboard'))
             ->assertOk()
@@ -128,7 +132,7 @@ class AdminAuthTest extends TestCase
         ])->assertRedirect(route('login.mfa'));
 
         $this->assertGuest();
-        $this->get(route('admin.dashboard'))->assertRedirect(route('login'));
+        $this->get(route('admin.dashboard'))->assertRedirect(route('login.mfa'));
         $this->get(route('login.mfa'))->assertOk();
 
         $this->from(route('login.mfa'))->post('/login/mfa', [
@@ -140,12 +144,14 @@ class AdminAuthTest extends TestCase
 
         $this->assertGuest();
 
+        $sessionIdBeforeMfa = $this->app['session']->getId();
         $code = app(TotpVerifier::class)->currentCode($secret);
 
         $this->post('/login/mfa', ['code' => $code])
             ->assertRedirect(route('admin.dashboard'));
 
         $this->assertAuthenticatedAs($user);
+        $this->assertNotSame($sessionIdBeforeMfa, $this->app['session']->getId());
         $this->assertSame('failed', AuditLog::query()->where('event', 'auth.mfa')->where('result', 'failed')->value('result'));
         $this->assertSame('success', AuditLog::query()->where('event', 'auth.mfa')->where('result', 'success')->value('result'));
     }
@@ -207,6 +213,45 @@ class AdminAuthTest extends TestCase
 
         $this->assertGuest();
         $this->assertSame('success', AuditLog::query()->where('event', 'auth.logout')->value('result'));
+    }
+
+    public function test_ensure_user_is_active_revokes_inactive_user_session(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $user = User::factory()->adminLembaga($lembaga->id)->create([
+            'email' => 'admin@example.test',
+            'password' => 'StrongPassword123',
+        ]);
+
+        $this->actingAs($user);
+
+        $user->forceFill(['is_active' => false])->save();
+
+        $this->get(route('admin.dashboard'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertSame('auth.session_revoked', AuditLog::query()->where('event', 'auth.session_revoked')->value('event'));
+        $this->assertSame('user_inactive', AuditLog::query()->where('event', 'auth.session_revoked')->value('metadata')['reason'] ?? null);
+    }
+
+    public function test_ensure_user_is_active_revokes_session_when_lembaga_inactive(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $user = User::factory()->adminLembaga($lembaga->id)->create([
+            'email' => 'admin@example.test',
+            'password' => 'StrongPassword123',
+        ]);
+
+        $this->actingAs($user);
+
+        $lembaga->forceFill(['is_active' => false])->save();
+
+        $this->get(route('admin.dashboard'))
+            ->assertRedirect(route('login'));
+
+        $this->assertGuest();
+        $this->assertSame('lembaga_inactive', AuditLog::query()->where('event', 'auth.session_revoked')->value('metadata')['reason'] ?? null);
     }
 
     public function test_audit_logs_do_not_contain_password_or_totp_plaintext(): void

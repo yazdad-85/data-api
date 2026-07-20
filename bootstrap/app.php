@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Http\Middleware\AssignRequestId;
 use App\Http\Middleware\EnsureMfaSatisfied;
 use App\Http\Middleware\EnsureUserIsActive;
+use App\Support\Security\MfaPendingSession;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,7 +23,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'mfa' => EnsureMfaSatisfied::class,
         ]);
 
-        $middleware->redirectGuestsTo(fn () => route('login'));
+        $middleware->redirectGuestsTo(function () {
+            return MfaPendingSession::user() !== null
+                ? route('login.mfa')
+                : route('login');
+        });
         $middleware->redirectUsersTo(fn () => route('admin.dashboard'));
     })
     ->withExceptions(function (Exceptions $exceptions): void {
