@@ -39,7 +39,7 @@ class LembagaAdminController extends Controller
 
         return redirect()
             ->route('admin.lembaga.admins.password-once', [$lembaga, $admin])
-            ->with('generated_password', $plainPassword)
+            ->with('generated_password', ['user_id' => (string) $admin->id, 'password' => $plainPassword])
             ->with('status', 'Admin lembaga berhasil dibuat.');
     }
 
@@ -99,7 +99,7 @@ class LembagaAdminController extends Controller
 
         return redirect()
             ->route('admin.lembaga.admins.password-once', [$lembaga, $user])
-            ->with('generated_password', $plainPassword)
+            ->with('generated_password', ['user_id' => (string) $user->id, 'password' => $plainPassword])
             ->with('status', 'Kata sandi admin lembaga berhasil direset.');
     }
 
@@ -108,9 +108,16 @@ class LembagaAdminController extends Controller
         $this->assertAdminBelongsToLembaga($lembaga, $user);
         $this->authorize('view', $lembaga);
 
-        $plainPassword = $request->session()->pull('generated_password');
+        $generatedPassword = $request->session()->pull('generated_password');
 
-        if (! is_string($plainPassword) || $plainPassword === '') {
+        $plainPassword = is_array($generatedPassword)
+            && (string) ($generatedPassword['user_id'] ?? '') === (string) $user->id
+            && is_string($generatedPassword['password'] ?? null)
+            && $generatedPassword['password'] !== ''
+                ? $generatedPassword['password']
+                : null;
+
+        if ($plainPassword === null) {
             return redirect()
                 ->route('admin.lembaga.show', $lembaga)
                 ->with('status', 'Kata sandi hanya dapat dilihat sekali dan sudah tidak tersedia. Gunakan reset kata sandi jika diperlukan.');
