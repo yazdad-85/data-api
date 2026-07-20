@@ -223,17 +223,123 @@ body {
     animation: content-in 220ms ease;
 }
 
-.dashboard-placeholder h1 {
+.dashboard__intro {
+    margin-bottom: 1.5rem;
+}
+
+.dashboard__intro h1 {
     margin: 0 0 0.5rem;
     font-size: 1.75rem;
     font-weight: 600;
     color: var(--brand-deep);
 }
 
-.dashboard-placeholder p {
+.dashboard__intro p {
     margin: 0;
     color: var(--muted);
-    max-width: 36rem;
+    max-width: 40rem;
+}
+
+.dashboard-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
+    gap: 0.85rem;
+}
+
+.dashboard-metric {
+    display: flex;
+    flex-direction: column;
+    gap: 0.45rem;
+    padding: 1rem 1.05rem;
+    border-top: 3px solid var(--brand);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 55%, white), var(--surface-elevated) 42%),
+        var(--surface-elevated);
+}
+
+.dashboard-metric__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--muted);
+}
+
+.dashboard-metric__value {
+    font-size: 1.85rem;
+    font-weight: 600;
+    line-height: 1.1;
+    color: var(--brand-deep);
+}
+
+.dashboard-checklist {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    max-width: 42rem;
+}
+
+.dashboard-checklist__item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 0.85rem 0;
+    border-bottom: 1px solid var(--border);
+}
+
+.dashboard-checklist__main {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    min-width: 0;
+}
+
+.dashboard-checklist__step {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    flex-shrink: 0;
+    border-radius: 999px;
+    background: var(--brand-soft);
+    color: var(--brand-deep);
+    font-size: 0.85rem;
+    font-weight: 700;
+}
+
+.dashboard-checklist__label {
+    font-weight: 600;
+    color: var(--ink);
+    text-decoration: none;
+}
+
+.dashboard-checklist__label:hover {
+    color: var(--brand-deep);
+    text-decoration: underline;
+}
+
+.dashboard-checklist__hint {
+    margin: 0.2rem 0 0;
+    color: var(--muted);
+    font-size: 0.875rem;
+}
+
+.dashboard-checklist__meta {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+    flex-shrink: 0;
+}
+
+.dashboard-checklist__count {
+    font-size: 1.35rem;
+    font-weight: 600;
+    color: var(--brand-deep);
+    min-width: 1.5rem;
+    text-align: right;
 }
 
 /* Shared UI components */

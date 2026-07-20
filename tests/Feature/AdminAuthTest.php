@@ -49,7 +49,7 @@ class AdminAuthTest extends TestCase
         $this->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee($user->name)
-            ->assertSee($user->role);
+            ->assertSee('Admin Lembaga');
 
         $this->assertSame('success', AuditLog::query()->where('event', 'auth.login')->value('result'));
     }

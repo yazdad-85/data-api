@@ -6,8 +6,10 @@ use Symfony\Component\Console\Input\ArgvInput;
 
 define('LARAVEL_START', microtime(true));
 
-// Register the Composer autoloader...
+// Register the Composer autoloader, then prefer this worktree's App/Tests sources
+// when vendor/ is a symlink to the main checkout.
 require __DIR__.'/vendor/autoload.php';
+require __DIR__.'/bootstrap/worktree-autoload.php';
 
 // Bootstrap Laravel and handle the command...
 /** @var Application $app */
