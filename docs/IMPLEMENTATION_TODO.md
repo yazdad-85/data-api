@@ -176,25 +176,28 @@ Test wajib:
 
 ## Milestone 5 - CRUD Super Admin
 
-Status: **Belum dimulai** (brainstorming 20 Jul 2026)
+Status: **M5a selesai; M5b API client belum**
 
 Keputusan arah (sementara):
-- Spek pertama: **Lembaga + Admin Lembaga** (Blade + controller/Form Request).
+- Spek pertama: **Lembaga + Admin Lembaga** (Blade + controller/Form Request) — **M5a selesai** (spek [2026-07-20-milestone-5a-lembaga-admin-design.md](./superpowers/specs/2026-07-20-milestone-5a-lembaga-admin-design.md)).
+- Generate/reset password Admin Lembaga copy-once selesai di M5a.
 - **API client/key** → spek M5b terpisah (setelah blok lembaga/admin hijau).
 - UI CRUD M5a: **Blade murni** (opsi A); hybrid Livewire (opsi C) tercatat sebagai follow-up M3/M4 di atas, dikerjakan ketika modal/list interaktif benar-benar dibutuhkan — **bukan** dengan mengulang M3/M4 dari awal.
 
 Tujuan: pengelolaan lembaga, admin lembaga, dan API client/key.
 
-- [ ] CRUD lembaga.
-- [ ] Aktif/nonaktif lembaga dengan modal dampak.
-- [ ] CRUD Admin Lembaga.
-- [ ] Aktif/nonaktif Admin Lembaga.
+- [x] CRUD lembaga.
+- [x] Aktif/nonaktif lembaga dengan modal dampak.
+- [x] CRUD Admin Lembaga.
+- [x] Aktif/nonaktif Admin Lembaga.
+- [x] Generate/reset password Admin Lembaga copy-once.
 - [ ] Buat API client per aplikasi konsumen.
 - [ ] Generate API key copy-once.
 - [ ] Rotate API key dengan modal dampak; key lama langsung revoke.
 - [ ] Revoke/nonaktifkan API client.
 - [ ] Admin Lembaga hanya lihat nama client, prefix, scope, status, last used.
-- [ ] Audit log untuk semua aksi kritis.
+- [x] Audit log untuk aksi kritis lembaga/admin.
+- [ ] Audit log untuk aksi kritis API client/key (M5b).
 
 Review wajib:
 
