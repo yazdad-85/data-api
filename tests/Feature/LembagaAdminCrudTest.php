@@ -97,6 +97,12 @@ class LembagaAdminCrudTest extends TestCase
         ApiClient::factory()->for($lembaga)->create();
         ApiClient::factory()->for($lembaga)->revoked()->create();
 
+        $this->actingAs($sa)->get(route('admin.lembaga.show', $lembaga))
+            ->assertOk()
+            ->assertSee('Nonaktifkan lembaga?')
+            ->assertSee('2</strong> Admin Lembaga aktif dan', false)
+            ->assertSee('1</strong> API client aktif akan terdampak.', false);
+
         $this->actingAs($sa)->post(route('admin.lembaga.deactivate', $lembaga))
             ->assertRedirect(route('admin.lembaga.show', $lembaga));
 
@@ -265,6 +271,49 @@ class LembagaAdminCrudTest extends TestCase
         ])->assertRedirect(route('admin.dashboard'));
 
         $this->assertAuthenticatedAs($admin);
+
+        $second = $this->actingAs($sa)->get(route('admin.lembaga.admins.password-once', [$lembaga, $admin]));
+        $second->assertRedirect(route('admin.lembaga.show', $lembaga));
+        $this->assertStringContainsString(
+            'tidak tersedia',
+            (string) $second->getSession()->get('status')
+        );
+    }
+
+    public function test_password_once_flash_does_not_leak_across_admins(): void
+    {
+        $sa = $this->superAdmin();
+        $lembaga = Lembaga::factory()->create();
+
+        $createA = $this->actingAs($sa)->post(route('admin.lembaga.admins.store', $lembaga), [
+            'name' => 'Admin A',
+            'email' => 'admina-flash@example.test',
+        ]);
+        $adminA = User::query()->where('email', 'admina-flash@example.test')->firstOrFail();
+        $passwordA = $createA->getSession()->get('generated_password')['password'] ?? null;
+        $this->assertIsString($passwordA);
+        $createA->assertRedirect(route('admin.lembaga.admins.password-once', [$lembaga, $adminA]));
+
+        $createB = $this->actingAs($sa)->post(route('admin.lembaga.admins.store', $lembaga), [
+            'name' => 'Admin B',
+            'email' => 'adminb-flash@example.test',
+        ]);
+        $adminB = User::query()->where('email', 'adminb-flash@example.test')->firstOrFail();
+        $passwordB = $createB->getSession()->get('generated_password')['password'] ?? null;
+        $this->assertIsString($passwordB);
+        $this->assertNotSame($passwordA, $passwordB);
+        $createB->assertRedirect(route('admin.lembaga.admins.password-once', [$lembaga, $adminB]));
+
+        $response = $this->actingAs($sa)->get(route('admin.lembaga.admins.password-once', [$lembaga, $adminA]));
+        $response->assertRedirect(route('admin.lembaga.show', $lembaga));
+        $this->assertStringContainsString(
+            'tidak tersedia',
+            (string) $response->getSession()->get('status')
+        );
+
+        $show = $this->actingAs($sa)->get(route('admin.lembaga.show', $lembaga));
+        $show->assertDontSee($passwordA);
+        $show->assertDontSee($passwordB);
     }
 
     public function test_admin_lembaga_gets_forbidden_on_lembaga_index(): void
