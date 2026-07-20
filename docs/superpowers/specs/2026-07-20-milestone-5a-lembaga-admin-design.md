@@ -1,6 +1,6 @@
 # Design — Milestone 5a: CRUD Lembaga & Admin Lembaga
 
-Status: **DRAFT — menunggu review pemilik**  
+Status: **Approved**  
 Tanggal: 2026-07-20  
 Basis: [SPEC.md](../../SPEC.md) §2.3, §3.1, §3.3, §5.1; [RULES.md](../../RULES.md) A11, B4; [IMPLEMENTATION_TODO.md](../../IMPLEMENTATION_TODO.md) Milestone 5; shell M4; auth M3
 
