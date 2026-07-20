@@ -139,6 +139,10 @@ Test wajib:
 - [x] Login throttle bekerja.
 - [x] MFA Super Admin aktif dan wajib sebelum produksi publik.
 
+### Follow-up (belum dikerjakan — bukan blocker M3)
+
+- [ ] Evolusi UI auth ke **hybrid Livewire** (opsi C): challenge MFA / form login interaktif bila dibutuhkan UX lebih kaya. **Jangan dibuka ulang sebagai “M3 belum selesai”.** Kerjakan saat spek hybrid disetujui (kemungkinan berdampingan M5/M6), dengan Blade+controller M3 tetap sebagai fondasi otorisasi/session.
+
 ## Milestone 4 - UI shell dan dashboard admin
 
 Status: **Selesai**
@@ -166,7 +170,18 @@ Test wajib:
 - [x] Snapshot/manual review layout desktop dan tablet (verifikasi browser lokal 20 Jul 2026; layout grid diperbaiki; responsive drawer ≤960px).
 - [x] Navigasi sidebar sesuai role.
 
+### Follow-up (belum dikerjakan — bukan blocker M4)
+
+- [ ] Evolusi shell/komponen ke **hybrid Livewire** (opsi C): modal konfirmasi, table search/filter, form dinamis memakai Livewire di atas layout Blade M4. **Jangan mundur menandai M4 belum selesai.** Jadwalkan saat CRUD (M5/M6) membutuhkan interaksi itu; komponen Blade `x-ui.*` tetap dipakai atau dibungkus Livewire.
+
 ## Milestone 5 - CRUD Super Admin
+
+Status: **Belum dimulai** (brainstorming 20 Jul 2026)
+
+Keputusan arah (sementara):
+- Spek pertama: **Lembaga + Admin Lembaga** (Blade + controller/Form Request).
+- **API client/key** → spek M5b terpisah (setelah blok lembaga/admin hijau).
+- UI CRUD M5a: **Blade murni** (opsi A); hybrid Livewire (opsi C) tercatat sebagai follow-up M3/M4 di atas, dikerjakan ketika modal/list interaktif benar-benar dibutuhkan — **bukan** dengan mengulang M3/M4 dari awal.
 
 Tujuan: pengelolaan lembaga, admin lembaga, dan API client/key.
 
