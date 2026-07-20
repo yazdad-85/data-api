@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\BelongsToLembaga;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class TahunAjaran extends Model
 {
-    use HasUuids, SoftDeletes;
+    use BelongsToLembaga, HasUuids, SoftDeletes;
 
     protected $table = 'tahun_ajaran';
 
