@@ -4,9 +4,10 @@
 @section('breadcrumb', $title)
 
 @section('content')
-    <div class="coming-soon">
-        <h1 class="font-display">{{ $title }}</h1>
-        <p class="coming-soon__lead">Segera hadir</p>
-        <p>Fitur ini sedang disiapkan dan akan tersedia pada tahap berikutnya.</p>
-    </div>
+    <x-ui.empty-state
+        :title="$title"
+        description="Fitur ini sedang disiapkan dan akan tersedia pada tahap berikutnya."
+    >
+        <x-ui.badge tone="warn">Segera hadir</x-ui.badge>
+    </x-ui.empty-state>
 @endsection
