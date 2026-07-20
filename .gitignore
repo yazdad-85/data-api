@@ -9,6 +9,7 @@
 .phpunit.result.cache
 /.codex
 /.cursor/
+/.worktrees/
 /.idea
 /.nova
 /.phpunit.cache
