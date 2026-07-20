@@ -19,5 +19,27 @@ document.addEventListener('click', (event) => {
         if (modal && typeof modal.showModal === 'function') {
             modal.showModal();
         }
+        return;
+    }
+    const closer = event.target.closest('[data-modal-close]');
+    if (closer) {
+        const modal = closer.closest('dialog');
+        if (modal && typeof modal.close === 'function') {
+            modal.close();
+        }
+        return;
+    }
+    const copyTrigger = event.target.closest('[data-copy-target]');
+    if (copyTrigger) {
+        const target = document.getElementById(copyTrigger.dataset.copyTarget);
+        if (target && navigator.clipboard) {
+            navigator.clipboard.writeText(target.value).then(() => {
+                const original = copyTrigger.textContent;
+                copyTrigger.textContent = 'Disalin!';
+                setTimeout(() => {
+                    copyTrigger.textContent = original;
+                }, 1500);
+            }).catch(() => {});
+        }
     }
 });

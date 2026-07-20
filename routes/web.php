@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ComingSoonController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -37,4 +38,11 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::put('/lembaga/{lembaga}', [LembagaController::class, 'update'])->name('admin.lembaga.update');
     Route::post('/lembaga/{lembaga}/activate', [LembagaController::class, 'activate'])->name('admin.lembaga.activate');
     Route::post('/lembaga/{lembaga}/deactivate', [LembagaController::class, 'deactivate'])->name('admin.lembaga.deactivate');
+
+    Route::post('/lembaga/{lembaga}/admins', [LembagaAdminController::class, 'store'])->name('admin.lembaga.admins.store');
+    Route::put('/lembaga/{lembaga}/admins/{user}', [LembagaAdminController::class, 'update'])->name('admin.lembaga.admins.update');
+    Route::post('/lembaga/{lembaga}/admins/{user}/activate', [LembagaAdminController::class, 'activate'])->name('admin.lembaga.admins.activate');
+    Route::post('/lembaga/{lembaga}/admins/{user}/deactivate', [LembagaAdminController::class, 'deactivate'])->name('admin.lembaga.admins.deactivate');
+    Route::post('/lembaga/{lembaga}/admins/{user}/reset-password', [LembagaAdminController::class, 'resetPassword'])->name('admin.lembaga.admins.reset-password');
+    Route::get('/lembaga/{lembaga}/admins/{user}/password-once', [LembagaAdminController::class, 'passwordOnce'])->name('admin.lembaga.admins.password-once');
 });

@@ -889,6 +889,49 @@ body {
     margin-top: 0.5rem;
 }
 
+.table-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.table-actions form {
+    display: inline-flex;
+}
+
+.btn-sm {
+    padding: 0.35rem 0.7rem;
+    font-size: 0.85rem;
+}
+
+.callout-warning {
+    margin: 0 0 1.25rem;
+    padding: 0.75rem 1rem;
+    border: 1px solid color-mix(in srgb, var(--warn) 35%, white);
+    border-radius: 0.3rem;
+    background: color-mix(in srgb, var(--warn) 10%, white);
+    color: var(--warn);
+}
+
+.callout-warning p {
+    margin: 0.25rem 0 0;
+}
+
+.callout-warning p:first-child {
+    margin-top: 0;
+}
+
+.password-display {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.password-display .field {
+    flex: 1 1 16rem;
+}
+
 /* Guest auth shell */
 .guest-shell {
     min-height: 100vh;

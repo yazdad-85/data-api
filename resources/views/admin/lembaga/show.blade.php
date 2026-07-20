@@ -12,6 +12,15 @@
         <p class="flash-status">{{ session('status') }}</p>
     @endif
 
+    @if ($errors->any())
+        <div class="callout-warning">
+            <p><strong>Periksa kembali data yang dikirim:</strong></p>
+            @foreach ($errors->all() as $message)
+                <p>{{ $message }}</p>
+            @endforeach
+        </div>
+    @endif
+
     <div class="card">
         <div class="card__header">
             <div>
@@ -82,7 +91,7 @@
         @if ($admins->isEmpty())
             <x-ui.empty-state
                 title="Belum ada admin lembaga"
-                description="Aksi admin dilengkapi di langkah berikutnya."
+                description="Tambahkan admin lembaga melalui formulir di bawah."
             />
         @else
             <x-ui.table>
@@ -91,6 +100,7 @@
                         <th>Nama</th>
                         <th>Email</th>
                         <th>Status</th>
+                        <th>Aksi</th>
                     </tr>
                 </x-slot:thead>
                 @foreach ($admins as $admin)
@@ -104,14 +114,107 @@
                                 <x-ui.badge tone="neutral">Nonaktif</x-ui.badge>
                             @endif
                         </td>
+                        <td>
+                            <div class="table-actions">
+                                <button type="button" class="btn btn-secondary btn-sm" data-modal-open="edit-admin-{{ $admin->id }}">
+                                    Ubah
+                                </button>
+
+                                @if ($admin->is_active)
+                                    <form method="POST" action="{{ route('admin.lembaga.admins.deactivate', [$lembaga, $admin]) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-danger btn-sm">Nonaktifkan</button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="{{ route('admin.lembaga.admins.activate', [$lembaga, $admin]) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary btn-sm">Aktifkan</button>
+                                    </form>
+                                @endif
+
+                                <form method="POST" action="{{ route('admin.lembaga.admins.reset-password', [$lembaga, $admin]) }}">
+                                    @csrf
+                                    <button type="submit" class="btn btn-secondary btn-sm">Reset kata sandi</button>
+                                </form>
+                            </div>
+                        </td>
                     </tr>
                 @endforeach
             </x-ui.table>
-            <p class="section__note">
-                Aksi admin (tambah, ubah, aktif/nonaktif, reset password) dilengkapi di langkah berikutnya.
-            </p>
         @endif
+
+        <div class="form-card" style="margin-top: 1.5rem;">
+            <h3 class="section__title font-display">Tambah admin lembaga</h3>
+            <form method="POST" action="{{ route('admin.lembaga.admins.store', $lembaga) }}">
+                @csrf
+
+                <div class="form-grid">
+                    <x-ui.input
+                        name="name"
+                        label="Nama"
+                        required
+                        :value="old('name')"
+                        :error="$errors->first('name')"
+                    />
+                    <x-ui.input
+                        name="email"
+                        type="email"
+                        label="Email"
+                        required
+                        :value="old('email')"
+                        :error="$errors->first('email')"
+                        hint="Kata sandi awal dibuat otomatis dan ditampilkan sekali setelah admin dibuat."
+                    />
+                </div>
+
+                <div class="form-actions">
+                    <x-ui.button type="submit">Tambah admin</x-ui.button>
+                </div>
+            </form>
+        </div>
     </section>
+
+    @foreach ($admins as $admin)
+        <x-ui.modal id="edit-admin-{{ $admin->id }}" title="Ubah admin lembaga">
+            <form method="POST" action="{{ route('admin.lembaga.admins.update', [$lembaga, $admin]) }}">
+                @csrf
+                @method('PUT')
+
+                <div class="field">
+                    <label for="edit-name-{{ $admin->id }}" class="field-label">
+                        Nama <span class="field-required" aria-hidden="true">*</span>
+                    </label>
+                    <input
+                        id="edit-name-{{ $admin->id }}"
+                        type="text"
+                        name="name"
+                        value="{{ $admin->name }}"
+                        required
+                        class="field-control"
+                    >
+                </div>
+
+                <div class="field">
+                    <label for="edit-email-{{ $admin->id }}" class="field-label">
+                        Email <span class="field-required" aria-hidden="true">*</span>
+                    </label>
+                    <input
+                        id="edit-email-{{ $admin->id }}"
+                        type="email"
+                        name="email"
+                        value="{{ $admin->email }}"
+                        required
+                        class="field-control"
+                    >
+                </div>
+
+                <div class="form-actions">
+                    <x-ui.button type="submit">Simpan perubahan</x-ui.button>
+                    <button type="button" class="btn btn-secondary" data-modal-close>Batal</button>
+                </div>
+            </form>
+        </x-ui.modal>
+    @endforeach
 
     <x-ui.modal id="deactivate-lembaga" title="Nonaktifkan lembaga?">
         <p>
