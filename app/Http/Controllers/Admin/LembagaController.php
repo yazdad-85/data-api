@@ -28,9 +28,14 @@ class LembagaController extends Controller
 
         $lembagas = Lembaga::query()
             ->when($q !== '', function ($query) use ($q) {
-                $query->where(function ($inner) use ($q) {
-                    $inner->where('kode', 'ilike', '%'.$q.'%')
-                        ->orWhere('nama', 'ilike', '%'.$q.'%');
+                $like = '%'.$q.'%';
+                $query->where(function ($inner) use ($like) {
+                    if ($inner->getConnection()->getDriverName() === 'pgsql') {
+                        $inner->where('kode', 'ilike', $like)->orWhere('nama', 'ilike', $like);
+                    } else {
+                        $inner->whereRaw('lower(kode) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nama) like lower(?)', [$like]);
+                    }
                 });
             })
             ->orderBy('nama')
