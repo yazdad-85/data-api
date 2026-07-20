@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ComingSoonController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -23,4 +24,7 @@ Route::post('/logout', LogoutController::class)
 
 Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'show'])->name('admin.dashboard');
+    Route::get('/coming-soon/{feature}', [ComingSoonController::class, 'show'])
+        ->where('feature', 'lembaga|admin-lembaga|api-client|tahun-ajaran|guru|kelas|siswa|karyawan|api-client-ro')
+        ->name('admin.coming-soon');
 });

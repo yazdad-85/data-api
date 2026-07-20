@@ -14,10 +14,12 @@ use App\Policies\KaryawanPolicy;
 use App\Policies\KelasPolicy;
 use App\Policies\SiswaPolicy;
 use App\Policies\TahunAjaranPolicy;
+use App\Support\Navigation\AdminMenu;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 
@@ -60,5 +62,16 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('access-admin', fn (User $user) => $user->isSuperAdmin() || $user->isAdminLembaga());
         Gate::define('manage-all-lembaga', fn (User $user) => $user->isSuperAdmin());
         Gate::define('manage-own-lembaga', fn (User $user) => $user->isAdminLembaga());
+
+        View::composer('layouts.admin', function ($view) {
+            $user = auth()->user();
+
+            if ($user?->isAdminLembaga()) {
+                $user->loadMissing('lembaga');
+            }
+
+            $view->with('menu', $user ? app(AdminMenu::class)->forUser($user) : collect());
+            $view->with('authUser', $user);
+        });
     }
 }
