@@ -15,7 +15,7 @@ final class AdminMenu
         if ($user->isSuperAdmin()) {
             return collect([
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'available' => true],
-                ['label' => 'Lembaga', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'lembaga'], 'available' => false],
+                ['label' => 'Lembaga', 'route' => 'admin.lembaga.index', 'available' => true],
                 ['label' => 'API client', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'api-client'], 'available' => false],
             ]);
         }

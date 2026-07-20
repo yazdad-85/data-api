@@ -11,5 +11,13 @@ document.addEventListener('click', (event) => {
     const backdrop = event.target.closest('[data-sidebar-backdrop]');
     if (backdrop) {
         document.documentElement.classList.remove('sidebar-open');
+        return;
+    }
+    const opener = event.target.closest('[data-modal-open]');
+    if (opener) {
+        const modal = document.getElementById(opener.dataset.modalOpen);
+        if (modal && typeof modal.showModal === 'function') {
+            modal.showModal();
+        }
     }
 });
