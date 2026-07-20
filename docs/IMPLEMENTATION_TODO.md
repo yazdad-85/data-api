@@ -141,28 +141,30 @@ Test wajib:
 
 ## Milestone 4 - UI shell dan dashboard admin
 
+Status: **Selesai**
+
 Tujuan: fondasi UI konsisten sebelum CRUD detail.
 
-- [ ] Buat layout Blade/Livewire admin.
-- [ ] Sidebar per role.
-- [ ] Header user/lembaga/logout.
-- [ ] Breadcrumb dan judul halaman.
-- [ ] Komponen tombol, input, select, badge, modal, table, pagination.
-- [ ] Empty state, loading state, dan inline validation state.
-- [ ] Dashboard Super Admin: jumlah lembaga aktif/nonaktif, API client aktif, ringkasan master.
-- [ ] Dashboard Admin Lembaga: urutan input data dan ringkasan master.
+- [x] Buat layout Blade/Livewire admin.
+- [x] Sidebar per role.
+- [x] Header user/lembaga/logout.
+- [x] Breadcrumb dan judul halaman.
+- [x] Komponen tombol, input, select, badge, modal, table, pagination.
+- [x] Empty state, loading state, dan inline validation state (empty-state + skeleton; input/select mendukung prop `error` + `aria-invalid`).
+- [x] Dashboard Super Admin: jumlah lembaga aktif/nonaktif, API client aktif, ringkasan master.
+- [x] Dashboard Admin Lembaga: urutan input data dan ringkasan master.
 
 Review wajib:
 
-- [ ] Review UI untuk bahasa Indonesia, aksesibilitas dasar, dan konsistensi komponen.
-- [ ] Review agar UI tidak menjadi satu-satunya enforcement otorisasi.
-- [ ] Perbaiki semua temuan review sebelum test.
+- [x] Review UI untuk bahasa Indonesia, aksesibilitas dasar, dan konsistensi komponen.
+- [x] Review agar UI tidak menjadi satu-satunya enforcement otorisasi.
+- [x] Perbaiki semua temuan review sebelum test.
 
 Test wajib:
 
-- [ ] Smoke test halaman dashboard.
-- [ ] Snapshot/manual review layout desktop dan tablet.
-- [ ] Navigasi sidebar sesuai role.
+- [x] Smoke test halaman dashboard.
+- [ ] Snapshot/manual review layout desktop dan tablet (belum ada visual snapshot / review browser tablet tercatat; responsive CSS drawer ≤960px ada).
+- [x] Navigasi sidebar sesuai role.
 
 ## Milestone 5 - CRUD Super Admin
 
