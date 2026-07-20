@@ -45,4 +45,31 @@ class UserFactory extends Factory
             'email_verified_at' => null,
         ]);
     }
+
+    public function adminLembaga(?string $lembagaId = null): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'role' => 'admin_lembaga',
+            'lembaga_id' => $lembagaId,
+        ]);
+    }
+
+    public function inactive(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'is_active' => false,
+        ]);
+    }
+
+    public function withMfa(string $secret = 'JBSWY3DPEHPK3PXP', array $recoveryCodes = ['AAAA-BBBB', 'CCCC-DDDD']): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'mfa_enabled_at' => now(),
+            'mfa_secret' => $secret,
+            'recovery_codes_hash' => array_map(
+                static fn (string $code): string => Hash::make($code),
+                $recoveryCodes,
+            ),
+        ]);
+    }
 }

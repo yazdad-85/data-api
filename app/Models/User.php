@@ -40,6 +40,32 @@ class User extends Authenticatable
         return $this->hasMany(AuditLog::class);
     }
 
+    public function isSuperAdmin(): bool
+    {
+        return $this->role === 'super_admin';
+    }
+
+    public function isAdminLembaga(): bool
+    {
+        return $this->role === 'admin_lembaga';
+    }
+
+    public function canAccessLembaga(string $lembagaId): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        return $this->isAdminLembaga()
+            && $this->lembaga_id !== null
+            && hash_equals((string) $this->lembaga_id, $lembagaId);
+    }
+
+    public function hasMfaEnabled(): bool
+    {
+        return $this->mfa_enabled_at !== null && filled($this->mfa_secret);
+    }
+
     /**
      * Get the attributes that should be cast.
      *
