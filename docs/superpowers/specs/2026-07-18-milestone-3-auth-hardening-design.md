@@ -1,6 +1,6 @@
 # Design — Milestone 3: Auth Admin Hardened + Multi-tenant Authorization
 
-Status: **DRAFT — menunggu review pemilik**  
+Status: **DISETUJUI** (implemented on `feature/m3-auth-hardening`)  
 Tanggal: 2026-07-18  
 Basis: [README.md](../../../README.md), [PLAN.md](../../PLAN.md), [SPEC.md](../../SPEC.md), [RULES.md](../../RULES.md), [AUDIT_LENGKAP_2026-07-18.md](../../AUDIT_LENGKAP_2026-07-18.md), [IMPLEMENTATION_TODO.md](../../IMPLEMENTATION_TODO.md)
 

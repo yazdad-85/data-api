@@ -4,7 +4,6 @@ namespace App\Models\Concerns;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
 trait BelongsToLembaga

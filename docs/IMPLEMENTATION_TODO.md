@@ -110,32 +110,34 @@ Test wajib:
 
 ## Milestone 3 - Auth admin dan authorization multi-tenant
 
+Status: **Selesai**
+
 Tujuan: Super Admin dan Admin Lembaga punya batas akses yang benar.
 
-- [ ] Implement login/logout session admin.
-- [ ] Implement throttle login 5/menit/email+IP dan limit tambahan per IP.
-- [ ] Implement MFA/TOTP wajib untuk Super Admin sebelum produksi publik.
-- [ ] Implement middleware user aktif.
-- [ ] Admin Lembaga lembaga nonaktif tidak bisa login.
-- [ ] Implement Gate/Policy role.
-- [ ] Implement tenant scope untuk semua CRUD master.
-- [ ] Invalidate session saat user dinonaktifkan.
-- [ ] Pesan login generik: "Email atau password salah".
+- [x] Implement login/logout session admin.
+- [x] Implement throttle login 5/menit/email+IP dan limit tambahan per IP.
+- [x] Implement MFA/TOTP wajib untuk Super Admin sebelum produksi publik.
+- [x] Implement middleware user aktif.
+- [x] Admin Lembaga lembaga nonaktif tidak bisa login.
+- [x] Implement Gate/Policy role.
+- [x] Implement tenant scope untuk semua CRUD master (scope + policies foundation; CRUD UI di M5/M6).
+- [x] Invalidate session saat user dinonaktifkan (middleware + SessionInvalidator; hook CRUD M5 menyusul).
+- [x] Pesan login generik: "Email atau password salah".
 
 Review wajib:
 
-- [ ] Review semua middleware dan policy.
-- [ ] Review query list/detail agar Admin Lembaga tidak bisa lintas lembaga.
-- [ ] Perbaiki semua temuan review sebelum test.
+- [x] Review semua middleware dan policy.
+- [x] Review query list/detail agar Admin Lembaga tidak bisa lintas lembaga.
+- [x] Perbaiki semua temuan review sebelum test.
 
 Test wajib:
 
-- [ ] Super Admin bisa akses semua lembaga.
-- [ ] Admin Lembaga hanya akses lembaga sendiri.
-- [ ] Admin Lembaga tidak bisa akses record lembaga lain via URL/manual request.
-- [ ] Lembaga nonaktif membuat Admin Lembaga ditolak login.
-- [ ] Login throttle bekerja.
-- [ ] MFA Super Admin aktif dan wajib sebelum produksi publik.
+- [x] Super Admin bisa akses semua lembaga.
+- [x] Admin Lembaga hanya akses lembaga sendiri.
+- [x] Admin Lembaga tidak bisa akses record lembaga lain via URL/manual request.
+- [x] Lembaga nonaktif membuat Admin Lembaga ditolak login.
+- [x] Login throttle bekerja.
+- [x] MFA Super Admin aktif dan wajib sebelum produksi publik.
 
 ## Milestone 4 - UI shell dan dashboard admin
 
