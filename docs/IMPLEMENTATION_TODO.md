@@ -163,7 +163,7 @@ Review wajib:
 Test wajib:
 
 - [x] Smoke test halaman dashboard.
-- [ ] Snapshot/manual review layout desktop dan tablet (belum ada visual snapshot / review browser tablet tercatat; responsive CSS drawer ≤960px ada).
+- [x] Snapshot/manual review layout desktop dan tablet (verifikasi browser lokal 20 Jul 2026; layout grid diperbaiki; responsive drawer ≤960px).
 - [x] Navigasi sidebar sesuai role.
 
 ## Milestone 5 - CRUD Super Admin
