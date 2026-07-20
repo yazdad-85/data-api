@@ -18,6 +18,12 @@
         </header>
 
         @if ($stats['role'] === 'super_admin')
+            @if ($stats['lembaga_aktif'] === 0 && $stats['lembaga_nonaktif'] === 0)
+                <x-ui.empty-state
+                    title="Belum ada lembaga"
+                    description="Dashboard siap. Menu Lembaga, Admin lembaga, dan API client akan aktif di Milestone 5."
+                />
+            @endif
             <div class="dashboard-metrics" role="list">
                 <div class="dashboard-metric" role="listitem">
                     <span class="dashboard-metric__label">Lembaga aktif</span>
