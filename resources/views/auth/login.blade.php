@@ -7,7 +7,7 @@
     <p>Masuk ke panel administrasi.</p>
 
     @if ($errors->any())
-        <p class="error">{{ $errors->first() }}</p>
+        <p class="guest-error">{{ $errors->first() }}</p>
     @endif
 
     <form method="POST" action="{{ route('login') }}">
