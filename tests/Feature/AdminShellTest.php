@@ -25,6 +25,7 @@ class AdminShellTest extends TestCase
         $response->assertOk();
         $response->assertSee('Pusat Data');
         $response->assertSee('Lembaga');
+        $response->assertDontSee('Admin lembaga');
         $response->assertDontSee('Tahun ajaran');
         $response->assertSee('Lembaga aktif');
         $response->assertSee('API client aktif');

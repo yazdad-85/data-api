@@ -21,7 +21,7 @@
             @if ($stats['lembaga_aktif'] === 0 && $stats['lembaga_nonaktif'] === 0)
                 <x-ui.empty-state
                     title="Belum ada lembaga"
-                    description="Dashboard siap. Menu Lembaga, Admin lembaga, dan API client akan aktif di Milestone 5."
+                    description="Dashboard siap. Kelola lembaga dari menu Lembaga. API client menyusul di Milestone 5b."
                 />
             @endif
             <div class="dashboard-metrics" role="list">

@@ -6,14 +6,17 @@ use App\Console\Commands\InstallSuperAdmin;
 use App\Models\Guru;
 use App\Models\Karyawan;
 use App\Models\Kelas;
+use App\Models\Lembaga;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Policies\GuruPolicy;
 use App\Policies\KaryawanPolicy;
 use App\Policies\KelasPolicy;
+use App\Policies\LembagaPolicy;
 use App\Policies\SiswaPolicy;
 use App\Policies\TahunAjaranPolicy;
+use App\Policies\UserPolicy;
 use App\Support\Navigation\AdminMenu;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -58,6 +61,8 @@ class AppServiceProvider extends ServiceProvider
         Gate::policy(Kelas::class, KelasPolicy::class);
         Gate::policy(TahunAjaran::class, TahunAjaranPolicy::class);
         Gate::policy(Karyawan::class, KaryawanPolicy::class);
+        Gate::policy(Lembaga::class, LembagaPolicy::class);
+        Gate::policy(User::class, UserPolicy::class);
 
         Gate::define('access-admin', fn (User $user) => $user->isSuperAdmin() || $user->isAdminLembaga());
         Gate::define('manage-all-lembaga', fn (User $user) => $user->isSuperAdmin());
