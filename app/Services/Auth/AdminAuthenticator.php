@@ -11,6 +11,8 @@ final class AdminAuthenticator
 {
     public const FAILURE_MESSAGE = 'Email atau password salah';
 
+    private static ?string $dummyPasswordHash = null;
+
     public function __construct(private readonly AuditLogger $auditLogger)
     {
     }
@@ -23,7 +25,12 @@ final class AdminAuthenticator
         $email = strtolower(trim($email));
         $user = User::query()->where('email', $email)->first();
 
-        if ($user === null || ! Hash::check($password, $user->password)) {
+        $passwordValid = Hash::check(
+            $password,
+            $user?->password ?? self::dummyPasswordHash(),
+        );
+
+        if ($user === null || ! $passwordValid) {
             $this->auditLogger->record('auth.login', 'failed', [
                 'reason' => 'invalid_credentials',
                 'email' => $email,
@@ -54,5 +61,10 @@ final class AdminAuthenticator
         }
 
         return ['ok' => true, 'user' => $user];
+    }
+
+    private static function dummyPasswordHash(): string
+    {
+        return self::$dummyPasswordHash ??= Hash::make(str_repeat('0', 32));
     }
 }

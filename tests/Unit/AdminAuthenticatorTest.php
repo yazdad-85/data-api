@@ -36,6 +36,22 @@ class AdminAuthenticatorTest extends TestCase
         $this->assertSame('invalid_credentials', $audit->metadata['reason']);
     }
 
+    public function test_unknown_email_returns_generic_failure_and_audits_invalid_credentials(): void
+    {
+        $authenticator = app(AdminAuthenticator::class);
+        $request = Request::create('/login', 'POST');
+
+        $result = $authenticator->attempt('missing@example.test', 'StrongPassword123', $request);
+
+        $this->assertFalse($result['ok']);
+        $this->assertSame(AdminAuthenticator::FAILURE_MESSAGE, $result['message']);
+        $this->assertSame('invalid_credentials', $result['reason']);
+
+        $audit = AuditLog::query()->where('event', 'auth.login')->firstOrFail();
+        $this->assertSame('failed', $audit->result);
+        $this->assertSame('invalid_credentials', $audit->metadata['reason']);
+    }
+
     public function test_inactive_user_returns_generic_failure_and_audits_user_inactive(): void
     {
         $lembaga = Lembaga::factory()->create();

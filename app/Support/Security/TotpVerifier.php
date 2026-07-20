@@ -3,6 +3,7 @@
 namespace App\Support\Security;
 
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 
 class TotpVerifier
@@ -45,23 +46,40 @@ class TotpVerifier
 
     private function consumeRecoveryCode(User $user, string $code): bool
     {
-        $hashes = $user->recovery_codes_hash ?? [];
-        if (! is_array($hashes) || $hashes === []) {
-            return false;
-        }
+        return (bool) DB::transaction(function () use ($user, $code): bool {
+            $locked = User::query()
+                ->whereKey($user->getKey())
+                ->lockForUpdate()
+                ->first();
 
-        foreach ($hashes as $index => $hash) {
-            if (is_string($hash) && Hash::check($code, $hash)) {
-                unset($hashes[$index]);
-                $user->forceFill([
-                    'recovery_codes_hash' => array_values($hashes),
-                ])->save();
-
-                return true;
+            if ($locked === null) {
+                return false;
             }
-        }
 
-        return false;
+            $hashes = $locked->recovery_codes_hash ?? [];
+            if (! is_array($hashes) || $hashes === []) {
+                return false;
+            }
+
+            foreach ($hashes as $index => $hash) {
+                if (is_string($hash) && Hash::check($code, $hash)) {
+                    unset($hashes[$index]);
+                    $remaining = array_values($hashes);
+
+                    $locked->forceFill([
+                        'recovery_codes_hash' => $remaining,
+                    ])->save();
+
+                    $user->forceFill([
+                        'recovery_codes_hash' => $remaining,
+                    ]);
+
+                    return true;
+                }
+            }
+
+            return false;
+        });
     }
 
     public function currentCode(string $base32Secret): string
