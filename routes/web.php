@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\ApiClientController;
 use App\Http\Controllers\Admin\ComingSoonController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GuruController;
+use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
 use App\Http\Controllers\Admin\LembagaController;
@@ -31,7 +32,7 @@ Route::post('/logout', LogoutController::class)
 Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'show'])->name('admin.dashboard');
     Route::get('/coming-soon/{feature}', [ComingSoonController::class, 'show'])
-        ->where('feature', 'kelas|siswa|karyawan')
+        ->where('feature', 'kelas|siswa')
         ->name('admin.coming-soon');
 
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
@@ -53,6 +54,16 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::post('/guru/{guru}/activate', [GuruController::class, 'activate'])->name('admin.guru.activate');
     Route::post('/guru/{guru}/deactivate', [GuruController::class, 'deactivate'])->name('admin.guru.deactivate');
     Route::delete('/guru/{guru}', [GuruController::class, 'destroy'])->name('admin.guru.destroy');
+
+    Route::get('/karyawan', [KaryawanController::class, 'index'])->name('admin.karyawan.index');
+    Route::get('/karyawan/create', [KaryawanController::class, 'create'])->name('admin.karyawan.create');
+    Route::post('/karyawan', [KaryawanController::class, 'store'])->name('admin.karyawan.store');
+    Route::get('/karyawan/{karyawan}', [KaryawanController::class, 'show'])->name('admin.karyawan.show');
+    Route::get('/karyawan/{karyawan}/edit', [KaryawanController::class, 'edit'])->name('admin.karyawan.edit');
+    Route::put('/karyawan/{karyawan}', [KaryawanController::class, 'update'])->name('admin.karyawan.update');
+    Route::post('/karyawan/{karyawan}/activate', [KaryawanController::class, 'activate'])->name('admin.karyawan.activate');
+    Route::post('/karyawan/{karyawan}/deactivate', [KaryawanController::class, 'deactivate'])->name('admin.karyawan.deactivate');
+    Route::delete('/karyawan/{karyawan}', [KaryawanController::class, 'destroy'])->name('admin.karyawan.destroy');
 
     Route::get('/lembaga', [LembagaController::class, 'index'])->name('admin.lembaga.index');
     Route::get('/lembaga/create', [LembagaController::class, 'create'])->name('admin.lembaga.create');

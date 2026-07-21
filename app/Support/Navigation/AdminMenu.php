@@ -26,7 +26,7 @@ final class AdminMenu
                 ['label' => 'Guru', 'route' => 'admin.guru.index', 'available' => true],
                 ['label' => 'Kelas', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'kelas'], 'available' => false],
                 ['label' => 'Siswa', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'siswa'], 'available' => false],
-                ['label' => 'Karyawan', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'karyawan'], 'available' => false],
+                ['label' => 'Karyawan', 'route' => 'admin.karyawan.index', 'available' => true],
                 ['label' => 'API client', 'route' => 'admin.api-clients.index', 'available' => true],
             ]);
         }

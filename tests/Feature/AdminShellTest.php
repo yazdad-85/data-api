@@ -56,6 +56,19 @@ class AdminShellTest extends TestCase
         $this->assertTrue($apiClientItem['available']);
         $this->assertSame('admin.api-clients.index', $apiClientItem['route']);
 
+        foreach (['Tahun ajaran' => 'admin.tahun-ajaran.index', 'Guru' => 'admin.guru.index', 'Karyawan' => 'admin.karyawan.index'] as $label => $expectedRoute) {
+            $item = $menu->firstWhere('label', $label);
+            $this->assertNotNull($item, "Menu item {$label} not found");
+            $this->assertTrue($item['available'], "Menu item {$label} should be available");
+            $this->assertSame($expectedRoute, $item['route']);
+        }
+
+        foreach (['Kelas', 'Siswa'] as $label) {
+            $item = $menu->firstWhere('label', $label);
+            $this->assertNotNull($item, "Menu item {$label} not found");
+            $this->assertFalse($item['available'], "Menu item {$label} should still be coming soon");
+        }
+
         $html = $response->getContent();
         $tahunPos = strpos($html, 'Tahun ajaran');
         $guruPos = strpos($html, 'Guru');
