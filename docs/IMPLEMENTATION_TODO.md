@@ -216,38 +216,44 @@ Test wajib:
 
 ## Milestone 6 - CRUD master Admin Lembaga
 
+Status: **M6a selesai (Tahun ajaran/Guru/Karyawan)**; **M6b (Kelas/Siswa) belum**
+
 Tujuan: master data fase 1 lengkap dan scoped.
 
-- [ ] CRUD Tahun Ajaran.
-- [ ] Aktifkan satu tahun ajaran per lembaga dalam transaksi.
-- [ ] CRUD Guru.
-- [ ] CRUD Kelas.
-- [ ] Validasi kelas wajib punya tahun ajaran milik lembaga yang sama.
-- [ ] Validasi wali kelas guru milik lembaga yang sama.
-- [ ] Blok soft delete kelas yang masih dipakai siswa.
-- [ ] CRUD Siswa.
-- [ ] Siswa boleh tanpa kelas, tampil badge "Belum ada kelas".
-- [ ] Validasi siswa `kelas_id` dan `tahun_ajaran_id` cocok.
-- [ ] CRUD Karyawan.
-- [ ] Search/pagination list siswa dan guru.
-- [ ] Soft delete dengan modal konfirmasi.
-- [ ] Audit log akses/view PII admin sesuai RULES.
+Keputusan arah: Milestone 6 dipecah — spek [2026-07-21-milestone-6a-master-ta-guru-karyawan-design.md](./superpowers/specs/2026-07-21-milestone-6a-master-ta-guru-karyawan-design.md) mencakup Tahun ajaran + Guru + Karyawan (Admin Lembaga saja; Super Admin 403 di route ini) dan rename kolom guru `nip` → `niy`. Kelas + Siswa dikerjakan di **M6b** (spek terpisah menyusul).
 
-Review wajib:
+- [x] CRUD Tahun Ajaran.
+- [x] Aktifkan satu tahun ajaran per lembaga dalam transaksi.
+- [x] CRUD Guru.
+- [ ] CRUD Kelas. *(M6b)*
+- [ ] Validasi kelas wajib punya tahun ajaran milik lembaga yang sama. *(M6b)*
+- [ ] Validasi wali kelas guru milik lembaga yang sama. *(M6b)*
+- [ ] Blok soft delete kelas yang masih dipakai siswa. *(M6b)*
+- [ ] CRUD Siswa. *(M6b)*
+- [ ] Siswa boleh tanpa kelas, tampil badge "Belum ada kelas". *(M6b)*
+- [ ] Validasi siswa `kelas_id` dan `tahun_ajaran_id` cocok. *(M6b)*
+- [x] CRUD Karyawan.
+- [ ] Search/pagination list siswa dan guru. *(guru selesai; siswa menyusul M6b)*
+- [x] Soft delete dengan modal konfirmasi. *(tahun ajaran, guru, karyawan)*
+- [x] Audit log akses/view PII admin sesuai RULES. *(`master.view` pada show guru/karyawan, tanpa dump PII)*
 
-- [ ] Review semua query CRUD untuk tenant scope.
-- [ ] Review validasi relasi lembaga.
-- [ ] Review UX form dan pesan validasi bahasa Indonesia.
-- [ ] Perbaiki semua temuan review sebelum test.
+Review wajib (M6a):
+
+- [x] Review semua query CRUD tahun ajaran/guru/karyawan untuk tenant scope.
+- [x] Review validasi relasi lembaga (guru/karyawan scoped `lembaga_id` dari auth, bukan input klien).
+- [x] Review UX form dan pesan validasi bahasa Indonesia.
+- [x] Perbaiki semua temuan review sebelum test.
+
+Review wajib (M6b, belum): Kelas/Siswa dan relasinya.
 
 Test wajib:
 
-- [ ] Admin Lembaga A tidak bisa CRUD data lembaga B.
-- [ ] Kelas lintas lembaga ditolak.
-- [ ] Wali kelas lintas lembaga ditolak.
-- [ ] Delete kelas berisi siswa diblok.
-- [ ] Satu tahun ajaran aktif per lembaga.
-- [ ] Partial unique NIS/NISN berjalan.
+- [x] Admin Lembaga A tidak bisa CRUD data lembaga B. *(tahun ajaran/guru/karyawan)*
+- [ ] Kelas lintas lembaga ditolak. *(M6b)*
+- [ ] Wali kelas lintas lembaga ditolak. *(M6b)*
+- [ ] Delete kelas berisi siswa diblok. *(M6b)*
+- [x] Satu tahun ajaran aktif per lembaga.
+- [ ] Partial unique NIS/NISN berjalan. *(M6b)*
 
 ## Milestone 7 - API client authentication
 
