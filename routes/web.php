@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ApiClientController;
 use App\Http\Controllers\Admin\ComingSoonController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LembagaAdminController;
@@ -28,8 +29,10 @@ Route::post('/logout', LogoutController::class)
 Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'show'])->name('admin.dashboard');
     Route::get('/coming-soon/{feature}', [ComingSoonController::class, 'show'])
-        ->where('feature', 'api-client|tahun-ajaran|guru|kelas|siswa|karyawan|api-client-ro')
+        ->where('feature', 'tahun-ajaran|guru|kelas|siswa|karyawan')
         ->name('admin.coming-soon');
+
+    Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
 
     Route::get('/lembaga', [LembagaController::class, 'index'])->name('admin.lembaga.index');
     Route::get('/lembaga/create', [LembagaController::class, 'create'])->name('admin.lembaga.create');

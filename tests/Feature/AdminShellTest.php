@@ -53,7 +53,8 @@ class AdminShellTest extends TestCase
         $menu = app(AdminMenu::class)->forUser($user);
         $apiClientItem = $menu->firstWhere('label', 'API client');
         $this->assertNotNull($apiClientItem);
-        $this->assertFalse($apiClientItem['available']);
+        $this->assertTrue($apiClientItem['available']);
+        $this->assertSame('admin.api-clients.index', $apiClientItem['route']);
 
         $html = $response->getContent();
         $tahunPos = strpos($html, 'Tahun ajaran');
