@@ -1,6 +1,6 @@
 # Design — Milestone 6a: Master Tahun Ajaran, Guru & Karyawan
 
-Status: **DRAFT — menunggu review pemilik**  
+Status: **Approved**  
 Tanggal: 2026-07-21  
 Basis: [SPEC.md](../../SPEC.md) §2.3–2.4, §3.4, §3.6–3.7, §5.2; [RULES.md](../../RULES.md) A5–A6, A12–A13, B4; [IMPLEMENTATION_TODO.md](../../IMPLEMENTATION_TODO.md) Milestone 6; auth M3; shell M4; M5 selesai
 
