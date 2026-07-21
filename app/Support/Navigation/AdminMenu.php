@@ -22,7 +22,7 @@ final class AdminMenu
         if ($user->isAdminLembaga()) {
             return collect([
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'available' => true],
-                ['label' => 'Tahun ajaran', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'tahun-ajaran'], 'available' => false],
+                ['label' => 'Tahun ajaran', 'route' => 'admin.tahun-ajaran.index', 'available' => true],
                 ['label' => 'Guru', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'guru'], 'available' => false],
                 ['label' => 'Kelas', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'kelas'], 'available' => false],
                 ['label' => 'Siswa', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'siswa'], 'available' => false],
