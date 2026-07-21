@@ -116,6 +116,37 @@ class MasterTahunAjaranTest extends TestCase
         $this->assertFalse($taB->refresh()->is_aktif);
     }
 
+    public function test_creating_tahun_ajaran_with_soft_deleted_nama_is_rejected_as_validation_error(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create([
+            'nama' => '2026/2027',
+            'tanggal_mulai' => '2026-07-01',
+            'tanggal_selesai' => '2027-06-30',
+        ]);
+
+        $tahunAjaran->delete();
+
+        $response = $this->actingAs($admin)->post(route('admin.tahun-ajaran.store'), [
+            'tahun_mulai' => 2026,
+            'tanggal_mulai' => '2026-07-01',
+            'tanggal_selesai' => '2027-06-30',
+        ]);
+
+        $response->assertSessionHasErrors('tahun_mulai');
+
+        $this->assertSame(
+            0,
+            TahunAjaran::query()->where('lembaga_id', $lembaga->id)->where('nama', '2026/2027')->count()
+        );
+        $this->assertSame(
+            1,
+            TahunAjaran::withTrashed()->where('lembaga_id', $lembaga->id)->where('nama', '2026/2027')->count()
+        );
+    }
+
     public function test_duplicate_nama_in_same_lembaga_is_rejected_as_validation_error(): void
     {
         // This admin web app renders validation failures as a redirect with
