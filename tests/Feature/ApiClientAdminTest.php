@@ -280,6 +280,65 @@ class ApiClientAdminTest extends TestCase
         ])->assertForbidden();
     }
 
+    public function test_generated_key_flash_does_not_leak_to_other_client_when_key_once_skipped(): void
+    {
+        $sa = $this->superAdmin();
+        $lembagaA = Lembaga::factory()->create();
+        $lembagaB = Lembaga::factory()->create();
+
+        $this->actingAs($sa)->post(route('admin.lembaga.api-clients.store', $lembagaA), [
+            'nama' => 'Client A',
+            'scopes' => ['guru:read'],
+            'field_profile' => 'minimal',
+        ])->assertRedirect();
+
+        $clientA = ApiClient::query()->where('nama', 'Client A')->firstOrFail();
+
+        $this->actingAs($sa)->post(route('admin.lembaga.api-clients.store', $lembagaB), [
+            'nama' => 'Client B',
+            'scopes' => ['guru:read'],
+            'field_profile' => 'minimal',
+        ])->assertRedirect();
+
+        $keyOnceForA = $this->actingAs($sa)->get(route('admin.lembaga.api-clients.key-once', [$lembagaA, $clientA]));
+
+        $keyOnceForA->assertRedirect(route('admin.lembaga.show', $lembagaA));
+        $this->assertStringContainsString(
+            'tidak tersedia',
+            (string) $keyOnceForA->getSession()->get('status')
+        );
+    }
+
+    public function test_admin_lembaga_sees_own_api_clients_including_revoked_status(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $otherLembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $ownClient = ApiClient::factory()->for($lembaga)->create(['nama' => 'Client Sendiri']);
+        $ownRevokedClient = ApiClient::factory()->for($lembaga)->revoked()->create(['nama' => 'Client Dicabut']);
+        $otherClient = ApiClient::factory()->for($otherLembaga)->create(['nama' => 'Client Lembaga Lain']);
+
+        $response = $this->actingAs($admin)->get(route('admin.api-clients.index'));
+
+        $response->assertOk();
+        $response->assertSee('Client Sendiri');
+        $response->assertSee('Client Dicabut');
+        $response->assertSee('Dicabut');
+        $response->assertDontSee('Client Lembaga Lain');
+
+        $this->assertNotNull($ownClient);
+        $this->assertNotNull($otherClient);
+    }
+
+    public function test_super_admin_cannot_access_admin_lembaga_api_clients_index(): void
+    {
+        $sa = $this->superAdmin();
+
+        $this->actingAs($sa)->get(route('admin.api-clients.index'))
+            ->assertForbidden();
+    }
+
     private function extractApiKeyFromHtml(string $html): ?string
     {
         if (preg_match('/id="api-client-key"[^>]*value="([^"]*)"/', $html, $matches) !== 1) {
