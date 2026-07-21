@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Lembaga;
 use App\Models\User;
+use App\Support\Navigation\AdminMenu;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -29,6 +30,10 @@ class AdminShellTest extends TestCase
         $response->assertDontSee('Tahun ajaran');
         $response->assertSee('Lembaga aktif');
         $response->assertSee('API client aktif');
+        $response->assertDontSee('admin-sidebar__badge');
+
+        $menu = app(AdminMenu::class)->forUser($user);
+        $this->assertSame(['Dashboard', 'Lembaga'], $menu->pluck('label')->all());
     }
 
     public function test_admin_lembaga_dashboard_shows_ordered_menu_without_sa_items(): void
@@ -42,6 +47,13 @@ class AdminShellTest extends TestCase
         $response->assertSee('Tahun ajaran');
         $response->assertDontSee('Admin lembaga');
         $response->assertSee('Sekolah Contoh');
+        $response->assertSee('API client');
+        $response->assertSee('admin-sidebar__badge');
+
+        $menu = app(AdminMenu::class)->forUser($user);
+        $apiClientItem = $menu->firstWhere('label', 'API client');
+        $this->assertNotNull($apiClientItem);
+        $this->assertFalse($apiClientItem['available']);
 
         $html = $response->getContent();
         $tahunPos = strpos($html, 'Tahun ajaran');

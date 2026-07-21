@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Console\Commands\InstallSuperAdmin;
+use App\Models\ApiClient;
 use App\Models\Guru;
 use App\Models\Karyawan;
 use App\Models\Kelas;
@@ -10,6 +11,7 @@ use App\Models\Lembaga;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\User;
+use App\Policies\ApiClientPolicy;
 use App\Policies\GuruPolicy;
 use App\Policies\KaryawanPolicy;
 use App\Policies\KelasPolicy;
@@ -56,6 +58,7 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        Gate::policy(ApiClient::class, ApiClientPolicy::class);
         Gate::policy(Guru::class, GuruPolicy::class);
         Gate::policy(Siswa::class, SiswaPolicy::class);
         Gate::policy(Kelas::class, KelasPolicy::class);
