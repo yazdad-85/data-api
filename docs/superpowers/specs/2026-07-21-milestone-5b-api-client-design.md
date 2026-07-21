@@ -1,6 +1,6 @@
 # Design — Milestone 5b: API Client & API Key
 
-Status: **DRAFT — menunggu review pemilik**  
+Status: **Approved**  
 Tanggal: 2026-07-21  
 Basis: [SPEC.md](../../SPEC.md) §2.2, §3.2, §5.1; [RULES.md](../../RULES.md) A8, B4, D2/D11/D13; [IMPLEMENTATION_TODO.md](../../IMPLEMENTATION_TODO.md) Milestone 5; shell M4; auth M3; lembaga/admin M5a
 
