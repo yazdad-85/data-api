@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ApiClientController;
 use App\Http\Controllers\Admin\ComingSoonController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
 use App\Http\Controllers\Admin\LembagaController;
@@ -30,7 +31,7 @@ Route::post('/logout', LogoutController::class)
 Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'show'])->name('admin.dashboard');
     Route::get('/coming-soon/{feature}', [ComingSoonController::class, 'show'])
-        ->where('feature', 'guru|kelas|siswa|karyawan')
+        ->where('feature', 'kelas|siswa|karyawan')
         ->name('admin.coming-soon');
 
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
@@ -42,6 +43,16 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::put('/tahun-ajaran/{tahun_ajaran}', [TahunAjaranController::class, 'update'])->name('admin.tahun-ajaran.update');
     Route::post('/tahun-ajaran/{tahun_ajaran}/activate', [TahunAjaranController::class, 'activate'])->name('admin.tahun-ajaran.activate');
     Route::delete('/tahun-ajaran/{tahun_ajaran}', [TahunAjaranController::class, 'destroy'])->name('admin.tahun-ajaran.destroy');
+
+    Route::get('/guru', [GuruController::class, 'index'])->name('admin.guru.index');
+    Route::get('/guru/create', [GuruController::class, 'create'])->name('admin.guru.create');
+    Route::post('/guru', [GuruController::class, 'store'])->name('admin.guru.store');
+    Route::get('/guru/{guru}', [GuruController::class, 'show'])->name('admin.guru.show');
+    Route::get('/guru/{guru}/edit', [GuruController::class, 'edit'])->name('admin.guru.edit');
+    Route::put('/guru/{guru}', [GuruController::class, 'update'])->name('admin.guru.update');
+    Route::post('/guru/{guru}/activate', [GuruController::class, 'activate'])->name('admin.guru.activate');
+    Route::post('/guru/{guru}/deactivate', [GuruController::class, 'deactivate'])->name('admin.guru.deactivate');
+    Route::delete('/guru/{guru}', [GuruController::class, 'destroy'])->name('admin.guru.destroy');
 
     Route::get('/lembaga', [LembagaController::class, 'index'])->name('admin.lembaga.index');
     Route::get('/lembaga/create', [LembagaController::class, 'create'])->name('admin.lembaga.create');

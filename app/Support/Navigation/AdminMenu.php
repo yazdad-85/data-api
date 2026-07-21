@@ -23,7 +23,7 @@ final class AdminMenu
             return collect([
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'available' => true],
                 ['label' => 'Tahun ajaran', 'route' => 'admin.tahun-ajaran.index', 'available' => true],
-                ['label' => 'Guru', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'guru'], 'available' => false],
+                ['label' => 'Guru', 'route' => 'admin.guru.index', 'available' => true],
                 ['label' => 'Kelas', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'kelas'], 'available' => false],
                 ['label' => 'Siswa', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'siswa'], 'available' => false],
                 ['label' => 'Karyawan', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'karyawan'], 'available' => false],

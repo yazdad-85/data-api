@@ -81,13 +81,13 @@ class AdminShellTest extends TestCase
             ->assertSee('&copy; '.now()->year, false);
     }
 
-    public function test_admin_lembaga_coming_soon_guru_page_shows_segera_hadir(): void
+    public function test_admin_lembaga_coming_soon_kelas_page_shows_segera_hadir(): void
     {
         $lembaga = Lembaga::factory()->create();
         $user = User::factory()->adminLembaga($lembaga->id)->create();
 
         $this->actingAs($user)
-            ->get(route('admin.coming-soon', ['feature' => 'guru']))
+            ->get(route('admin.coming-soon', ['feature' => 'kelas']))
             ->assertOk()
             ->assertSee('Segera hadir');
     }
