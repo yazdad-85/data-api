@@ -116,8 +116,8 @@
                 Menghapus <strong>{{ $tahunAjaran->nama }}</strong> akan berdampak:
             </p>
             <ul>
-                <li>Tahun ajaran tidak lagi muncul pada daftar.</li>
-                <li>Jika masih dipakai oleh kelas, penghapusan akan ditolak.</li>
+                <li>Penghapusan bersifat permanen; nama tahun ajaran bisa dipakai lagi.</li>
+                <li>Jika masih dipakai oleh kelas atau siswa, penghapusan akan ditolak.</li>
             </ul>
 
             <x-slot:actions>

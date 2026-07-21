@@ -116,7 +116,7 @@ class MasterTahunAjaranTest extends TestCase
         $this->assertFalse($taB->refresh()->is_aktif);
     }
 
-    public function test_creating_tahun_ajaran_with_soft_deleted_nama_is_rejected_as_validation_error(): void
+    public function test_creating_tahun_ajaran_with_soft_deleted_nama_restores_the_record(): void
     {
         $lembaga = Lembaga::factory()->create();
         $admin = User::factory()->adminLembaga($lembaga->id)->create();
@@ -125,22 +125,29 @@ class MasterTahunAjaranTest extends TestCase
             'nama' => '2026/2027',
             'tanggal_mulai' => '2026-07-01',
             'tanggal_selesai' => '2027-06-30',
+            'is_aktif' => true,
         ]);
 
         $tahunAjaran->delete();
 
         $response = $this->actingAs($admin)->post(route('admin.tahun-ajaran.store'), [
             'tahun_mulai' => 2026,
-            'tanggal_mulai' => '2026-07-01',
-            'tanggal_selesai' => '2027-06-30',
+            'tanggal_mulai' => '2026-08-01',
+            'tanggal_selesai' => '2027-07-31',
         ]);
 
-        $response->assertSessionHasErrors('tahun_mulai');
+        $response->assertRedirect(route('admin.tahun-ajaran.index'));
+        $response->assertSessionHas('status');
 
-        $this->assertSame(
-            0,
-            TahunAjaran::query()->where('lembaga_id', $lembaga->id)->where('nama', '2026/2027')->count()
-        );
+        $restored = TahunAjaran::query()
+            ->where('lembaga_id', $lembaga->id)
+            ->where('nama', '2026/2027')
+            ->sole();
+
+        $this->assertSame($tahunAjaran->id, $restored->id);
+        $this->assertFalse($restored->is_aktif);
+        $this->assertSame('2026-08-01', $restored->tanggal_mulai->toDateString());
+        $this->assertSame('2027-07-31', $restored->tanggal_selesai->toDateString());
         $this->assertSame(
             1,
             TahunAjaran::withTrashed()->where('lembaga_id', $lembaga->id)->where('nama', '2026/2027')->count()
@@ -218,22 +225,24 @@ class MasterTahunAjaranTest extends TestCase
         $this->assertSame('2027-06-15', $tahunAjaran->tanggal_selesai->format('Y-m-d'));
     }
 
-    public function test_destroy_soft_deletes_tahun_ajaran_without_kelas(): void
+    public function test_destroy_force_deletes_tahun_ajaran_without_dependents(): void
     {
         $lembaga = Lembaga::factory()->create();
         $admin = User::factory()->adminLembaga($lembaga->id)->create();
         $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $tahunAjaranId = $tahunAjaran->id;
 
         $response = $this->actingAs($admin)->delete(route('admin.tahun-ajaran.destroy', $tahunAjaran));
 
         $response->assertRedirect(route('admin.tahun-ajaran.index'));
+        $response->assertSessionHas('status');
 
-        $this->assertSoftDeleted('tahun_ajaran', ['id' => $tahunAjaran->id]);
+        $this->assertDatabaseMissing('tahun_ajaran', ['id' => $tahunAjaranId]);
 
         $log = AuditLog::query()->where('event', 'tahun_ajaran.delete')->first();
         $this->assertNotNull($log);
         $this->assertSame('success', $log->result);
-        $this->assertSame($tahunAjaran->id, $log->subject_id);
+        $this->assertSame($tahunAjaranId, $log->subject_id);
     }
 
     public function test_destroy_is_blocked_when_kelas_still_references_tahun_ajaran(): void
@@ -253,6 +262,27 @@ class MasterTahunAjaranTest extends TestCase
         $response->assertRedirect(route('admin.tahun-ajaran.index'));
         $response->assertSessionHasErrors('tahun_ajaran');
 
-        $this->assertNotSoftDeleted('tahun_ajaran', ['id' => $tahunAjaran->id]);
+        $this->assertDatabaseHas('tahun_ajaran', ['id' => $tahunAjaran->id]);
+    }
+
+    public function test_create_after_force_delete_reuses_nama(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create(['nama' => '2026/2027']);
+
+        $this->actingAs($admin)->delete(route('admin.tahun-ajaran.destroy', $tahunAjaran))
+            ->assertRedirect(route('admin.tahun-ajaran.index'));
+
+        $this->actingAs($admin)->post(route('admin.tahun-ajaran.store'), [
+            'tahun_mulai' => 2026,
+            'tanggal_mulai' => '2026-07-01',
+            'tanggal_selesai' => '2027-06-30',
+        ])->assertRedirect(route('admin.tahun-ajaran.index'));
+
+        $this->assertSame(
+            1,
+            TahunAjaran::query()->where('lembaga_id', $lembaga->id)->where('nama', '2026/2027')->count()
+        );
     }
 }

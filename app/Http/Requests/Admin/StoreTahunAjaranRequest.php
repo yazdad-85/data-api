@@ -39,16 +39,13 @@ class StoreTahunAjaranRequest extends FormRequest
 
             $nama = TahunAjaranNamer::fromTahunMulai((int) $tahunMulai);
 
-            $exists = TahunAjaran::withTrashed()
+            $exists = TahunAjaran::query()
                 ->where('lembaga_id', $this->user()?->lembaga_id)
                 ->where('nama', $nama)
                 ->exists();
 
             if ($exists) {
-                $validator->errors()->add(
-                    'tahun_mulai',
-                    "Tahun ajaran {$nama} sudah ada atau pernah dihapus. Pilih tahun lain atau hubungi administrator untuk memulihkan."
-                );
+                $validator->errors()->add('tahun_mulai', "Tahun ajaran {$nama} sudah ada.");
             }
         });
     }

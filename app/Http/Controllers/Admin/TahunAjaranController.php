@@ -48,21 +48,40 @@ class TahunAjaranController extends Controller
         $tahunMulai = (int) $request->validated('tahun_mulai');
         $nama = TahunAjaranNamer::fromTahunMulai($tahunMulai);
 
-        $tahunAjaran = TahunAjaran::query()->create([
-            'lembaga_id' => $user->lembaga_id,
-            'nama' => $nama,
-            'tanggal_mulai' => $request->validated('tanggal_mulai'),
-            'tanggal_selesai' => $request->validated('tanggal_selesai'),
-            'is_aktif' => false,
-        ]);
+        $trashed = TahunAjaran::onlyTrashed()
+            ->where('lembaga_id', $user->lembaga_id)
+            ->where('nama', $nama)
+            ->first();
 
-        $this->auditLogger->record('tahun_ajaran.create', 'success', [
+        if ($trashed !== null) {
+            $trashed->restore();
+            $trashed->update([
+                'tanggal_mulai' => $request->validated('tanggal_mulai'),
+                'tanggal_selesai' => $request->validated('tanggal_selesai'),
+                'is_aktif' => false,
+            ]);
+            $tahunAjaran = $trashed->fresh();
+            $auditAction = 'tahun_ajaran.restore';
+            $status = "Tahun ajaran {$tahunAjaran->nama} dipulihkan.";
+        } else {
+            $tahunAjaran = TahunAjaran::query()->create([
+                'lembaga_id' => $user->lembaga_id,
+                'nama' => $nama,
+                'tanggal_mulai' => $request->validated('tanggal_mulai'),
+                'tanggal_selesai' => $request->validated('tanggal_selesai'),
+                'is_aktif' => false,
+            ]);
+            $auditAction = 'tahun_ajaran.create';
+            $status = "Tahun ajaran {$tahunAjaran->nama} berhasil dibuat.";
+        }
+
+        $this->auditLogger->record($auditAction, 'success', [
             'nama' => $tahunAjaran->nama,
         ], subject: $tahunAjaran, lembagaId: $user->lembaga_id, request: $request);
 
         return redirect()
             ->route('admin.tahun-ajaran.index')
-            ->with('status', "Tahun ajaran {$tahunAjaran->nama} berhasil dibuat.");
+            ->with('status', $status);
     }
 
     public function edit(TahunAjaran $tahunAjaran): View
@@ -117,22 +136,23 @@ class TahunAjaranController extends Controller
         $user = $this->adminLembaga();
         abort_unless(hash_equals((string) $tahunAjaran->lembaga_id, (string) $user->lembaga_id), 404);
 
-        if ($tahunAjaran->kelas()->exists()) {
+        if ($tahunAjaran->kelas()->exists() || $tahunAjaran->siswa()->exists()) {
             return redirect()
                 ->route('admin.tahun-ajaran.index')
                 ->withErrors([
-                    'tahun_ajaran' => "Tahun ajaran {$tahunAjaran->nama} tidak dapat dihapus karena masih dipakai kelas.",
+                    'tahun_ajaran' => "Tahun ajaran {$tahunAjaran->nama} tidak dapat dihapus karena masih dipakai kelas atau siswa.",
                 ]);
         }
 
-        $tahunAjaran->delete();
+        $nama = $tahunAjaran->nama;
+        $tahunAjaran->forceDelete();
 
         $this->auditLogger->record('tahun_ajaran.delete', 'success', [
-            'nama' => $tahunAjaran->nama,
+            'nama' => $nama,
         ], subject: $tahunAjaran, lembagaId: $user->lembaga_id, request: $request);
 
         return redirect()
             ->route('admin.tahun-ajaran.index')
-            ->with('status', "Tahun ajaran {$tahunAjaran->nama} dihapus.");
+            ->with('status', "Tahun ajaran {$nama} dihapus permanen.");
     }
 }

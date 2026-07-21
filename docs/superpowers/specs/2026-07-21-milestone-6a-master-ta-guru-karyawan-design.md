@@ -86,7 +86,7 @@ Views: `admin/tahun-ajaran/*`, `admin/guru/*`, `admin/karyawan/*` memakai `x-ui.
 
 **Activate:** modal Bahasa Indonesia menjelaskan TA aktif sebelumnya akan dinonaktifkan. Transaksi DB: `UPDATE ... SET is_aktif=false WHERE lembaga_id=? AND is_aktif=true`; set target `is_aktif=true`. Audit `tahun_ajaran.activate`.
 
-**Destroy (soft):** modal; jika `kelas()->exists()` → **blok** dengan pesan jelas (siap untuk M6b; di M6a biasanya 0 kelas).
+**Destroy:** **hard delete** (`forceDelete`) jika belum dipakai kelas/siswa — nama bisa dipakai lagi. Jika `kelas()` atau `siswa()` masih ada → **blok**. Soft-deleted lama (jika ada) tetap bisa dipulihkan lewat create ulang nama yang sama (restore-on-create). Guru/Karyawan tetap soft delete.
 
 **List:** badge Aktif/Nonaktif; aksi Ubah, Aktifkan (jika nonaktif), Hapus.
 
