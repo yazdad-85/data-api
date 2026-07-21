@@ -10,7 +10,10 @@
     <div class="page-header">
         <div>
             <h1 class="page-header__title font-display">Lembaga</h1>
-            <p class="page-header__description">Kelola lembaga yang terdaftar di Pusat Data.</p>
+            <p class="page-header__description">
+                Kelola lembaga yang terdaftar di Pusat Data.
+                Admin lembaga dikelola dari halaman <strong>Detail</strong> tiap lembaga.
+            </p>
         </div>
         <div class="page-header__actions">
             <x-ui.button href="{{ route('admin.lembaga.create') }}">Tambah lembaga</x-ui.button>
@@ -69,9 +72,21 @@
                         @endif
                     </td>
                     <td>
-                        <a href="{{ route('admin.lembaga.show', $lembaga) }}">Detail</a>
-                        &middot;
-                        <a href="{{ route('admin.lembaga.edit', $lembaga) }}">Edit</a>
+                        <div class="table-actions">
+                            <x-ui.button
+                                href="{{ route('admin.lembaga.show', $lembaga) }}"
+                                class="btn-sm"
+                            >
+                                Detail
+                            </x-ui.button>
+                            <x-ui.button
+                                href="{{ route('admin.lembaga.edit', $lembaga) }}"
+                                variant="secondary"
+                                class="btn-sm"
+                            >
+                                Ubah
+                            </x-ui.button>
+                        </div>
                     </td>
                 </tr>
             @endforeach
