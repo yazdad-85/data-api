@@ -241,7 +241,12 @@
                                     <button type="button" class="btn btn-secondary btn-sm" data-modal-open="edit-api-client-{{ $apiClient->id }}">
                                         Ubah
                                     </button>
-                                    <span class="section__note">Rotate &amp; cabut menyusul.</span>
+                                    <button type="button" class="btn btn-secondary btn-sm" data-modal-open="rotate-api-client-{{ $apiClient->id }}">
+                                        Rotate key
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm" data-modal-open="revoke-api-client-{{ $apiClient->id }}">
+                                        Cabut
+                                    </button>
                                 @else
                                     <span class="section__note">Client ini sudah dicabut.</span>
                                 @endif
@@ -369,6 +374,48 @@
                         <button type="button" class="btn btn-secondary" data-modal-close>Batal</button>
                     </div>
                 </form>
+            </x-ui.modal>
+
+            <x-ui.modal id="rotate-api-client-{{ $apiClient->id }}" title="Rotate API key?">
+                <p>
+                    Rotate key untuk <strong>{{ $apiClient->nama }}</strong> akan berdampak:
+                </p>
+                <ul>
+                    <li>Key lama (<code>{{ $apiClient->api_key_prefix }}</code>) langsung tidak berlaku dan tidak dapat digunakan lagi.</li>
+                    <li>Integrator harus segera memasang key baru yang ditampilkan sekali setelah rotate.</li>
+                    <li>ID client dan konfigurasi scope/profil data tidak berubah.</li>
+                </ul>
+
+                <x-slot:actions>
+                    <form method="dialog">
+                        <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.lembaga.api-clients.rotate', [$lembaga, $apiClient]) }}">
+                        @csrf
+                        <x-ui.button variant="danger" type="submit">Rotate key</x-ui.button>
+                    </form>
+                </x-slot:actions>
+            </x-ui.modal>
+
+            <x-ui.modal id="revoke-api-client-{{ $apiClient->id }}" title="Cabut API client?">
+                <p>
+                    Mencabut <strong>{{ $apiClient->nama }}</strong> akan berdampak:
+                </p>
+                <ul>
+                    <li>Client tidak dapat lagi melakukan autentikasi ke API (mulai Milestone 7).</li>
+                    <li>Pencabutan bersifat final; tidak ada tombol untuk mengaktifkan kembali key ini.</li>
+                    <li>Jika integrator masih memerlukan akses, buat API client baru.</li>
+                </ul>
+
+                <x-slot:actions>
+                    <form method="dialog">
+                        <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.lembaga.api-clients.revoke', [$lembaga, $apiClient]) }}">
+                        @csrf
+                        <x-ui.button variant="danger" type="submit">Cabut API client</x-ui.button>
+                    </form>
+                </x-slot:actions>
             </x-ui.modal>
         @endif
     @endforeach

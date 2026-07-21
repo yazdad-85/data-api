@@ -49,5 +49,7 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
 
     Route::post('/lembaga/{lembaga}/api-clients', [LembagaApiClientController::class, 'store'])->name('admin.lembaga.api-clients.store');
     Route::put('/lembaga/{lembaga}/api-clients/{apiClient}', [LembagaApiClientController::class, 'update'])->name('admin.lembaga.api-clients.update');
+    Route::post('/lembaga/{lembaga}/api-clients/{apiClient}/rotate', [LembagaApiClientController::class, 'rotate'])->name('admin.lembaga.api-clients.rotate');
+    Route::post('/lembaga/{lembaga}/api-clients/{apiClient}/revoke', [LembagaApiClientController::class, 'revoke'])->name('admin.lembaga.api-clients.revoke');
     Route::get('/lembaga/{lembaga}/api-clients/{apiClient}/key-once', [LembagaApiClientController::class, 'keyOnce'])->name('admin.lembaga.api-clients.key-once');
 });
