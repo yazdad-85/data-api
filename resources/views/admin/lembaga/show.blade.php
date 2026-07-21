@@ -174,6 +174,205 @@
         </div>
     </section>
 
+    @php
+        $apiScopeLabels = [
+            'tahun_ajaran:read' => 'Tahun ajaran (baca)',
+            'guru:read' => 'Guru (baca)',
+            'kelas:read' => 'Kelas (baca)',
+            'siswa:read' => 'Siswa (baca)',
+            'karyawan:read' => 'Karyawan (baca)',
+        ];
+        $apiFieldProfileLabels = [
+            'minimal' => 'Minimal',
+            'academic' => 'Akademik',
+            'contact' => 'Kontak',
+        ];
+    @endphp
+
+    <section class="section">
+        <div class="section__header">
+            <div>
+                <h2 class="section__title font-display">API client</h2>
+                <p class="section__description">
+                    Client aplikasi konsumen yang dapat mengambil data {{ $lembaga->nama }} melalui API key.
+                </p>
+            </div>
+        </div>
+
+        @if ($apiClients->isEmpty())
+            <x-ui.empty-state
+                title="Belum ada API client"
+                description="Tambahkan API client melalui formulir di bawah."
+            />
+        @else
+            <x-ui.table>
+                <x-slot:thead>
+                    <tr>
+                        <th>Nama</th>
+                        <th>Prefix</th>
+                        <th>Scope</th>
+                        <th>Profil data</th>
+                        <th>Status</th>
+                        <th>Aksi</th>
+                    </tr>
+                </x-slot:thead>
+                @foreach ($apiClients as $apiClient)
+                    <tr>
+                        <td>{{ $apiClient->nama }}</td>
+                        <td><code>{{ $apiClient->api_key_prefix }}</code></td>
+                        <td>
+                            @foreach ($apiClient->scopes as $scope)
+                                <x-ui.badge tone="neutral">{{ $apiScopeLabels[$scope] ?? $scope }}</x-ui.badge>
+                            @endforeach
+                        </td>
+                        <td>{{ $apiFieldProfileLabels[$apiClient->field_profile] ?? $apiClient->field_profile }}</td>
+                        <td>
+                            @if ($apiClient->revoked_at !== null)
+                                <x-ui.badge tone="danger">Dicabut</x-ui.badge>
+                            @elseif ($apiClient->is_active)
+                                <x-ui.badge tone="ok">Aktif</x-ui.badge>
+                            @else
+                                <x-ui.badge tone="neutral">Nonaktif</x-ui.badge>
+                            @endif
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                @if ($apiClient->revoked_at === null)
+                                    <button type="button" class="btn btn-secondary btn-sm" data-modal-open="edit-api-client-{{ $apiClient->id }}">
+                                        Ubah
+                                    </button>
+                                    <span class="section__note">Rotate &amp; cabut menyusul.</span>
+                                @else
+                                    <span class="section__note">Client ini sudah dicabut.</span>
+                                @endif
+                            </div>
+                        </td>
+                    </tr>
+                @endforeach
+            </x-ui.table>
+        @endif
+
+        <div class="form-card" style="margin-top: 1.5rem;">
+            <h3 class="section__title font-display">Tambah API client</h3>
+            <form method="POST" action="{{ route('admin.lembaga.api-clients.store', $lembaga) }}">
+                @csrf
+
+                <div class="form-grid">
+                    <x-ui.input
+                        name="nama"
+                        label="Nama"
+                        required
+                        :value="old('nama')"
+                        :error="$errors->first('nama')"
+                    />
+
+                    <x-ui.select
+                        name="field_profile"
+                        label="Profil data"
+                        required
+                        :error="$errors->first('field_profile')"
+                        hint="Menentukan field yang disertakan saat data diambil melalui API."
+                    >
+                        @foreach ($apiFieldProfileLabels as $value => $label)
+                            <option value="{{ $value }}" @selected(old('field_profile', 'minimal') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </x-ui.select>
+                </div>
+
+                <div class="field">
+                    <span class="field-label">
+                        Scope <span class="field-required" aria-hidden="true">*</span>
+                    </span>
+                    <div class="checkbox-group">
+                        @foreach ($apiScopeLabels as $value => $label)
+                            <label class="checkbox-option">
+                                <input
+                                    type="checkbox"
+                                    name="scopes[]"
+                                    value="{{ $value }}"
+                                    @checked(in_array($value, old('scopes', []), true))
+                                >
+                                {{ $label }}
+                            </label>
+                        @endforeach
+                    </div>
+                    @error('scopes')
+                        <p class="field-error">{{ $message }}</p>
+                    @enderror
+                </div>
+
+                <div class="form-actions">
+                    <x-ui.button type="submit">Tambah API client</x-ui.button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    @foreach ($apiClients as $apiClient)
+        @if ($apiClient->revoked_at === null)
+            <x-ui.modal id="edit-api-client-{{ $apiClient->id }}" title="Ubah API client">
+                <form method="POST" action="{{ route('admin.lembaga.api-clients.update', [$lembaga, $apiClient]) }}">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="field">
+                        <label for="edit-api-client-nama-{{ $apiClient->id }}" class="field-label">
+                            Nama <span class="field-required" aria-hidden="true">*</span>
+                        </label>
+                        <input
+                            id="edit-api-client-nama-{{ $apiClient->id }}"
+                            type="text"
+                            name="nama"
+                            value="{{ $apiClient->nama }}"
+                            required
+                            class="field-control"
+                        >
+                    </div>
+
+                    <div class="field">
+                        <label for="edit-api-client-profile-{{ $apiClient->id }}" class="field-label">
+                            Profil data <span class="field-required" aria-hidden="true">*</span>
+                        </label>
+                        <select
+                            id="edit-api-client-profile-{{ $apiClient->id }}"
+                            name="field_profile"
+                            required
+                            class="field-control"
+                        >
+                            @foreach ($apiFieldProfileLabels as $value => $label)
+                                <option value="{{ $value }}" @selected($apiClient->field_profile === $value)>{{ $label }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+
+                    <div class="field">
+                        <span class="field-label">
+                            Scope <span class="field-required" aria-hidden="true">*</span>
+                        </span>
+                        <div class="checkbox-group">
+                            @foreach ($apiScopeLabels as $value => $label)
+                                <label class="checkbox-option">
+                                    <input
+                                        type="checkbox"
+                                        name="scopes[]"
+                                        value="{{ $value }}"
+                                        @checked(in_array($value, $apiClient->scopes, true))
+                                    >
+                                    {{ $label }}
+                                </label>
+                            @endforeach
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <x-ui.button type="submit">Simpan perubahan</x-ui.button>
+                        <button type="button" class="btn btn-secondary" data-modal-close>Batal</button>
+                    </div>
+                </form>
+            </x-ui.modal>
+        @endif
+    @endforeach
+
     @foreach ($admins as $admin)
         <x-ui.modal id="edit-admin-{{ $admin->id }}" title="Ubah admin lembaga">
             <form method="POST" action="{{ route('admin.lembaga.admins.update', [$lembaga, $admin]) }}">
