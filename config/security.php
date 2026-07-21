@@ -6,4 +6,6 @@ return [
         'pending_ttl_minutes' => (int) env('MFA_PENDING_TTL_MINUTES', 10),
         'totp_window' => (int) env('MFA_TOTP_WINDOW', 1),
     ],
+
+    'api_key_pepper' => (string) env('API_KEY_PEPPER', ''),
 ];

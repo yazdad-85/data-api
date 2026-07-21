@@ -1,8 +1,10 @@
 <?php
 
+use App\Http\Controllers\Admin\ApiClientController;
 use App\Http\Controllers\Admin\ComingSoonController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\LembagaAdminController;
+use App\Http\Controllers\Admin\LembagaApiClientController;
 use App\Http\Controllers\Admin\LembagaController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -27,8 +29,10 @@ Route::post('/logout', LogoutController::class)
 Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'show'])->name('admin.dashboard');
     Route::get('/coming-soon/{feature}', [ComingSoonController::class, 'show'])
-        ->where('feature', 'api-client|tahun-ajaran|guru|kelas|siswa|karyawan|api-client-ro')
+        ->where('feature', 'tahun-ajaran|guru|kelas|siswa|karyawan')
         ->name('admin.coming-soon');
+
+    Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
 
     Route::get('/lembaga', [LembagaController::class, 'index'])->name('admin.lembaga.index');
     Route::get('/lembaga/create', [LembagaController::class, 'create'])->name('admin.lembaga.create');
@@ -45,4 +49,10 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::post('/lembaga/{lembaga}/admins/{user}/deactivate', [LembagaAdminController::class, 'deactivate'])->name('admin.lembaga.admins.deactivate');
     Route::post('/lembaga/{lembaga}/admins/{user}/reset-password', [LembagaAdminController::class, 'resetPassword'])->name('admin.lembaga.admins.reset-password');
     Route::get('/lembaga/{lembaga}/admins/{user}/password-once', [LembagaAdminController::class, 'passwordOnce'])->name('admin.lembaga.admins.password-once');
+
+    Route::post('/lembaga/{lembaga}/api-clients', [LembagaApiClientController::class, 'store'])->name('admin.lembaga.api-clients.store');
+    Route::put('/lembaga/{lembaga}/api-clients/{apiClient}', [LembagaApiClientController::class, 'update'])->name('admin.lembaga.api-clients.update');
+    Route::post('/lembaga/{lembaga}/api-clients/{apiClient}/rotate', [LembagaApiClientController::class, 'rotate'])->name('admin.lembaga.api-clients.rotate');
+    Route::post('/lembaga/{lembaga}/api-clients/{apiClient}/revoke', [LembagaApiClientController::class, 'revoke'])->name('admin.lembaga.api-clients.revoke');
+    Route::get('/lembaga/{lembaga}/api-clients/{apiClient}/key-once', [LembagaApiClientController::class, 'keyOnce'])->name('admin.lembaga.api-clients.key-once');
 });

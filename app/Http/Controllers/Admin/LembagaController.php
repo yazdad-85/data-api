@@ -75,7 +75,8 @@ class LembagaController extends Controller
             ->get();
 
         $adminsAktif = $admins->where('is_active', true)->count();
-        $apiClientsAktif = $lembaga->apiClients()
+        $apiClients = $lembaga->apiClients()->orderBy('nama')->get();
+        $apiClientsAktif = $apiClients
             ->where('is_active', true)
             ->whereNull('revoked_at')
             ->count();
@@ -84,6 +85,7 @@ class LembagaController extends Controller
             'lembaga',
             'admins',
             'adminsAktif',
+            'apiClients',
             'apiClientsAktif',
         ));
     }

@@ -16,7 +16,6 @@ final class AdminMenu
             return collect([
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'available' => true],
                 ['label' => 'Lembaga', 'route' => 'admin.lembaga.index', 'available' => true],
-                ['label' => 'API client', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'api-client'], 'available' => false],
             ]);
         }
 
@@ -28,7 +27,7 @@ final class AdminMenu
                 ['label' => 'Kelas', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'kelas'], 'available' => false],
                 ['label' => 'Siswa', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'siswa'], 'available' => false],
                 ['label' => 'Karyawan', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'karyawan'], 'available' => false],
-                ['label' => 'API client', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'api-client-ro'], 'available' => false],
+                ['label' => 'API client', 'route' => 'admin.api-clients.index', 'available' => true],
             ]);
         }
 

@@ -12,13 +12,11 @@ class ComingSoonController extends Controller
         $titles = [
             'lembaga' => 'Lembaga',
             'admin-lembaga' => 'Admin lembaga',
-            'api-client' => 'API client',
             'tahun-ajaran' => 'Tahun ajaran',
             'guru' => 'Guru',
             'kelas' => 'Kelas',
             'siswa' => 'Siswa',
             'karyawan' => 'Karyawan',
-            'api-client-ro' => 'API client',
         ];
 
         abort_unless(isset($titles[$feature]), 404);
