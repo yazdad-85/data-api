@@ -34,7 +34,7 @@ class MetadataRedactor
         'alamat',
         'email',
         'nama_wali',
-        'nip',
+        'niy',
         'nis',
         'nisn',
         'nuptk',

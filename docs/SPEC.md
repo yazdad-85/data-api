@@ -89,7 +89,7 @@ Nama kolom database & API memakai **snake_case** bahasa Indonesia/standar pendid
 
 | Entitas | Field kunci | Catatan |
 |---------|-------------|---------|
-| Guru | `nip`, `nuptk`, `nama`, `status_kepegawaian` | Tidak pakai `no_induk` |
+| Guru | `niy`, `nuptk`, `nama`, `status_kepegawaian` | `niy` = Nomor Induk Yayasan; tidak pakai `no_induk` |
 | Siswa | `nis`, `nisn`, `nama_wali`, `telepon_wali` | Tidak pakai `no_induk` |
 | Karyawan | `nik_pegawai`, `jabatan` | Kode internal lembaga |
 | Kelas | `tingkat`, `wali_kelas_guru_id` | |
@@ -169,7 +169,7 @@ Constraint wajib:
 |-------|------|:-----:|---------|
 | `id` | UUID | Ya | |
 | `lembaga_id` | UUID | Ya | |
-| `nama` | string(50) | Ya | Mis. `2025/2026` |
+| `nama` | string(50) | Ya | Format baku `YYYY/YYYY+1` (mis. `2025/2026`); aplikasi membentuk otomatis dari tahun mulai |
 | `tanggal_mulai` | date | Ya | |
 | `tanggal_selesai` | date | Ya | |
 | `is_aktif` | boolean | Ya | Max 1 aktif per lembaga (lihat RULES) |
@@ -200,7 +200,7 @@ Unik: (`lembaga_id`, `tahun_ajaran_id`, `nama`)
 |-------|------|:-----:|---------|
 | `id` | UUID | Ya | |
 | `lembaga_id` | UUID | Ya | |
-| `nip` | string(40) | Tidak | |
+| `niy` | string(40) | Tidak | Nomor Induk Yayasan (NIY) |
 | `nuptk` | string(40) | Tidak | |
 | `nama` | string(150) | Ya | |
 | `jenis_kelamin` | enum | Tidak | `L` \| `P` |
