@@ -52,6 +52,29 @@ class MasterTahunAjaranTest extends TestCase
         $this->assertSame($lembaga->id, $log->lembaga_id);
     }
 
+    public function test_client_supplied_nama_and_lembaga_id_are_ignored_on_create(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $otherLembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.tahun-ajaran.store'), [
+            'tahun_mulai' => 2028,
+            'tanggal_mulai' => '2028-07-01',
+            'tanggal_selesai' => '2029-06-30',
+            'nama' => 'Nama Curang',
+            'lembaga_id' => $otherLembaga->id,
+            'is_aktif' => true,
+        ]);
+
+        $response->assertRedirect(route('admin.tahun-ajaran.index'));
+
+        $tahunAjaran = TahunAjaran::query()->where('lembaga_id', $lembaga->id)->firstOrFail();
+        $this->assertSame('2028/2029', $tahunAjaran->nama);
+        $this->assertSame($lembaga->id, $tahunAjaran->lembaga_id);
+        $this->assertFalse($tahunAjaran->is_aktif);
+    }
+
     public function test_activating_tahun_ajaran_deactivates_previously_active_one_in_transaction(): void
     {
         $lembaga = Lembaga::factory()->create();

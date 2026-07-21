@@ -54,6 +54,25 @@ class MasterKaryawanTest extends TestCase
         $this->assertSame($lembaga->id, $log->lembaga_id);
     }
 
+    public function test_client_supplied_lembaga_id_and_is_active_are_ignored_on_create(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $otherLembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.karyawan.store'), [
+            'nama' => 'Karyawan Aman',
+            'lembaga_id' => $otherLembaga->id,
+            'is_active' => false,
+        ]);
+
+        $response->assertRedirect(route('admin.karyawan.index'));
+
+        $karyawan = Karyawan::query()->where('nama', 'Karyawan Aman')->firstOrFail();
+        $this->assertSame($lembaga->id, $karyawan->lembaga_id);
+        $this->assertTrue($karyawan->is_active);
+    }
+
     public function test_admin_lembaga_updates_karyawan(): void
     {
         $lembaga = Lembaga::factory()->create();

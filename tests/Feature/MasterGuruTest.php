@@ -57,6 +57,25 @@ class MasterGuruTest extends TestCase
         $this->assertSame($lembaga->id, $log->lembaga_id);
     }
 
+    public function test_client_supplied_lembaga_id_and_is_active_are_ignored_on_create(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $otherLembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.guru.store'), [
+            'nama' => 'Guru Aman',
+            'lembaga_id' => $otherLembaga->id,
+            'is_active' => false,
+        ]);
+
+        $response->assertRedirect(route('admin.guru.index'));
+
+        $guru = Guru::query()->where('nama', 'Guru Aman')->firstOrFail();
+        $this->assertSame($lembaga->id, $guru->lembaga_id);
+        $this->assertTrue($guru->is_active);
+    }
+
     public function test_admin_lembaga_updates_guru(): void
     {
         $lembaga = Lembaga::factory()->create();
