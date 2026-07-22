@@ -5,9 +5,12 @@ namespace Tests\Feature;
 use App\Models\Kelas;
 use App\Models\Lembaga;
 use App\Models\Siswa;
+use App\Models\SiswaPenempatan;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Services\Siswa\SiswaTemplateExporter;
+use App\Support\Master\PenempatanJenis;
+use App\Support\Master\SiswaStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
@@ -78,6 +81,15 @@ class KelasSiswaImportTest extends TestCase
         $this->assertSame($tahunAjaran->id, $siswaA->tahun_ajaran_id);
         $this->assertSame($lembaga->id, $siswaA->lembaga_id);
         $this->assertTrue($siswaA->is_active);
+        $this->assertSame(SiswaStatus::AKTIF, $siswaA->status_siswa);
+
+        $penempatan = SiswaPenempatan::withoutGlobalScopes()
+            ->where('siswa_id', $siswaA->id)
+            ->whereNull('selesai_at')
+            ->first();
+        $this->assertNotNull($penempatan);
+        $this->assertSame(PenempatanJenis::AWAL, $penempatan->jenis);
+        $this->assertSame($kelas->id, $penempatan->kelas_id);
 
         $siswaB = Siswa::query()->where('nis', 'NIS-102')->firstOrFail();
         $this->assertSame('Siti Rahma', $siswaB->nama);

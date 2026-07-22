@@ -87,6 +87,11 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::put('/siswa/{siswa}', [SiswaController::class, 'update'])->name('admin.siswa.update');
     Route::post('/siswa/{siswa}/activate', [SiswaController::class, 'activate'])->name('admin.siswa.activate');
     Route::post('/siswa/{siswa}/deactivate', [SiswaController::class, 'deactivate'])->name('admin.siswa.deactivate');
+    Route::post('/siswa/{siswa}/lifecycle/tempatkan', [SiswaController::class, 'tempatkan'])->name('admin.siswa.lifecycle.tempatkan');
+    Route::post('/siswa/{siswa}/lifecycle/pindah-kelas', [SiswaController::class, 'pindahKelas'])->name('admin.siswa.lifecycle.pindah');
+    Route::post('/siswa/{siswa}/lifecycle/mutasi-keluar', [SiswaController::class, 'mutasiKeluar'])->name('admin.siswa.lifecycle.mutasi_keluar');
+    Route::post('/siswa/{siswa}/lifecycle/luluskan', [SiswaController::class, 'luluskan'])->name('admin.siswa.lifecycle.lulus');
+    Route::post('/siswa/{siswa}/lifecycle/set-status', [SiswaController::class, 'setStatus'])->name('admin.siswa.lifecycle.set_status');
     Route::delete('/siswa/{siswa}', [SiswaController::class, 'destroy'])->name('admin.siswa.destroy');
 
     Route::get('/lembaga', [LembagaController::class, 'index'])->name('admin.lembaga.index');

@@ -12,7 +12,8 @@
         <div>
             <h1 class="page-header__title font-display">Tambah siswa</h1>
             <p class="page-header__description">
-                Siswa baru berstatus aktif secara default. NIS wajib diisi.
+                NIS wajib diisi. Jika kelas dipilih, siswa langsung berstatus <strong>aktif</strong> dengan penempatan awal;
+                tanpa kelas, siswa disimpan sebagai <strong>calon</strong> dan dapat ditempatkan nanti dari halaman detail.
             </p>
         </div>
     </div>

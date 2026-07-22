@@ -4,6 +4,7 @@ namespace App\Services\Siswa;
 
 use App\Models\Kelas;
 use App\Models\Siswa;
+use App\Support\Master\SiswaStatus;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
@@ -12,6 +13,10 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 final class SiswaImporter
 {
+    public function __construct(
+        private readonly SiswaLifecycleService $lifecycle,
+    ) {}
+
     /**
      * @return array{success: int, failed: int, errors: list<array{row: int, message: string}>}
      */
@@ -106,13 +111,18 @@ final class SiswaImporter
             }
 
             DB::transaction(function () use ($kelas, $lembagaId, $validated) {
-                Siswa::query()->create([
+                // Buat sebagai calon lalu tempatkan via service agar siswa berakhir
+                // "aktif" dengan tepat satu penempatan terbuka jenis "awal".
+                $siswa = Siswa::query()->create([
                     ...$validated,
                     'lembaga_id' => $lembagaId,
-                    'kelas_id' => $kelas->id,
-                    'tahun_ajaran_id' => $kelas->tahun_ajaran_id,
-                    'is_active' => true,
+                    'kelas_id' => null,
+                    'tahun_ajaran_id' => null,
+                    'status_siswa' => SiswaStatus::CALON,
+                    'is_active' => false,
                 ]);
+
+                $this->lifecycle->tempatkan($siswa, $kelas);
             });
 
             $success++;
