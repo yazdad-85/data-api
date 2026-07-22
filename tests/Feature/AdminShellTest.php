@@ -48,7 +48,7 @@ class AdminShellTest extends TestCase
         $response->assertDontSee('Admin lembaga');
         $response->assertSee('Sekolah Contoh');
         $response->assertSee('API client');
-        $response->assertSee('admin-sidebar__badge');
+        $response->assertDontSee('admin-sidebar__badge');
 
         $menu = app(AdminMenu::class)->forUser($user);
         $apiClientItem = $menu->firstWhere('label', 'API client');
@@ -56,17 +56,17 @@ class AdminShellTest extends TestCase
         $this->assertTrue($apiClientItem['available']);
         $this->assertSame('admin.api-clients.index', $apiClientItem['route']);
 
-        foreach (['Tahun ajaran' => 'admin.tahun-ajaran.index', 'Guru' => 'admin.guru.index', 'Karyawan' => 'admin.karyawan.index'] as $label => $expectedRoute) {
+        foreach ([
+            'Tahun ajaran' => 'admin.tahun-ajaran.index',
+            'Guru' => 'admin.guru.index',
+            'Kelas' => 'admin.kelas.index',
+            'Siswa' => 'admin.siswa.index',
+            'Karyawan' => 'admin.karyawan.index',
+        ] as $label => $expectedRoute) {
             $item = $menu->firstWhere('label', $label);
             $this->assertNotNull($item, "Menu item {$label} not found");
             $this->assertTrue($item['available'], "Menu item {$label} should be available");
             $this->assertSame($expectedRoute, $item['route']);
-        }
-
-        foreach (['Kelas', 'Siswa'] as $label) {
-            $item = $menu->firstWhere('label', $label);
-            $this->assertNotNull($item, "Menu item {$label} not found");
-            $this->assertFalse($item['available'], "Menu item {$label} should still be coming soon");
         }
 
         $html = $response->getContent();
@@ -94,15 +94,15 @@ class AdminShellTest extends TestCase
             ->assertSee('&copy; '.now()->year, false);
     }
 
-    public function test_admin_lembaga_coming_soon_kelas_page_shows_segera_hadir(): void
+    public function test_admin_lembaga_kelas_index_is_reachable_from_menu(): void
     {
         $lembaga = Lembaga::factory()->create();
         $user = User::factory()->adminLembaga($lembaga->id)->create();
 
         $this->actingAs($user)
-            ->get(route('admin.coming-soon', ['feature' => 'kelas']))
+            ->get(route('admin.kelas.index'))
             ->assertOk()
-            ->assertSee('Segera hadir');
+            ->assertSee('Kelas');
     }
 
     public function test_guest_admin_redirects_to_login(): void

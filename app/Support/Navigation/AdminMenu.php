@@ -24,8 +24,8 @@ final class AdminMenu
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'available' => true],
                 ['label' => 'Tahun ajaran', 'route' => 'admin.tahun-ajaran.index', 'available' => true],
                 ['label' => 'Guru', 'route' => 'admin.guru.index', 'available' => true],
-                ['label' => 'Kelas', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'kelas'], 'available' => false],
-                ['label' => 'Siswa', 'route' => 'admin.coming-soon', 'params' => ['feature' => 'siswa'], 'available' => false],
+                ['label' => 'Kelas', 'route' => 'admin.kelas.index', 'available' => true],
+                ['label' => 'Siswa', 'route' => 'admin.siswa.index', 'available' => true],
                 ['label' => 'Karyawan', 'route' => 'admin.karyawan.index', 'available' => true],
                 ['label' => 'API client', 'route' => 'admin.api-clients.index', 'available' => true],
             ]);

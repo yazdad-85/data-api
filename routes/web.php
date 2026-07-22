@@ -1,7 +1,6 @@
 <?php
 
 use App\Http\Controllers\Admin\ApiClientController;
-use App\Http\Controllers\Admin\ComingSoonController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\KaryawanController;
@@ -33,9 +32,6 @@ Route::post('/logout', LogoutController::class)
 
 Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'show'])->name('admin.dashboard');
-    Route::get('/coming-soon/{feature}', [ComingSoonController::class, 'show'])
-        ->where('feature', 'kelas|siswa')
-        ->name('admin.coming-soon');
 
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
 

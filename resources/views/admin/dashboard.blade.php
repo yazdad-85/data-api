@@ -58,9 +58,13 @@
                 @foreach ($stats['urutan'] as $item)
                     @php
                         $count = $stats[$item['count_key']] ?? 0;
-                        $feature = match ($item['count_key']) {
-                            'tahun_ajaran' => 'tahun-ajaran',
-                            default => $item['count_key'],
+                        $route = match ($item['count_key']) {
+                            'tahun_ajaran' => 'admin.tahun-ajaran.index',
+                            'guru' => 'admin.guru.index',
+                            'kelas' => 'admin.kelas.index',
+                            'siswa' => 'admin.siswa.index',
+                            'karyawan' => 'admin.karyawan.index',
+                            default => 'admin.dashboard',
                         };
                     @endphp
                     <li class="dashboard-checklist__item">
@@ -69,7 +73,7 @@
                             <div>
                                 <a
                                     class="dashboard-checklist__label"
-                                    href="{{ route('admin.coming-soon', ['feature' => $feature]) }}"
+                                    href="{{ route($route) }}"
                                 >{{ $item['label'] }}</a>
                                 <p class="dashboard-checklist__hint">
                                     @if ($count === 0)

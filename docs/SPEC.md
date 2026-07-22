@@ -239,7 +239,7 @@ Unik: (`lembaga_id`, `tahun_ajaran_id`, `nama`)
 |-------|------|:-----:|---------|
 | `id` | UUID | Ya | |
 | `lembaga_id` | UUID | Ya | |
-| `nis` | string(40) | Tidak | |
+| `nis` | string(40) | Tidak | Kolom DB nullable (sync/compat); **Admin Lembaga UI wajib NIS** saat create/import |
 | `nisn` | string(20) | Tidak | |
 | `nama` | string(150) | Ya | |
 | `jenis_kelamin` | enum | Tidak | `L` \| `P` |

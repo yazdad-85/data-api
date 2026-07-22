@@ -216,7 +216,7 @@ Test wajib:
 
 ## Milestone 6 - CRUD master Admin Lembaga
 
-Status: **M6a selesai + UAT guru OK**; **M6b spek siap review** — [2026-07-22-milestone-6b-kelas-siswa-design.md](./superpowers/specs/2026-07-22-milestone-6b-kelas-siswa-design.md)
+Status: **M6 selesai (M6a + M6b)** — spek [M6a](./superpowers/specs/2026-07-21-milestone-6a-master-ta-guru-karyawan-design.md) · [M6b](./superpowers/specs/2026-07-22-milestone-6b-kelas-siswa-design.md)
 
 Tujuan: master data fase 1 lengkap dan scoped.
 
@@ -227,15 +227,15 @@ UAT lokal (22 Jul 2026): edit & hapus guru berhasil; import guru + auto NIY dipa
 - [x] CRUD Tahun Ajaran.
 - [x] Aktifkan satu tahun ajaran per lembaga dalam transaksi.
 - [x] CRUD Guru. *(termasuk import Excel, template 2 sheet, auto NIY, tahun masuk; UAT edit/hapus OK)*
-- [ ] CRUD Kelas. *(M6b)*
-- [ ] Validasi kelas wajib punya tahun ajaran milik lembaga yang sama. *(M6b)*
-- [ ] Validasi wali kelas guru milik lembaga yang sama. *(M6b)*
-- [ ] Blok soft delete kelas yang masih dipakai siswa. *(M6b)*
-- [ ] CRUD Siswa. *(M6b)*
-- [ ] Siswa boleh tanpa kelas, tampil badge "Belum ada kelas". *(M6b)*
-- [ ] Validasi siswa `kelas_id` dan `tahun_ajaran_id` cocok. *(M6b)*
+- [x] CRUD Kelas. *(M6b)*
+- [x] Validasi kelas wajib punya tahun ajaran milik lembaga yang sama. *(M6b)*
+- [x] Validasi wali kelas guru milik lembaga yang sama. *(M6b)*
+- [x] Blok soft delete kelas yang masih dipakai siswa. *(M6b — hard delete kelas kosong)*
+- [x] CRUD Siswa. *(M6b)*
+- [x] Siswa boleh tanpa kelas, tampil badge "Belum ada kelas". *(M6b)*
+- [x] Validasi siswa `kelas_id` dan `tahun_ajaran_id` cocok. *(M6b)*
 - [x] CRUD Karyawan. *(disamakan dengan guru: import Excel, template 2 sheet, auto NIK format NIY, tahun masuk)*
-- [x] Search/pagination list guru. *(siswa menyusul M6b)*
+- [x] Search/pagination list guru & siswa.
 - [x] Soft delete dengan modal konfirmasi. *(tahun ajaran, guru, karyawan — UAT guru hapus OK)*
 - [x] Audit log akses/view PII admin sesuai RULES. *(`master.view` pada show guru/karyawan, tanpa dump PII)*
 
@@ -246,16 +246,18 @@ Review wajib (M6a):
 - [x] Review UX form dan pesan validasi bahasa Indonesia.
 - [x] Perbaiki semua temuan review sebelum test.
 
-Review wajib (M6b, belum): Kelas/Siswa dan relasinya.
+Review wajib (M6b):
+
+- [x] Review Kelas/Siswa dan relasinya.
 
 Test wajib:
 
-- [x] Admin Lembaga A tidak bisa CRUD data lembaga B. *(tahun ajaran/guru/karyawan)*
-- [ ] Kelas lintas lembaga ditolak. *(M6b)*
-- [ ] Wali kelas lintas lembaga ditolak. *(M6b)*
-- [ ] Delete kelas berisi siswa diblok. *(M6b)*
+- [x] Admin Lembaga A tidak bisa CRUD data lembaga B. *(tahun ajaran/guru/karyawan/kelas/siswa)*
+- [x] Kelas lintas lembaga ditolak. *(M6b)*
+- [x] Wali kelas lintas lembaga ditolak. *(M6b)*
+- [x] Delete kelas berisi siswa diblok. *(M6b)*
 - [x] Satu tahun ajaran aktif per lembaga.
-- [ ] Partial unique NIS/NISN berjalan. *(M6b)*
+- [x] Partial unique NIS/NISN berjalan. *(M6b)*
 
 ## Milestone 7 - API client authentication
 
