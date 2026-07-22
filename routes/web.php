@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\ComingSoonController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\KaryawanController;
+use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
 use App\Http\Controllers\Admin\LembagaController;
@@ -68,6 +69,14 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::post('/karyawan/{karyawan}/activate', [KaryawanController::class, 'activate'])->name('admin.karyawan.activate');
     Route::post('/karyawan/{karyawan}/deactivate', [KaryawanController::class, 'deactivate'])->name('admin.karyawan.deactivate');
     Route::delete('/karyawan/{karyawan}', [KaryawanController::class, 'destroy'])->name('admin.karyawan.destroy');
+
+    Route::get('/kelas', [KelasController::class, 'index'])->name('admin.kelas.index');
+    Route::get('/kelas/create', [KelasController::class, 'create'])->name('admin.kelas.create');
+    Route::post('/kelas', [KelasController::class, 'store'])->name('admin.kelas.store');
+    Route::get('/kelas/{kelas}', [KelasController::class, 'show'])->name('admin.kelas.show');
+    Route::get('/kelas/{kelas}/edit', [KelasController::class, 'edit'])->name('admin.kelas.edit');
+    Route::put('/kelas/{kelas}', [KelasController::class, 'update'])->name('admin.kelas.update');
+    Route::delete('/kelas/{kelas}', [KelasController::class, 'destroy'])->name('admin.kelas.destroy');
 
     Route::get('/lembaga', [LembagaController::class, 'index'])->name('admin.lembaga.index');
     Route::get('/lembaga/create', [LembagaController::class, 'create'])->name('admin.lembaga.create');

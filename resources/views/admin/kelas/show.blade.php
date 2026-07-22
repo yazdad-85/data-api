@@ -1,0 +1,104 @@
+@extends('layouts.admin')
+
+@section('title', $kelas->nama)
+
+@section('breadcrumb')
+    <a href="{{ route('admin.dashboard') }}">Dashboard</a> /
+    <a href="{{ route('admin.kelas.index') }}">Kelas</a> / {{ $kelas->nama }}
+@endsection
+
+@section('content')
+    @if (session('status'))
+        <p class="flash-status">{{ session('status') }}</p>
+    @endif
+
+    <div class="card">
+        <div class="card__header">
+            <div>
+                <h1 class="card__title font-display">{{ $kelas->nama }}</h1>
+                <p class="card__meta">
+                    Tahun ajaran <strong>{{ $kelas->tahunAjaran?->nama ?? '—' }}</strong>
+                    @if ($kelas->tingkat)
+                        &middot; Tingkat <strong>{{ $kelas->tingkat }}</strong>
+                    @endif
+                    @if ($kelas->waliKelas)
+                        &middot; Wali kelas <strong>{{ $kelas->waliKelas->nama }}</strong>
+                    @endif
+                </p>
+            </div>
+            <div class="card__actions">
+                <x-ui.button href="{{ route('admin.kelas.edit', $kelas) }}" variant="secondary">Ubah</x-ui.button>
+                <button type="button" class="btn btn-danger" data-modal-open="delete-kelas-show">Hapus</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-header" style="margin-top: 2rem;">
+        <div>
+            <h2 class="page-header__title font-display">Siswa di kelas ini</h2>
+            <p class="page-header__description">
+                Daftar siswa yang terdaftar di kelas {{ $kelas->nama }}.
+            </p>
+        </div>
+        <div class="page-header__actions">
+            {{-- Import siswa akan diimplementasikan pada Task 5 --}}
+            <x-ui.button variant="secondary" disabled>Unduh template siswa</x-ui.button>
+            <x-ui.button variant="secondary" disabled>Import siswa</x-ui.button>
+        </div>
+    </div>
+
+    @if ($siswa->isEmpty())
+        <x-ui.empty-state
+            title="Belum ada siswa"
+            description="Siswa di kelas ini akan muncul setelah ditambahkan atau diimpor."
+        />
+    @else
+        <x-ui.table>
+            <x-slot:thead>
+                <tr>
+                    <th>NIS</th>
+                    <th>Nama</th>
+                    <th>NISN</th>
+                    <th>Status</th>
+                </tr>
+            </x-slot:thead>
+            @foreach ($siswa as $item)
+                <tr>
+                    <td>{{ $item->nis ?? '—' }}</td>
+                    <td>{{ $item->nama }}</td>
+                    <td>{{ $item->nisn ?? '—' }}</td>
+                    <td>
+                        @if ($item->is_active)
+                            <x-ui.badge tone="ok">Aktif</x-ui.badge>
+                        @else
+                            <x-ui.badge tone="neutral">Nonaktif</x-ui.badge>
+                        @endif
+                    </td>
+                </tr>
+            @endforeach
+        </x-ui.table>
+
+        <x-ui.pagination :paginator="$siswa" />
+    @endif
+
+    <x-ui.modal id="delete-kelas-show" title="Hapus kelas?">
+        <p>
+            Menghapus <strong>{{ $kelas->nama }}</strong> akan berdampak:
+        </p>
+        <ul>
+            <li>Penghapusan bersifat permanen; nama kelas bisa dipakai lagi.</li>
+            <li>Jika masih memiliki siswa, penghapusan akan ditolak.</li>
+        </ul>
+
+        <x-slot:actions>
+            <form method="dialog">
+                <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
+            </form>
+            <form method="POST" action="{{ route('admin.kelas.destroy', $kelas) }}">
+                @csrf
+                @method('DELETE')
+                <x-ui.button variant="danger" type="submit">Hapus kelas</x-ui.button>
+            </form>
+        </x-slot:actions>
+    </x-ui.modal>
+@endsection
