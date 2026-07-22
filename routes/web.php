@@ -71,6 +71,8 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::delete('/karyawan/{karyawan}', [KaryawanController::class, 'destroy'])->name('admin.karyawan.destroy');
 
     Route::get('/kelas', [KelasController::class, 'index'])->name('admin.kelas.index');
+    Route::get('/kelas/template', [KelasController::class, 'downloadTemplate'])->name('admin.kelas.template');
+    Route::post('/kelas/import', [KelasController::class, 'import'])->name('admin.kelas.import');
     Route::get('/kelas/create', [KelasController::class, 'create'])->name('admin.kelas.create');
     Route::post('/kelas', [KelasController::class, 'store'])->name('admin.kelas.store');
     Route::get('/kelas/{kelas}', [KelasController::class, 'show'])->name('admin.kelas.show');

@@ -4,15 +4,20 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\EnsuresAdminLembaga;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ImportKelasRequest;
 use App\Http\Requests\Admin\StoreKelasRequest;
 use App\Http\Requests\Admin\UpdateKelasRequest;
 use App\Models\Guru;
 use App\Models\Kelas;
+use App\Models\Lembaga;
 use App\Models\TahunAjaran;
 use App\Services\AuditLogger;
+use App\Services\Kelas\KelasImporter;
+use App\Services\Kelas\KelasTemplateExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class KelasController extends Controller
 {
@@ -20,6 +25,8 @@ class KelasController extends Controller
 
     public function __construct(
         private readonly AuditLogger $auditLogger,
+        private readonly KelasTemplateExporter $templateExporter,
+        private readonly KelasImporter $importer,
     ) {}
 
     public function index(Request $request): View
@@ -84,6 +91,45 @@ class KelasController extends Controller
         return redirect()
             ->route('admin.kelas.index')
             ->with('status', "Kelas {$kelas->nama} berhasil dibuat.");
+    }
+
+    public function downloadTemplate(): StreamedResponse
+    {
+        $this->adminLembaga();
+
+        return $this->templateExporter->downloadResponse();
+    }
+
+    public function import(ImportKelasRequest $request): RedirectResponse
+    {
+        $user = $this->adminLembaga();
+        $lembaga = Lembaga::query()->findOrFail($user->lembaga_id);
+
+        $result = $this->importer->import(
+            $request->file('file'),
+            $lembaga,
+            (string) $user->lembaga_id,
+        );
+
+        $auditResult = $result['success'] > 0 && $result['failed'] === 0
+            ? 'success'
+            : ($result['success'] > 0 ? 'success' : 'failed');
+
+        $this->auditLogger->record('kelas.import', $auditResult, [
+            'success' => $result['success'],
+            'failed' => $result['failed'],
+        ], lembagaId: $user->lembaga_id, request: $request);
+
+        $status = "Import selesai: {$result['success']} berhasil";
+        if ($result['failed'] > 0) {
+            $status .= ", {$result['failed']} gagal";
+        }
+        $status .= '.';
+
+        return redirect()
+            ->route('admin.kelas.index')
+            ->with('status', $status)
+            ->with('import_errors', $result['errors']);
     }
 
     public function show(Request $request, Kelas $kelas): View
