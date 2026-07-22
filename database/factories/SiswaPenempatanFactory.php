@@ -25,7 +25,7 @@ class SiswaPenempatanFactory extends Factory
             'siswa_id' => Siswa::factory(),
             'tahun_ajaran_id' => null,
             'kelas_id' => null,
-            'mulai_at' => now()->toDateString(),
+            'mulai_at' => now()->subDays(60)->toDateString(),
             'selesai_at' => now()->subDays(30)->toDateString(),
             'jenis' => PenempatanJenis::AWAL,
             'keterangan' => null,
