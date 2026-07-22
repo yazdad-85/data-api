@@ -19,7 +19,24 @@ final class KelasImporter
     public function import(UploadedFile $file, Lembaga $lembaga, string $lembagaId): array
     {
         $spreadsheet = IOFactory::load($file->getRealPath());
-        $sheet = $spreadsheet->getSheetByName('Data Kelas') ?? $spreadsheet->getSheet(1);
+        $sheet = $spreadsheet->getSheetByName('Data Kelas');
+
+        if ($sheet === null) {
+            if ($spreadsheet->getSheetByName('Data Siswa') !== null) {
+                return [
+                    'success' => 0,
+                    'failed' => 0,
+                    'errors' => [[
+                        'row' => 1,
+                        'message' => 'File ini tampak template import siswa. Import siswa dari halaman detail kelas (bukan dari daftar kelas).',
+                    ]],
+                ];
+            }
+
+            $sheet = $spreadsheet->getSheetCount() > 1
+                ? $spreadsheet->getSheet(1)
+                : $spreadsheet->getSheet(0);
+        }
 
         $rows = $sheet->toArray(null, true, true, true);
         $headerRow = array_shift($rows);
@@ -35,12 +52,24 @@ final class KelasImporter
         $columnMap = $this->mapHeaders($headerRow);
         $required = ['nama', 'tahun_ajaran'];
 
+        $headerValues = array_values($columnMap);
+        if (in_array('nis', $headerValues, true) && ! in_array('tahun_ajaran', $headerValues, true)) {
+            return [
+                'success' => 0,
+                'failed' => 0,
+                'errors' => [[
+                    'row' => 1,
+                    'message' => 'File ini tampak template import siswa. Import siswa dari halaman detail kelas (bukan dari daftar kelas).',
+                ]],
+            ];
+        }
+
         foreach ($required as $column) {
             if (! in_array($column, $columnMap, true)) {
                 return [
                     'success' => 0,
                     'failed' => 0,
-                    'errors' => [['row' => 1, 'message' => "Kolom wajib \"{$column}\" tidak ditemukan."]],
+                    'errors' => [['row' => 1, 'message' => "Kolom wajib \"{$column}\" tidak ditemukan. Gunakan template import kelas (kolom: nama, tahun_ajaran, tingkat, wali_kelas_niy)."]],
                 ];
             }
         }

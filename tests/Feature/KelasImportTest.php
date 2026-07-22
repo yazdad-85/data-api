@@ -86,6 +86,36 @@ class KelasImportTest extends TestCase
         $this->assertSame('VIII-A', Kelas::query()->value('nama'));
     }
 
+    public function test_import_rejects_siswa_template_with_clear_message(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data Siswa');
+        $sheet->setCellValue('A1', 'nis');
+        $sheet->setCellValue('B1', 'nama');
+        $sheet->setCellValue('A2', 'NIS-001');
+        $sheet->setCellValue('B2', 'Siswa Contoh');
+
+        $path = tempnam(sys_get_temp_dir(), 'siswa-as-kelas-').'.xlsx';
+        (new Xlsx($spreadsheet))->save($path);
+        $file = new UploadedFile($path, 'template-import-siswa.xlsx', null, null, true);
+
+        $response = $this->actingAs($admin)->post(route('admin.kelas.import'), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect(route('admin.kelas.index'));
+        $response->assertSessionHas('import_errors');
+        $this->assertStringContainsString(
+            'template import siswa',
+            strtolower((string) session('import_errors')[0]['message'])
+        );
+        $this->assertSame(0, Kelas::query()->count());
+    }
+
     /**
      * @param  list<array<string, mixed>>  $rows
      */
