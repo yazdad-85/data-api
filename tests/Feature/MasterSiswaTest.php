@@ -323,4 +323,50 @@ class MasterSiswaTest extends TestCase
         $byNis = $this->actingAs($admin)->get(route('admin.siswa.index', ['q' => 'NIS-200']));
         $byNis->assertOk()->assertSee('Joko Susilo')->assertDontSee('Siti Aminah');
     }
+
+    public function test_index_filter_status_lulus(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        Siswa::factory()->for($lembaga)->lulus()->create(['nama' => 'Alumni Satu']);
+        Siswa::factory()->for($lembaga)->create(['nama' => 'Siswa Aktif Dua']);
+
+        $response = $this->actingAs($admin)->get(route('admin.siswa.index', ['status_siswa' => SiswaStatus::LULUS]));
+
+        $response->assertOk()
+            ->assertSee('Alumni Satu')
+            ->assertDontSee('Siswa Aktif Dua')
+            ->assertSee(SiswaStatus::label(SiswaStatus::LULUS));
+    }
+
+    public function test_index_filter_status_invalid_value_is_ignored(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        Siswa::factory()->for($lembaga)->lulus()->create(['nama' => 'Alumni Satu']);
+        Siswa::factory()->for($lembaga)->create(['nama' => 'Siswa Aktif Dua']);
+
+        $response = $this->actingAs($admin)->get(route('admin.siswa.index', ['status_siswa' => 'tidak-valid']));
+
+        $response->assertOk()
+            ->assertSee('Alumni Satu')
+            ->assertSee('Siswa Aktif Dua');
+    }
+
+    public function test_index_shows_status_badge_per_row(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        Siswa::factory()->for($lembaga)->calon()->create(['nama' => 'Calon Siswa']);
+        Siswa::factory()->for($lembaga)->create(['nama' => 'Siswa Aktif']);
+
+        $response = $this->actingAs($admin)->get(route('admin.siswa.index'));
+
+        $response->assertOk()
+            ->assertSee(SiswaStatus::label(SiswaStatus::CALON))
+            ->assertSee(SiswaStatus::label(SiswaStatus::AKTIF));
+    }
 }

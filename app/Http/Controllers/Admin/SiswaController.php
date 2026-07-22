@@ -35,11 +35,16 @@ class SiswaController extends Controller
         $q = trim((string) $request->query('q', ''));
         $kelasId = $request->query('kelas_id');
         $tahunAjaranId = $request->query('tahun_ajaran_id');
+        $statusSiswa = $request->query('status_siswa');
+        if (! is_string($statusSiswa) || ! in_array($statusSiswa, SiswaStatus::ALL, true)) {
+            $statusSiswa = '';
+        }
 
         $siswas = Siswa::query()
             ->with(['kelas', 'tahunAjaran'])
             ->when(is_string($kelasId) && $kelasId !== '', fn ($query) => $query->where('kelas_id', $kelasId))
             ->when(is_string($tahunAjaranId) && $tahunAjaranId !== '', fn ($query) => $query->where('tahun_ajaran_id', $tahunAjaranId))
+            ->when($statusSiswa !== '', fn ($query) => $query->where('status_siswa', $statusSiswa))
             ->when($q !== '', function ($query) use ($q) {
                 $like = '%'.$q.'%';
                 $query->where(function ($inner) use ($like) {
@@ -67,7 +72,7 @@ class SiswaController extends Controller
             ->orderByDesc('nama')
             ->get();
 
-        return view('admin.siswa.index', compact('siswas', 'q', 'kelasId', 'tahunAjaranId', 'kelasList', 'tahunAjarans'));
+        return view('admin.siswa.index', compact('siswas', 'q', 'kelasId', 'tahunAjaranId', 'statusSiswa', 'kelasList', 'tahunAjarans'));
     }
 
     public function create(): View

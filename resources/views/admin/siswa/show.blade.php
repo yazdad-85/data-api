@@ -10,22 +10,6 @@
 @php
     use App\Support\Master\SiswaStatus;
 
-    $statusLabels = [
-        SiswaStatus::CALON => 'Calon',
-        SiswaStatus::MUTASI_MASUK => 'Mutasi masuk',
-        SiswaStatus::AKTIF => 'Aktif',
-        SiswaStatus::MUTASI_KELUAR => 'Mutasi keluar',
-        SiswaStatus::LULUS => 'Lulus',
-    ];
-
-    $statusTones = [
-        SiswaStatus::CALON => 'warn',
-        SiswaStatus::MUTASI_MASUK => 'warn',
-        SiswaStatus::AKTIF => 'ok',
-        SiswaStatus::MUTASI_KELUAR => 'neutral',
-        SiswaStatus::LULUS => 'brand',
-    ];
-
     $jenisLabels = [
         'awal' => 'Penempatan awal',
         'kenaikan' => 'Kenaikan kelas',
@@ -65,8 +49,8 @@
                         &middot; NISN <strong>{{ $siswa->nisn }}</strong>
                     @endif
                     &middot;
-                    <x-ui.badge :tone="$statusTones[$siswa->status_siswa] ?? 'neutral'">
-                        {{ $statusLabels[$siswa->status_siswa] ?? $siswa->status_siswa }}
+                    <x-ui.badge :tone="SiswaStatus::tone($siswa->status_siswa)">
+                        {{ SiswaStatus::label($siswa->status_siswa) }}
                     </x-ui.badge>
                     @unless ($siswa->kelas)
                         <x-ui.badge tone="neutral">Belum ada kelas</x-ui.badge>

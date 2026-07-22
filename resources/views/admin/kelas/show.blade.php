@@ -7,6 +7,10 @@
     <a href="{{ route('admin.kelas.index') }}">Kelas</a> / {{ $kelas->nama }}
 @endsection
 
+@php
+    use App\Support\Master\SiswaStatus;
+@endphp
+
 @section('content')
     @if (session('status'))
         <p class="flash-status">{{ session('status') }}</p>
@@ -87,11 +91,9 @@
                     <td>{{ $item->nama }}</td>
                     <td>{{ $item->nisn ?? '—' }}</td>
                     <td>
-                        @if ($item->is_active)
-                            <x-ui.badge tone="ok">Aktif</x-ui.badge>
-                        @else
-                            <x-ui.badge tone="neutral">Nonaktif</x-ui.badge>
-                        @endif
+                        <x-ui.badge :tone="SiswaStatus::tone($item->status_siswa)">
+                            {{ SiswaStatus::label($item->status_siswa) }}
+                        </x-ui.badge>
                     </td>
                 </tr>
             @endforeach

@@ -42,4 +42,27 @@ final class SiswaStatus
             default => false,
         };
     }
+
+    public static function label(string $status): string
+    {
+        return match ($status) {
+            self::CALON => 'Calon',
+            self::MUTASI_MASUK => 'Mutasi masuk',
+            self::AKTIF => 'Aktif',
+            self::MUTASI_KELUAR => 'Mutasi keluar',
+            self::LULUS => 'Lulus',
+            default => $status,
+        };
+    }
+
+    public static function tone(string $status): string
+    {
+        return match ($status) {
+            self::CALON, self::MUTASI_MASUK => 'warn',
+            self::AKTIF => 'ok',
+            self::MUTASI_KELUAR => 'neutral',
+            self::LULUS => 'brand',
+            default => 'neutral',
+        };
+    }
 }

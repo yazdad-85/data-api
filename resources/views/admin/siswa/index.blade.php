@@ -6,6 +6,10 @@
     <a href="{{ route('admin.dashboard') }}">Dashboard</a> / Siswa
 @endsection
 
+@php
+    use App\Support\Master\SiswaStatus;
+@endphp
+
 @section('content')
     <div class="page-header">
         <div>
@@ -49,6 +53,14 @@
                 </option>
             @endforeach
         </select>
+        <select name="status_siswa" class="field-control" aria-label="Filter status siswa">
+            <option value="" @selected($statusSiswa === '')>Semua status</option>
+            @foreach (SiswaStatus::ALL as $status)
+                <option value="{{ $status }}" @selected($statusSiswa === $status)>
+                    {{ SiswaStatus::label($status) }}
+                </option>
+            @endforeach
+        </select>
         <input
             type="search"
             name="q"
@@ -58,14 +70,14 @@
             aria-label="Cari siswa"
         >
         <x-ui.button type="submit" variant="secondary">Filter</x-ui.button>
-        @if ($q !== '' || ($kelasId !== null && $kelasId !== '') || ($tahunAjaranId !== null && $tahunAjaranId !== ''))
+        @if ($q !== '' || ($kelasId !== null && $kelasId !== '') || ($tahunAjaranId !== null && $tahunAjaranId !== '') || $statusSiswa !== '')
             <x-ui.button href="{{ route('admin.siswa.index') }}" variant="ghost">Reset</x-ui.button>
         @endif
     </form>
 
     @if ($siswas->isEmpty())
         @php
-            $emptyDescription = ($q !== '' || ($kelasId !== null && $kelasId !== '') || ($tahunAjaranId !== null && $tahunAjaranId !== ''))
+            $emptyDescription = ($q !== '' || ($kelasId !== null && $kelasId !== '') || ($tahunAjaranId !== null && $tahunAjaranId !== '') || $statusSiswa !== '')
                 ? 'Tidak ada siswa yang cocok dengan filter.'
                 : 'Mulai dengan menambahkan siswa pertama.';
         @endphp
@@ -97,11 +109,9 @@
                         @endif
                     </td>
                     <td>
-                        @if ($siswa->is_active)
-                            <x-ui.badge tone="ok">Aktif</x-ui.badge>
-                        @else
-                            <x-ui.badge tone="neutral">Nonaktif</x-ui.badge>
-                        @endif
+                        <x-ui.badge :tone="SiswaStatus::tone($siswa->status_siswa)">
+                            {{ SiswaStatus::label($siswa->status_siswa) }}
+                        </x-ui.badge>
                     </td>
                     <td>
                         <div class="table-actions">
