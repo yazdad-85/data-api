@@ -102,7 +102,7 @@ final class SiswaLifecycleService
 
             $efektifAt = $this->resolveStatusAt($meta) ?? Carbon::now();
 
-            $this->closeOpenPenempatan($siswa, $efektifAt, PenempatanJenis::MUTASI_KELUAR);
+            $this->closeOpenPenempatan($siswa, $efektifAt);
             $this->syncSnapshot($siswa, null);
             $this->applyStatusFlags($siswa, SiswaStatus::MUTASI_KELUAR, $efektifAt);
             $this->applyMeta($siswa, $meta);
@@ -122,7 +122,7 @@ final class SiswaLifecycleService
 
             $efektifAt = $this->resolveStatusAt($meta) ?? Carbon::now();
 
-            $this->closeOpenPenempatan($siswa, $efektifAt, PenempatanJenis::LULUS);
+            $this->closeOpenPenempatan($siswa, $efektifAt);
             $this->syncSnapshot($siswa, null);
             $this->applyStatusFlags($siswa, SiswaStatus::LULUS, $efektifAt);
             $this->applyMeta($siswa, $meta);
@@ -158,11 +158,11 @@ final class SiswaLifecycleService
     }
 
     /**
-     * Menutup penempatan terbuka milik siswa. Jika `$jenisTutup` diisi (kasus mutasi
-     * keluar/lulus), baris yang sama diberi label jenis tersebut dan kelas/TA dikosongkan
-     * karena siswa tidak lagi ditempatkan di kelas manapun.
+     * Menutup penempatan terbuka milik siswa dengan hanya menandai `selesai_at`.
+     * `jenis`/`kelas_id`/`tahun_ajaran_id` pada baris tersebut dipertahankan sebagai
+     * jejak historis; snapshot kelas siswa saat ini dikosongkan lewat `syncSnapshot`.
      */
-    private function closeOpenPenempatan(Siswa $siswa, CarbonInterface $selesaiAt, ?string $jenisTutup = null): void
+    private function closeOpenPenempatan(Siswa $siswa, CarbonInterface $selesaiAt): void
     {
         $open = $this->findOpenPenempatan($siswa);
 
@@ -171,13 +171,6 @@ final class SiswaLifecycleService
         }
 
         $open->selesai_at = $selesaiAt->toDateString();
-
-        if ($jenisTutup !== null) {
-            $open->jenis = $jenisTutup;
-            $open->kelas_id = null;
-            $open->tahun_ajaran_id = null;
-        }
-
         $open->save();
     }
 

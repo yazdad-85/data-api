@@ -131,8 +131,9 @@ class SiswaLifecycleTest extends TestCase
         $this->assertCount(1, $penempatans);
         $penempatan = $penempatans->first();
         $this->assertNotNull($penempatan->selesai_at);
-        $this->assertSame(PenempatanJenis::MUTASI_KELUAR, $penempatan->jenis);
-        $this->assertNull($penempatan->kelas_id);
+        // Jejak historis dipertahankan: jenis dan kelas_id tetap merujuk penempatan asli.
+        $this->assertSame(PenempatanJenis::AWAL, $penempatan->jenis);
+        $this->assertSame($kelas->id, $penempatan->kelas_id);
     }
 
     public function test_luluskan_mengosongkan_kelas_dan_menutup_penempatan(): void
@@ -152,10 +153,13 @@ class SiswaLifecycleTest extends TestCase
         $this->assertSame(SiswaStatus::LULUS, $result->status_siswa);
         $this->assertFalse($result->is_active);
         $this->assertNull($result->kelas_id);
+        $this->assertNull($result->tahun_ajaran_id);
 
         $penempatan = SiswaPenempatan::withoutGlobalScopes()->where('siswa_id', $siswa->id)->first();
         $this->assertNotNull($penempatan->selesai_at);
-        $this->assertSame(PenempatanJenis::LULUS, $penempatan->jenis);
+        // Jejak historis dipertahankan: jenis dan kelas_id tetap merujuk penempatan asli.
+        $this->assertSame(PenempatanJenis::AWAL, $penempatan->jenis);
+        $this->assertSame($kelas->id, $penempatan->kelas_id);
     }
 
     public function test_pindah_kelas_menutup_lama_membuka_baru(): void
