@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Concerns\EnsuresAdminLembaga;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ImportKelasRequest;
+use App\Http\Requests\Admin\ImportSiswaRequest;
 use App\Http\Requests\Admin\StoreKelasRequest;
 use App\Http\Requests\Admin\UpdateKelasRequest;
 use App\Models\Guru;
@@ -14,6 +15,8 @@ use App\Models\TahunAjaran;
 use App\Services\AuditLogger;
 use App\Services\Kelas\KelasImporter;
 use App\Services\Kelas\KelasTemplateExporter;
+use App\Services\Siswa\SiswaImporter;
+use App\Services\Siswa\SiswaTemplateExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -27,6 +30,8 @@ class KelasController extends Controller
         private readonly AuditLogger $auditLogger,
         private readonly KelasTemplateExporter $templateExporter,
         private readonly KelasImporter $importer,
+        private readonly SiswaTemplateExporter $siswaTemplateExporter,
+        private readonly SiswaImporter $siswaImporter,
     ) {}
 
     public function index(Request $request): View
@@ -148,6 +153,46 @@ class KelasController extends Controller
         ], subject: $kelas, lembagaId: $user->lembaga_id, request: $request);
 
         return view('admin.kelas.show', compact('kelas', 'siswa'));
+    }
+
+    public function siswaTemplate(Kelas $kelas): StreamedResponse
+    {
+        $user = $this->adminLembaga();
+        abort_unless(hash_equals((string) $kelas->lembaga_id, (string) $user->lembaga_id), 404);
+
+        return $this->siswaTemplateExporter->downloadResponse();
+    }
+
+    public function siswaImport(ImportSiswaRequest $request, Kelas $kelas): RedirectResponse
+    {
+        $user = $this->adminLembaga();
+        abort_unless(hash_equals((string) $kelas->lembaga_id, (string) $user->lembaga_id), 404);
+
+        $result = $this->siswaImporter->import(
+            $request->file('file'),
+            $kelas,
+        );
+
+        $auditResult = $result['success'] > 0 && $result['failed'] === 0
+            ? 'success'
+            : ($result['success'] > 0 ? 'success' : 'failed');
+
+        $this->auditLogger->record('siswa.import', $auditResult, [
+            'success' => $result['success'],
+            'failed' => $result['failed'],
+            'kelas_id' => $kelas->id,
+        ], subject: $kelas, lembagaId: $user->lembaga_id, request: $request);
+
+        $status = "Import selesai: {$result['success']} berhasil";
+        if ($result['failed'] > 0) {
+            $status .= ", {$result['failed']} gagal";
+        }
+        $status .= '.';
+
+        return redirect()
+            ->route('admin.kelas.show', $kelas)
+            ->with('status', $status)
+            ->with('import_errors', $result['errors']);
     }
 
     public function edit(Kelas $kelas): View

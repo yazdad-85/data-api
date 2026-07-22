@@ -1,0 +1,197 @@
+<?php
+
+namespace Tests\Feature;
+
+use App\Models\Kelas;
+use App\Models\Lembaga;
+use App\Models\Siswa;
+use App\Models\TahunAjaran;
+use App\Models\User;
+use App\Services\Siswa\SiswaTemplateExporter;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Tests\TestCase;
+
+class KelasSiswaImportTest extends TestCase
+{
+    use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        config(['security.mfa.super_admin_required' => false]);
+        $this->withoutVite();
+    }
+
+    public function test_download_template_ok_for_admin_lembaga_owning_kelas(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelas = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.kelas.siswa.template', $kelas));
+
+        $response->assertOk();
+        $response->assertHeader(
+            'content-type',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        );
+        $this->assertStringContainsString(
+            'template-import-siswa.xlsx',
+            (string) $response->headers->get('content-disposition')
+        );
+    }
+
+    public function test_import_creates_siswa_attached_to_kelas_with_correct_tahun_ajaran_id(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create(['nama' => '2026/2027']);
+        $kelas = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'nama' => 'VII-A',
+        ]);
+
+        $file = $this->makeImportFile([
+            ['nis' => 'NIS-101', 'nama' => 'Andi Pratama'],
+            ['nis' => 'NIS-102', 'nama' => 'Siti Rahma'],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelas), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect(route('admin.kelas.show', $kelas));
+        $response->assertSessionHas('status');
+
+        $this->assertSame(2, Siswa::query()->count());
+
+        $siswaA = Siswa::query()->where('nis', 'NIS-101')->firstOrFail();
+        $this->assertSame('Andi Pratama', $siswaA->nama);
+        $this->assertSame($kelas->id, $siswaA->kelas_id);
+        $this->assertSame($tahunAjaran->id, $siswaA->tahun_ajaran_id);
+        $this->assertSame($lembaga->id, $siswaA->lembaga_id);
+        $this->assertTrue($siswaA->is_active);
+
+        $siswaB = Siswa::query()->where('nis', 'NIS-102')->firstOrFail();
+        $this->assertSame('Siti Rahma', $siswaB->nama);
+        $this->assertSame($kelas->id, $siswaB->kelas_id);
+        $this->assertSame($tahunAjaran->id, $siswaB->tahun_ajaran_id);
+    }
+
+    public function test_imported_siswa_visible_on_admin_siswa_index(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelas = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        $file = $this->makeImportFile([
+            ['nis' => 'NIS-201', 'nama' => 'Budi Santoso'],
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelas), [
+            'file' => $file,
+        ])->assertRedirect(route('admin.kelas.show', $kelas));
+
+        $index = $this->actingAs($admin)->get(route('admin.siswa.index'));
+        $index->assertOk()->assertSee('Budi Santoso')->assertSee('NIS-201');
+    }
+
+    public function test_duplicate_nis_fails_row(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelas = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        $existing = Siswa::factory()->for($lembaga)->create([
+            'nis' => 'NIS-DUP',
+            'nama' => 'Siswa Lama',
+        ]);
+        $existing->delete();
+
+        $file = $this->makeImportFile([
+            ['nis' => 'NIS-OK', 'nama' => 'Siswa Baru'],
+            ['nis' => 'NIS-DUP', 'nama' => 'Duplikat'],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelas), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect(route('admin.kelas.show', $kelas));
+        $response->assertSessionHas('import_errors');
+        $this->assertSame(1, Siswa::query()->count());
+        $this->assertSame('NIS-OK', Siswa::query()->value('nis'));
+    }
+
+    public function test_other_lembaga_cannot_import_to_kelas(): void
+    {
+        $lembagaA = Lembaga::factory()->create();
+        $lembagaB = Lembaga::factory()->create();
+        $adminA = User::factory()->adminLembaga($lembagaA->id)->create();
+        $tahunAjaranB = TahunAjaran::factory()->for($lembagaB)->create();
+        $kelasB = Kelas::factory()->for($lembagaB)->create([
+            'tahun_ajaran_id' => $tahunAjaranB->id,
+        ]);
+
+        $file = $this->makeImportFile([
+            ['nis' => 'NIS-X', 'nama' => 'Siswa X'],
+        ]);
+
+        $this->actingAs($adminA)->post(route('admin.kelas.siswa.import', $kelasB), [
+            'file' => $file,
+        ])->assertNotFound();
+
+        $this->actingAs($adminA)->get(route('admin.kelas.siswa.template', $kelasB))
+            ->assertNotFound();
+
+        $this->assertSame(0, Siswa::query()->count());
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function makeImportFile(array $rows): UploadedFile
+    {
+        $spreadsheet = new Spreadsheet;
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data Siswa');
+
+        foreach (SiswaTemplateExporter::dataHeaders() as $index => $header) {
+            $column = chr(ord('A') + $index);
+            $sheet->setCellValue($column.'1', $header);
+        }
+
+        foreach ($rows as $rowIndex => $row) {
+            $excelRow = $rowIndex + 2;
+            $sheet->setCellValue('A'.$excelRow, $row['nis'] ?? '');
+            $sheet->setCellValue('B'.$excelRow, $row['nama'] ?? '');
+            $sheet->setCellValue('C'.$excelRow, $row['nisn'] ?? '');
+            $sheet->setCellValue('D'.$excelRow, $row['jenis_kelamin'] ?? '');
+            $sheet->setCellValue('E'.$excelRow, $row['tempat_lahir'] ?? '');
+            $sheet->setCellValue('F'.$excelRow, $row['tanggal_lahir'] ?? '');
+            $sheet->setCellValue('G'.$excelRow, $row['email'] ?? '');
+            $sheet->setCellValue('H'.$excelRow, $row['telepon'] ?? '');
+            $sheet->setCellValue('I'.$excelRow, $row['alamat'] ?? '');
+            $sheet->setCellValue('J'.$excelRow, $row['nama_wali'] ?? '');
+            $sheet->setCellValue('K'.$excelRow, $row['telepon_wali'] ?? '');
+        }
+
+        $path = tempnam(sys_get_temp_dir(), 'siswa-import-').'.xlsx';
+        (new Xlsx($spreadsheet))->save($path);
+
+        return new UploadedFile($path, 'import-siswa.xlsx', null, null, true);
+    }
+}

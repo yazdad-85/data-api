@@ -12,6 +12,26 @@
         <p class="flash-status">{{ session('status') }}</p>
     @endif
 
+    @if (session('import_errors'))
+        <div class="callout-warning">
+            <p><strong>Detail baris gagal:</strong></p>
+            <ul>
+                @foreach (session('import_errors') as $error)
+                    <li>Baris {{ $error['row'] }}: {{ $error['message'] }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
+    @if ($errors->any())
+        <div class="callout-warning">
+            <p><strong>Periksa kembali data yang dikirim:</strong></p>
+            @foreach ($errors->all() as $message)
+                <p>{{ $message }}</p>
+            @endforeach
+        </div>
+    @endif
+
     <div class="card">
         <div class="card__header">
             <div>
@@ -41,9 +61,8 @@
             </p>
         </div>
         <div class="page-header__actions">
-            {{-- Import siswa akan diimplementasikan pada Task 5 --}}
-            <x-ui.button variant="secondary" disabled>Unduh template siswa</x-ui.button>
-            <x-ui.button variant="secondary" disabled>Import siswa</x-ui.button>
+            <x-ui.button href="{{ route('admin.kelas.siswa.template', $kelas) }}" variant="secondary">Unduh template siswa</x-ui.button>
+            <button type="button" class="btn btn-secondary" data-modal-open="import-siswa-kelas">Import siswa</button>
         </div>
     </div>
 
@@ -80,6 +99,28 @@
 
         <x-ui.pagination :paginator="$siswa" />
     @endif
+
+    <x-ui.modal id="import-siswa-kelas" title="Import data siswa">
+        <p>
+            Unggah file Excel (.xlsx) sesuai template. Siswa akan terdaftar di kelas
+            <strong>{{ $kelas->nama }}</strong> ({{ $kelas->tahunAjaran?->nama ?? '—' }}).
+        </p>
+
+        <form id="import-siswa-kelas-form" method="POST" action="{{ route('admin.kelas.siswa.import', $kelas) }}" enctype="multipart/form-data">
+            @csrf
+            <div class="field">
+                <label for="import-siswa-kelas-file" class="field-label">File Excel</label>
+                <input id="import-siswa-kelas-file" type="file" name="file" accept=".xlsx,.xls" class="field-control" required>
+            </div>
+        </form>
+
+        <x-slot:actions>
+            <form method="dialog">
+                <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
+            </form>
+            <x-ui.button type="submit" form="import-siswa-kelas-form">Import</x-ui.button>
+        </x-slot:actions>
+    </x-ui.modal>
 
     <x-ui.modal id="delete-kelas-show" title="Hapus kelas?">
         <p>

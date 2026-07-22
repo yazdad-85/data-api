@@ -77,6 +77,8 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::get('/kelas/create', [KelasController::class, 'create'])->name('admin.kelas.create');
     Route::post('/kelas', [KelasController::class, 'store'])->name('admin.kelas.store');
     Route::get('/kelas/{kelas}', [KelasController::class, 'show'])->name('admin.kelas.show');
+    Route::get('/kelas/{kelas}/siswa/template', [KelasController::class, 'siswaTemplate'])->name('admin.kelas.siswa.template');
+    Route::post('/kelas/{kelas}/siswa/import', [KelasController::class, 'siswaImport'])->name('admin.kelas.siswa.import');
     Route::get('/kelas/{kelas}/edit', [KelasController::class, 'edit'])->name('admin.kelas.edit');
     Route::put('/kelas/{kelas}', [KelasController::class, 'update'])->name('admin.kelas.update');
     Route::delete('/kelas/{kelas}', [KelasController::class, 'destroy'])->name('admin.kelas.destroy');
