@@ -5,6 +5,7 @@ namespace Database\Factories;
 use App\Models\Kelas;
 use App\Models\Lembaga;
 use App\Models\Siswa;
+use App\Support\Master\SiswaStatus;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -24,6 +25,7 @@ class SiswaFactory extends Factory
             'nama' => fake()->name(),
             'nis' => fake()->unique()->numerify('NIS#####'),
             'is_active' => true,
+            'status_siswa' => SiswaStatus::AKTIF,
         ];
     }
 
@@ -41,6 +43,46 @@ class SiswaFactory extends Factory
             'kelas_id' => $kelas->id,
             'tahun_ajaran_id' => $kelas->tahun_ajaran_id,
             'lembaga_id' => $kelas->lembaga_id,
+        ]);
+    }
+
+    public function calon(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status_siswa' => SiswaStatus::CALON,
+            'is_active' => false,
+            'kelas_id' => null,
+            'tahun_ajaran_id' => null,
+        ]);
+    }
+
+    public function mutasiMasuk(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status_siswa' => SiswaStatus::MUTASI_MASUK,
+            'is_active' => false,
+            'kelas_id' => null,
+            'tahun_ajaran_id' => null,
+        ]);
+    }
+
+    public function mutasiKeluar(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status_siswa' => SiswaStatus::MUTASI_KELUAR,
+            'is_active' => false,
+            'kelas_id' => null,
+            'tahun_ajaran_id' => null,
+        ]);
+    }
+
+    public function lulus(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status_siswa' => SiswaStatus::LULUS,
+            'is_active' => false,
+            'kelas_id' => null,
+            'tahun_ajaran_id' => null,
         ]);
     }
 }
