@@ -20,6 +20,8 @@ final class SiswaLifecycleService
     public function setStatus(Siswa $siswa, string $to, array $meta = []): Siswa
     {
         return DB::transaction(function () use ($siswa, $to, $meta) {
+            $siswa = $this->lockSiswa($siswa);
+
             $this->assertTransition($siswa->status_siswa, $to);
 
             $this->applyStatusFlags($siswa, $to, $this->resolveStatusAt($meta));
@@ -33,6 +35,7 @@ final class SiswaLifecycleService
     public function tempatkan(Siswa $siswa, Kelas $kelas, ?CarbonInterface $mulai = null, string $jenis = PenempatanJenis::AWAL): Siswa
     {
         return DB::transaction(function () use ($siswa, $kelas, $mulai, $jenis) {
+            $siswa = $this->lockSiswa($siswa);
             $this->assertSameLembaga($siswa, $kelas);
 
             $from = $siswa->status_siswa;
@@ -63,6 +66,7 @@ final class SiswaLifecycleService
     public function pindahKelas(Siswa $siswa, Kelas $kelasTujuan, ?CarbonInterface $mulai = null): Siswa
     {
         return DB::transaction(function () use ($siswa, $kelasTujuan, $mulai) {
+            $siswa = $this->lockSiswa($siswa);
             $this->assertSameLembaga($siswa, $kelasTujuan);
 
             if ($siswa->status_siswa !== SiswaStatus::AKTIF) {
@@ -71,7 +75,7 @@ final class SiswaLifecycleService
 
             $this->assertTransition(SiswaStatus::AKTIF, SiswaStatus::AKTIF);
 
-            $open = $this->findOpenPenempatan($siswa);
+            $open = $this->findOpenPenempatan($siswa, lock: true);
             if ($open === null) {
                 throw new InvalidArgumentException('Siswa belum memiliki penempatan terbuka untuk dipindahkan.');
             }
@@ -98,6 +102,7 @@ final class SiswaLifecycleService
     public function mutasiKeluar(Siswa $siswa, array $meta = []): Siswa
     {
         return DB::transaction(function () use ($siswa, $meta) {
+            $siswa = $this->lockSiswa($siswa);
             $this->assertTransition($siswa->status_siswa, SiswaStatus::MUTASI_KELUAR);
 
             $efektifAt = $this->resolveStatusAt($meta) ?? Carbon::now();
@@ -118,6 +123,7 @@ final class SiswaLifecycleService
     public function luluskan(Siswa $siswa, array $meta = []): Siswa
     {
         return DB::transaction(function () use ($siswa, $meta) {
+            $siswa = $this->lockSiswa($siswa);
             $this->assertTransition($siswa->status_siswa, SiswaStatus::LULUS);
 
             $efektifAt = $this->resolveStatusAt($meta) ?? Carbon::now();
@@ -148,13 +154,37 @@ final class SiswaLifecycleService
         }
     }
 
-    private function findOpenPenempatan(Siswa $siswa): ?SiswaPenempatan
+    /**
+     * Mengambil ulang siswa dengan row-level lock agar mutasi lifecycle yang
+     * berjalan bersamaan (concurrent) untuk siswa yang sama tidak saling tabrakan.
+     */
+    private function lockSiswa(Siswa $siswa): Siswa
     {
-        return SiswaPenempatan::withoutGlobalScopes()
+        $locked = Siswa::withoutGlobalScopes()
+            ->where('lembaga_id', $siswa->lembaga_id)
+            ->whereKey($siswa->getKey())
+            ->lockForUpdate()
+            ->first();
+
+        if ($locked === null) {
+            throw new InvalidArgumentException('Siswa tidak ditemukan.');
+        }
+
+        return $locked;
+    }
+
+    private function findOpenPenempatan(Siswa $siswa, bool $lock = false): ?SiswaPenempatan
+    {
+        $query = SiswaPenempatan::withoutGlobalScopes()
             ->where('lembaga_id', $siswa->lembaga_id)
             ->where('siswa_id', $siswa->id)
-            ->whereNull('selesai_at')
-            ->first();
+            ->whereNull('selesai_at');
+
+        if ($lock) {
+            $query->lockForUpdate();
+        }
+
+        return $query->first();
     }
 
     /**
@@ -164,7 +194,7 @@ final class SiswaLifecycleService
      */
     private function closeOpenPenempatan(Siswa $siswa, CarbonInterface $selesaiAt): void
     {
-        $open = $this->findOpenPenempatan($siswa);
+        $open = $this->findOpenPenempatan($siswa, lock: true);
 
         if ($open === null) {
             return;
