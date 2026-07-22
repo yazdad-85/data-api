@@ -259,6 +259,47 @@ Test wajib:
 - [x] Satu tahun ajaran aktif per lembaga.
 - [x] Partial unique NIS/NISN berjalan. *(M6b)*
 
+## Milestone 6c - Lifecycle siswa
+
+Status: **Selesai** — spek [2026-07-22-milestone-6c-siswa-lifecycle-design.md](./superpowers/specs/2026-07-22-milestone-6c-siswa-lifecycle-design.md)
+
+Tujuan: lifecycle siswa (status operasional + histori penempatan/enrollment + kenaikan kelas batch + aksi per siswa) untuk Admin Lembaga, tanpa endpoint REST (tetap M7). Disisipkan **sebelum Milestone 7**; Milestone 6 (a+b) tetap dianggap selesai.
+
+Keputusan arah: hybrid data — `status_siswa` + metadata singkat di `siswa`; tabel `siswa_penempatan` sebagai enrollment penuh; `kelas_id`/`tahun_ajaran_id` tetap snapshot terkini yang di-mirror dari penempatan terbuka. UI **Admin Lembaga saja**; Super Admin → 403. Stack Blade + controller + Form Request.
+
+- [x] Migration: kolom status siswa (`status_siswa`, `status_at`, `status_alasan`, `status_asal`, `status_tujuan`) + index `(lembaga_id, status_siswa)`.
+- [x] Migration: tabel `siswa_penempatan` (composite FK tenant, partial unique satu baris terbuka per siswa) + backfill `jenis=awal` untuk siswa berkelas.
+- [x] Model `SiswaPenempatan` + factory (baris terbuka/tertutup).
+- [x] `SiswaLifecycleService`: transisi status, tutup/buka penempatan, sync snapshot `kelas_id`/`tahun_ajaran_id`, row-lock siswa saat mutasi.
+- [x] Aksi per siswa di UI show: tempatkan, pindah kelas, mutasi keluar, luluskan, set status; panel riwayat penempatan read-only.
+- [x] Blok perubahan kelas lewat edit master biasa (harus lewat aksi lifecycle).
+- [x] Guard activate/deactivate agar tidak menabrak status lifecycle (`mutasi_keluar`/`lulus`).
+- [x] Import siswa dari detail kelas menghasilkan `status=aktif` + enrollment `jenis=awal`.
+- [x] Filter list siswa by `status_siswa` + badge status + badge "Belum ada kelas".
+- [x] `KenaikanKelasService`: kenaikan/mutasi batch atomik (validasi semua baris → satu transaksi; gagal → rollback + pesan per baris).
+- [x] Wizard kenaikan batch (entry dari detail kelas) untuk Admin Lembaga; Super Admin 403.
+- [x] Audit log event lifecycle & kenaikan tanpa dump PII.
+- [x] Update SPEC §3.8 (status + `siswa_penempatan` §3.8.1) dan relokasi item enrollment di §7.
+- [x] Sisipkan checklist M6c ini sebelum Milestone 7.
+
+Review wajib:
+
+- [x] Review transisi status & atomicity batch.
+- [x] Review tenant scope service lifecycle & kenaikan (lembaga A tidak bisa proses lembaga B).
+- [x] Review konsistensi snapshot `kelas_id`/`tahun_ajaran_id` vs penempatan terbuka.
+- [x] Perbaiki semua temuan review sebelum test.
+
+Test wajib:
+
+- [x] Tenant: lembaga A tidak bisa lifecycle siswa lembaga B.
+- [x] Transisi status ilegal ditolak.
+- [x] Paling banyak satu penempatan terbuka per siswa.
+- [x] Snapshot `kelas_id`/`tahun_ajaran_id` konsisten setelah naik/pindah/keluar/lulus.
+- [x] Batch kenaikan atomic (semua sukses atau rollback penuh).
+- [x] Import siswa ke kelas menghasilkan `aktif` + enrollment awal.
+- [x] Backfill migration tidak merusak siswa tanpa kelas.
+- [x] Super Admin ditolak (403) dari route kenaikan/lifecycle.
+
 ## Milestone 7 - API client authentication
 
 Tujuan: integrasi aplikasi konsumen aman dan scoped.

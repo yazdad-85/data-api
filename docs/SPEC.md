@@ -245,22 +245,59 @@ Unik: (`lembaga_id`, `tahun_ajaran_id`, `nama`)
 | `jenis_kelamin` | enum | Tidak | `L` \| `P` |
 | `tempat_lahir` | string(100) | Tidak | |
 | `tanggal_lahir` | date | Tidak | |
-| `kelas_id` | UUID null | Tidak | Kelas aktif saat ini |
-| `tahun_ajaran_id` | UUID null | Tidak | Tahun ajaran terkait penempatan |
+| `kelas_id` | UUID null | Tidak | **Snapshot** kelas aktif; di-mirror dari penempatan terbuka (§3.8.1) |
+| `tahun_ajaran_id` | UUID null | Tidak | **Snapshot** tahun ajaran aktif; di-mirror dari penempatan terbuka (§3.8.1) |
 | `email` | string(150) | Tidak | |
 | `telepon` | string(30) | Tidak | |
 | `alamat` | text | Tidak | |
 | `nama_wali` | string(150) | Tidak | |
 | `telepon_wali` | string(30) | Tidak | |
-| `is_active` | boolean | Ya | |
+| `is_active` | boolean | Ya | Diselaraskan otomatis oleh aksi lifecycle menurut `status_siswa` |
+| `status_siswa` | string(30) | Ya | Status lifecycle operasional; default `aktif`. Enum: `calon` \| `mutasi_masuk` \| `aktif` \| `mutasi_keluar` \| `lulus` |
+| `status_at` | date null | Tidak | Tanggal efektif status terkini |
+| `status_alasan` | string(255) null | Tidak | Alasan singkat (mis. sebab mutasi keluar) |
+| `status_asal` | string(150) null | Tidak | Asal (mis. nama sekolah untuk mutasi masuk) |
+| `status_tujuan` | string(150) null | Tidak | Tujuan (mis. nama sekolah untuk mutasi keluar) |
 
 Unik (**wajib**, partial): (`lembaga_id`, `nis`) WHERE nis IS NOT NULL; (`lembaga_id`, `nisn`) WHERE nisn IS NOT NULL  
+Index tambahan: (`lembaga_id`, `status_siswa`) untuk filter list/API.  
 Validasi: jika `kelas_id` terisi, `tahun_ajaran_id` wajib terisi dan harus cocok dengan `kelas.tahun_ajaran_id`
 
 Semantik status:
 
 - `is_active = false` berarti record masih valid secara historis, tetapi tidak aktif untuk operasional.
 - `deleted_at != null` berarti record dihapus dari master aktif dan harus dikirim sebagai tombstone di sync.
+- `status_siswa` adalah status lifecycle (berbeda dari soft delete). Transisi diizinkan (fase 1):
+  - `calon` → `mutasi_masuk` \| `aktif`
+  - `mutasi_masuk` → `aktif` \| `mutasi_keluar`
+  - `aktif` → `aktif` (pindah/naik kelas) \| `mutasi_keluar` \| `lulus`
+  - `mutasi_keluar` / `lulus` → (tidak dibuka di fase 1)
+- `kelas_id` / `tahun_ajaran_id` **selalu** merupakan snapshot dari penempatan terbuka (`siswa_penempatan.selesai_at IS NULL`); dikosongkan untuk `mutasi_keluar`, `lulus`, dan `calon` tanpa kelas.
+- Perubahan kelas siswa (naik/pindah/keluar/lulus) **hanya** boleh lewat aksi lifecycle (§7.x), bukan edit master biasa, agar histori penempatan tetap konsisten.
+
+#### 3.8.1 Siswa penempatan (enrollment / histori kelas)
+
+Tabel `siswa_penempatan` menyimpan riwayat penempatan siswa antar kelas/tahun ajaran. Snapshot `siswa.kelas_id` / `siswa.tahun_ajaran_id` selalu mirror dari baris terbuka.
+
+| Field | Tipe | Wajib | Catatan |
+|-------|------|:-----:|---------|
+| `id` | UUID | Ya | PK |
+| `lembaga_id` | UUID | Ya | Tenant |
+| `siswa_id` | UUID | Ya | Composite FK `(lembaga_id, siswa_id)` → `siswa(lembaga_id, id)` |
+| `tahun_ajaran_id` | UUID null | Tidak | Composite FK; null bila penempatan tanpa TA |
+| `kelas_id` | UUID null | Tidak | Composite FK `(lembaga_id, tahun_ajaran_id, kelas_id)`; null bila tanpa kelas |
+| `mulai_at` | date | Ya | Mulai penempatan |
+| `selesai_at` | date null | Tidak | `null` = masih berjalan (terbuka) |
+| `jenis` | string(30) | Ya | `awal` \| `kenaikan` \| `pindah_kelas` \| `mutasi_masuk` \| `mutasi_keluar` \| `lulus` |
+| `keterangan` | text null | Tidak | Opsional |
+| `created_at` / `updated_at` | timestamp | Ya | |
+
+Aturan:
+
+- Paling banyak **satu** baris terbuka (`selesai_at IS NULL`) per siswa — ditegakkan partial unique index `(lembaga_id, siswa_id) WHERE selesai_at IS NULL` (PostgreSQL & SQLite) **dan** di service layer.
+- Naik/pindah/keluar/lulus: tutup baris terbuka (`selesai_at` = tanggal efektif, jejak historis dipertahankan) → buat baris baru bila masih ditempatkan.
+- Index: `(lembaga_id, siswa_id)`, `(lembaga_id, updated_at, id)`, unik `(lembaga_id, id)`.
+- Backfill migrasi: setiap siswa lama dengan `kelas_id` terisi → satu baris `jenis=awal` terbuka; siswa tanpa kelas tidak dibuatkan baris.
 
 ---
 
@@ -508,7 +545,8 @@ Wajib sebelum produksi:
 
 ## 7. Hal yang sengaja belum di-spec (fase berikutnya)
 
-- Histori perpindahan kelas siswa antar tahun (tabel enrollments)
+> Histori perpindahan kelas siswa antar tahun (tabel enrollment) **sudah di-spec** di §3.8.1 (`siswa_penempatan`) dan diimplementasikan di Milestone 6c — lihat [design M6c](./superpowers/specs/2026-07-22-milestone-6c-siswa-lifecycle-design.md).
+
 - Foto/dokumen upload
 - Webhook push perubahan
 - Import Excel massal — **fase 2** (D9; fase 1 input manual)

@@ -15,11 +15,17 @@ class TahunAjaranFactory extends Factory
     protected $model = TahunAjaran::class;
 
     /**
+     * Counter monotonik agar `nama` (tahun ajaran) unik antar-instance dan tidak
+     * menabrak unique constraint (lembaga_id, nama) saat banyak TA dibuat dalam satu tes.
+     */
+    private static int $tahunSequence = 2000;
+
+    /**
      * @return array<string, mixed>
      */
     public function definition(): array
     {
-        $tahunMulai = fake()->numberBetween(2020, 2030);
+        $tahunMulai = self::$tahunSequence++;
 
         return [
             'lembaga_id' => Lembaga::factory(),
