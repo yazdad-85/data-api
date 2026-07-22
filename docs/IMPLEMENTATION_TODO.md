@@ -216,15 +216,17 @@ Test wajib:
 
 ## Milestone 6 - CRUD master Admin Lembaga
 
-Status: **M6a selesai (Tahun ajaran/Guru/Karyawan)**; **M6b (Kelas/Siswa) belum**
+Status: **M6a selesai + UAT guru OK**; **M6b spek siap review** — [2026-07-22-milestone-6b-kelas-siswa-design.md](./superpowers/specs/2026-07-22-milestone-6b-kelas-siswa-design.md)
 
 Tujuan: master data fase 1 lengkap dan scoped.
 
-Keputusan arah: Milestone 6 dipecah — spek [2026-07-21-milestone-6a-master-ta-guru-karyawan-design.md](./superpowers/specs/2026-07-21-milestone-6a-master-ta-guru-karyawan-design.md) mencakup Tahun ajaran + Guru + Karyawan (Admin Lembaga saja; Super Admin 403 di route ini) dan rename kolom guru `nip` → `niy`. Kelas + Siswa dikerjakan di **M6b** (spek terpisah menyusul).
+Keputusan arah: Milestone 6 dipecah — spek M6a Tahun ajaran + Guru + Karyawan selesai. **M6b** = Kelas + Siswa (import kelas; import siswa dari detail kelas; NIS wajib; NISN opsional; hard delete kelas kosong).
+
+UAT lokal (22 Jul 2026): edit & hapus guru berhasil; import guru + auto NIY dipakai operasional.
 
 - [x] CRUD Tahun Ajaran.
 - [x] Aktifkan satu tahun ajaran per lembaga dalam transaksi.
-- [x] CRUD Guru.
+- [x] CRUD Guru. *(termasuk import Excel, template 2 sheet, auto NIY, tahun masuk; UAT edit/hapus OK)*
 - [ ] CRUD Kelas. *(M6b)*
 - [ ] Validasi kelas wajib punya tahun ajaran milik lembaga yang sama. *(M6b)*
 - [ ] Validasi wali kelas guru milik lembaga yang sama. *(M6b)*
@@ -232,9 +234,9 @@ Keputusan arah: Milestone 6 dipecah — spek [2026-07-21-milestone-6a-master-ta-
 - [ ] CRUD Siswa. *(M6b)*
 - [ ] Siswa boleh tanpa kelas, tampil badge "Belum ada kelas". *(M6b)*
 - [ ] Validasi siswa `kelas_id` dan `tahun_ajaran_id` cocok. *(M6b)*
-- [x] CRUD Karyawan.
-- [ ] Search/pagination list siswa dan guru. *(guru selesai; siswa menyusul M6b)*
-- [x] Soft delete dengan modal konfirmasi. *(tahun ajaran, guru, karyawan)*
+- [x] CRUD Karyawan. *(disamakan dengan guru: import Excel, template 2 sheet, auto NIK format NIY, tahun masuk)*
+- [x] Search/pagination list guru. *(siswa menyusul M6b)*
+- [x] Soft delete dengan modal konfirmasi. *(tahun ajaran, guru, karyawan — UAT guru hapus OK)*
 - [x] Audit log akses/view PII admin sesuai RULES. *(`master.view` pada show guru/karyawan, tanpa dump PII)*
 
 Review wajib (M6a):
