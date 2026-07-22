@@ -18,7 +18,13 @@ class UpdateLembagaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kode' => ['required', 'string', 'max:30', Rule::unique('lembaga', 'kode')->ignore($this->route('lembaga'))],
+            'niy_kode' => [
+                'required',
+                'string',
+                'size:2',
+                'regex:/^\d{2}$/',
+                Rule::unique('lembaga', 'niy_kode')->ignore($this->route('lembaga')),
+            ],
             'nama' => ['required', 'string', 'max:150'],
             'jenis' => ['nullable', 'string', 'max:50'],
             'alamat' => ['nullable', 'string'],

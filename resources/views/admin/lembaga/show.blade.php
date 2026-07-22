@@ -28,6 +28,8 @@
                 <p class="card__meta">
                     Kode <strong>{{ $lembaga->kode }}</strong>
                     &middot;
+                    Kode NIY <strong>{{ $lembaga->niy_kode ?? '—' }}</strong>
+                    &middot;
                     @if ($lembaga->is_active)
                         <x-ui.badge tone="ok">Aktif</x-ui.badge>
                     @else

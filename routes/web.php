@@ -46,6 +46,8 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::delete('/tahun-ajaran/{tahun_ajaran}', [TahunAjaranController::class, 'destroy'])->name('admin.tahun-ajaran.destroy');
 
     Route::get('/guru', [GuruController::class, 'index'])->name('admin.guru.index');
+    Route::get('/guru/template', [GuruController::class, 'downloadTemplate'])->name('admin.guru.template');
+    Route::post('/guru/import', [GuruController::class, 'import'])->name('admin.guru.import');
     Route::get('/guru/create', [GuruController::class, 'create'])->name('admin.guru.create');
     Route::post('/guru', [GuruController::class, 'store'])->name('admin.guru.store');
     Route::get('/guru/{guru}', [GuruController::class, 'show'])->name('admin.guru.show');
@@ -56,6 +58,8 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::delete('/guru/{guru}', [GuruController::class, 'destroy'])->name('admin.guru.destroy');
 
     Route::get('/karyawan', [KaryawanController::class, 'index'])->name('admin.karyawan.index');
+    Route::get('/karyawan/template', [KaryawanController::class, 'downloadTemplate'])->name('admin.karyawan.template');
+    Route::post('/karyawan/import', [KaryawanController::class, 'import'])->name('admin.karyawan.import');
     Route::get('/karyawan/create', [KaryawanController::class, 'create'])->name('admin.karyawan.create');
     Route::post('/karyawan', [KaryawanController::class, 'store'])->name('admin.karyawan.store');
     Route::get('/karyawan/{karyawan}', [KaryawanController::class, 'show'])->name('admin.karyawan.show');

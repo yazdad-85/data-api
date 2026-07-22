@@ -18,10 +18,10 @@ class StoreGuruRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'niy' => ['nullable', 'string', 'max:40'],
             'nuptk' => ['nullable', 'string', 'max:40'],
             'nama' => ['required', 'string', 'max:150'],
-            'jenis_kelamin' => ['nullable', Rule::in(['L', 'P'])],
+            'jenis_kelamin' => ['required', Rule::in(['L', 'P'])],
+            'tahun_masuk' => ['required', 'integer', 'min:1950', 'max:'.((int) now()->year + 1)],
             'tempat_lahir' => ['nullable', 'string', 'max:100'],
             'tanggal_lahir' => ['nullable', 'date'],
             'email' => ['nullable', 'email', 'max:150'],

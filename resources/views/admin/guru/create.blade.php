@@ -12,10 +12,19 @@
         <div>
             <h1 class="page-header__title font-display">Tambah guru</h1>
             <p class="page-header__description">
-                Guru baru berstatus aktif secara default.
+                Guru baru berstatus aktif secara default. NIY digenerate otomatis dari tahun masuk dan jenis kelamin.
             </p>
         </div>
     </div>
+
+    @if (! $lembaga->niy_kode)
+        <div class="callout-warning">
+            <p>
+                Lembaga belum memiliki <strong>kode NIY</strong>. Hubungi Super Admin untuk melengkapi data lembaga
+                sebelum menambah guru.
+            </p>
+        </div>
+    @endif
 
     <div class="form-card">
         <form method="POST" action="{{ route('admin.guru.store') }}">
@@ -30,27 +39,30 @@
                     :error="$errors->first('nama')"
                 />
                 <x-ui.input
-                    name="niy"
-                    label="NIY"
-                    :value="old('niy')"
-                    :error="$errors->first('niy')"
-                    hint="Nomor Induk Yayasan."
-                />
-                <x-ui.input
-                    name="nuptk"
-                    label="NUPTK"
-                    :value="old('nuptk')"
-                    :error="$errors->first('nuptk')"
+                    name="tahun_masuk"
+                    type="number"
+                    label="Tahun masuk"
+                    required
+                    :value="old('tahun_masuk')"
+                    :error="$errors->first('tahun_masuk')"
+                    hint="Tahun penuh, mis. 1989 atau 2024."
                 />
                 <x-ui.select
                     name="jenis_kelamin"
                     label="Jenis kelamin"
+                    required
                     :error="$errors->first('jenis_kelamin')"
                 >
                     <option value="" @selected(old('jenis_kelamin') === null)>— Pilih —</option>
                     <option value="L" @selected(old('jenis_kelamin') === 'L')>Laki-laki</option>
                     <option value="P" @selected(old('jenis_kelamin') === 'P')>Perempuan</option>
                 </x-ui.select>
+                <x-ui.input
+                    name="nuptk"
+                    label="NUPTK"
+                    :value="old('nuptk')"
+                    :error="$errors->first('nuptk')"
+                />
                 <x-ui.input
                     name="tempat_lahir"
                     label="Tempat lahir"
@@ -95,7 +107,7 @@
             </div>
 
             <div class="form-actions">
-                <x-ui.button type="submit">Simpan guru</x-ui.button>
+                <x-ui.button type="submit" :disabled="! $lembaga->niy_kode">Simpan guru</x-ui.button>
                 <x-ui.button href="{{ route('admin.guru.index') }}" variant="secondary">Batal</x-ui.button>
             </div>
         </form>

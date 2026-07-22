@@ -30,13 +30,15 @@
                     :value="old('nama', $guru->nama)"
                     :error="$errors->first('nama')"
                 />
-                <x-ui.input
-                    name="niy"
-                    label="NIY"
-                    :value="old('niy', $guru->niy)"
-                    :error="$errors->first('niy')"
-                    hint="Nomor Induk Yayasan."
-                />
+                <div class="field">
+                    <span class="field-label">NIY</span>
+                    <p class="field-control" style="background: var(--color-surface-muted, #f3f4f6);">{{ $guru->niy ?? '—' }}</p>
+                    <p class="field-hint">NIY tidak dapat diubah setelah dibuat.</p>
+                </div>
+                <div class="field">
+                    <span class="field-label">Tahun masuk</span>
+                    <p class="field-control" style="background: var(--color-surface-muted, #f3f4f6);">{{ $guru->tahun_masuk ?? '—' }}</p>
+                </div>
                 <x-ui.input
                     name="nuptk"
                     label="NUPTK"

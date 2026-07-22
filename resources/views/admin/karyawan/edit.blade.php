@@ -30,12 +30,15 @@
                     :value="old('nama', $karyawan->nama)"
                     :error="$errors->first('nama')"
                 />
-                <x-ui.input
-                    name="nik_pegawai"
-                    label="NIK pegawai"
-                    :value="old('nik_pegawai', $karyawan->nik_pegawai)"
-                    :error="$errors->first('nik_pegawai')"
-                />
+                <div class="field">
+                    <span class="field-label">NIK pegawai</span>
+                    <p class="field-control" style="background: var(--color-surface-muted, #f3f4f6);">{{ $karyawan->nik_pegawai ?? '—' }}</p>
+                    <p class="field-hint">NIK (format NIY) tidak dapat diubah setelah dibuat.</p>
+                </div>
+                <div class="field">
+                    <span class="field-label">Tahun masuk</span>
+                    <p class="field-control" style="background: var(--color-surface-muted, #f3f4f6);">{{ $karyawan->tahun_masuk ?? '—' }}</p>
+                </div>
                 <x-ui.select
                     name="jenis_kelamin"
                     label="Jenis kelamin"

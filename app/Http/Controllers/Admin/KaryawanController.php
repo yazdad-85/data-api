@@ -4,13 +4,21 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Concerns\EnsuresAdminLembaga;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\ImportKaryawanRequest;
 use App\Http\Requests\Admin\StoreKaryawanRequest;
 use App\Http\Requests\Admin\UpdateKaryawanRequest;
 use App\Models\Karyawan;
+use App\Models\Lembaga;
 use App\Services\AuditLogger;
+use App\Services\Karyawan\KaryawanImporter;
+use App\Services\Karyawan\KaryawanTemplateExporter;
+use App\Support\Master\GuruNiyGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class KaryawanController extends Controller
 {
@@ -18,6 +26,9 @@ class KaryawanController extends Controller
 
     public function __construct(
         private readonly AuditLogger $auditLogger,
+        private readonly GuruNiyGenerator $niyGenerator,
+        private readonly KaryawanTemplateExporter $templateExporter,
+        private readonly KaryawanImporter $importer,
     ) {}
 
     public function index(Request $request): View
@@ -47,20 +58,38 @@ class KaryawanController extends Controller
 
     public function create(): View
     {
-        $this->adminLembaga();
+        $user = $this->adminLembaga();
+        $lembaga = Lembaga::query()->findOrFail($user->lembaga_id);
 
-        return view('admin.karyawan.create');
+        return view('admin.karyawan.create', compact('lembaga'));
     }
 
     public function store(StoreKaryawanRequest $request): RedirectResponse
     {
         $user = $this->adminLembaga();
+        $lembaga = Lembaga::query()->findOrFail($user->lembaga_id);
 
-        $karyawan = Karyawan::query()->create([
-            ...$request->validated(),
-            'lembaga_id' => $user->lembaga_id,
-            'is_active' => true,
-        ]);
+        try {
+            $karyawan = DB::transaction(function () use ($request, $lembaga, $user) {
+                $nik = $this->niyGenerator->generate(
+                    $lembaga,
+                    $request->validated('jenis_kelamin'),
+                    (int) $request->validated('tahun_masuk'),
+                );
+
+                return Karyawan::query()->create([
+                    ...collect($request->validated())->except(['nik_pegawai'])->all(),
+                    'lembaga_id' => $user->lembaga_id,
+                    'nik_pegawai' => $nik,
+                    'is_active' => true,
+                ]);
+            });
+        } catch (InvalidArgumentException $exception) {
+            return redirect()
+                ->back()
+                ->withInput()
+                ->withErrors(['tahun_masuk' => $exception->getMessage()]);
+        }
 
         $this->auditLogger->record('karyawan.create', 'success', [
             'nama' => $karyawan->nama,
@@ -68,7 +97,46 @@ class KaryawanController extends Controller
 
         return redirect()
             ->route('admin.karyawan.index')
-            ->with('status', "Karyawan {$karyawan->nama} berhasil dibuat.");
+            ->with('status', "Karyawan {$karyawan->nama} berhasil dibuat dengan NIK {$karyawan->nik_pegawai}.");
+    }
+
+    public function downloadTemplate(): StreamedResponse
+    {
+        $this->adminLembaga();
+
+        return $this->templateExporter->downloadResponse();
+    }
+
+    public function import(ImportKaryawanRequest $request): RedirectResponse
+    {
+        $user = $this->adminLembaga();
+        $lembaga = Lembaga::query()->findOrFail($user->lembaga_id);
+
+        $result = $this->importer->import(
+            $request->file('file'),
+            $lembaga,
+            (string) $user->lembaga_id,
+        );
+
+        $auditResult = $result['success'] > 0 && $result['failed'] === 0
+            ? 'success'
+            : ($result['success'] > 0 ? 'success' : 'failed');
+
+        $this->auditLogger->record('karyawan.import', $auditResult, [
+            'success' => $result['success'],
+            'failed' => $result['failed'],
+        ], lembagaId: $user->lembaga_id, request: $request);
+
+        $status = "Import selesai: {$result['success']} berhasil";
+        if ($result['failed'] > 0) {
+            $status .= ", {$result['failed']} gagal";
+        }
+        $status .= '.';
+
+        return redirect()
+            ->route('admin.karyawan.index')
+            ->with('status', $status)
+            ->with('import_errors', $result['errors']);
     }
 
     public function show(Request $request, Karyawan $karyawan): View

@@ -21,6 +21,7 @@ class Guru extends Model
     protected $fillable = [
         'lembaga_id',
         'niy',
+        'tahun_masuk',
         'nuptk',
         'nama',
         'jenis_kelamin',
@@ -37,6 +38,7 @@ class Guru extends Model
     {
         return [
             'tanggal_lahir' => 'date',
+            'tahun_masuk' => 'integer',
             'is_active' => 'boolean',
         ];
     }

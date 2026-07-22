@@ -15,12 +15,25 @@
             </p>
         </div>
         <div class="page-header__actions">
+            <x-ui.button href="{{ route('admin.karyawan.template') }}" variant="secondary">Unduh template</x-ui.button>
+            <button type="button" class="btn btn-secondary" data-modal-open="import-karyawan">Import Excel</button>
             <x-ui.button href="{{ route('admin.karyawan.create') }}">Tambah karyawan</x-ui.button>
         </div>
     </div>
 
     @if (session('status'))
         <p class="flash-status">{{ session('status') }}</p>
+    @endif
+
+    @if (session('import_errors'))
+        <div class="callout-warning">
+            <p><strong>Detail baris gagal:</strong></p>
+            <ul>
+                @foreach (session('import_errors') as $error)
+                    <li>Baris {{ $error['row'] }}: {{ $error['message'] }}</li>
+                @endforeach
+            </ul>
+        </div>
     @endif
 
     @if ($errors->any())
@@ -136,4 +149,23 @@
             </x-slot:actions>
         </x-ui.modal>
     @endforeach
+
+    <x-ui.modal id="import-karyawan" title="Import data karyawan">
+        <p>Unggah file Excel (.xlsx) sesuai template. NIK pegawai (format NIY) akan digenerate otomatis.</p>
+
+        <form id="import-karyawan-form" method="POST" action="{{ route('admin.karyawan.import') }}" enctype="multipart/form-data">
+            @csrf
+            <div class="field">
+                <label for="import-file" class="field-label">File Excel</label>
+                <input id="import-file" type="file" name="file" accept=".xlsx,.xls" class="field-control" required>
+            </div>
+        </form>
+
+        <x-slot:actions>
+            <form method="dialog">
+                <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
+            </form>
+            <x-ui.button type="submit" form="import-karyawan-form">Import</x-ui.button>
+        </x-slot:actions>
+    </x-ui.modal>
 @endsection

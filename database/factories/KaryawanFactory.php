@@ -21,6 +21,8 @@ class KaryawanFactory extends Factory
         return [
             'lembaga_id' => Lembaga::factory(),
             'nama' => fake()->name(),
+            'jenis_kelamin' => fake()->randomElement(['L', 'P']),
+            'tahun_masuk' => fake()->numberBetween(1990, (int) date('Y')),
             'is_active' => true,
         ];
     }

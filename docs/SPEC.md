@@ -200,7 +200,8 @@ Unik: (`lembaga_id`, `tahun_ajaran_id`, `nama`)
 |-------|------|:-----:|---------|
 | `id` | UUID | Ya | |
 | `lembaga_id` | UUID | Ya | |
-| `niy` | string(40) | Tidak | Nomor Induk Yayasan (NIY) |
+| `niy` | string(40) | Tidak | Nomor Induk Yayasan (NIY); digenerate otomatis |
+| `tahun_masuk` | smallint | Ya (create/import) | Tahun masuk pegawai; dipakai generate NIY |
 | `nuptk` | string(40) | Tidak | |
 | `nama` | string(150) | Ya | |
 | `jenis_kelamin` | enum | Tidak | `L` \| `P` |
@@ -220,7 +221,8 @@ Unik: (`lembaga_id`, `tahun_ajaran_id`, `nama`)
 |-------|------|:-----:|---------|
 | `id` | UUID | Ya | |
 | `lembaga_id` | UUID | Ya | |
-| `nik_pegawai` | string(40) | Tidak | Kode internal lembaga |
+| `nik_pegawai` | string(40) | Tidak | Digenerate otomatis (format NIY sama dengan guru) |
+| `tahun_masuk` | smallint | Ya (create/import) | Tahun masuk; dipakai generate NIK/NIY |
 | `nama` | string(150) | Ya | |
 | `jenis_kelamin` | enum | Tidak | `L` \| `P` |
 | `jabatan` | string(100) | Tidak | |

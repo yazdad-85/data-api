@@ -18,6 +18,7 @@ class Lembaga extends Model
 
     protected $fillable = [
         'kode',
+        'niy_kode',
         'nama',
         'jenis',
         'alamat',

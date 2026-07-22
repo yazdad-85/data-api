@@ -25,15 +25,17 @@ class MasterKaryawanTest extends TestCase
         return User::factory()->create(['role' => 'super_admin', 'lembaga_id' => null]);
     }
 
-    public function test_admin_lembaga_creates_karyawan_with_full_fields(): void
+    public function test_admin_lembaga_creates_karyawan_with_auto_nik(): void
     {
-        $lembaga = Lembaga::factory()->create();
+        config(['master.niy.npyp' => '0488']);
+
+        $lembaga = Lembaga::factory()->create(['niy_kode' => '01']);
         $admin = User::factory()->adminLembaga($lembaga->id)->create();
 
         $response = $this->actingAs($admin)->post(route('admin.karyawan.store'), [
             'nama' => 'Wati Rahayu',
-            'nik_pegawai' => 'NIK-001',
             'jenis_kelamin' => 'P',
+            'tahun_masuk' => 1989,
             'jabatan' => 'Staf Tata Usaha',
             'email' => 'wati@example.com',
             'telepon' => '08129876543',
@@ -44,7 +46,8 @@ class MasterKaryawanTest extends TestCase
 
         $karyawan = Karyawan::query()->where('lembaga_id', $lembaga->id)->firstOrFail();
         $this->assertSame('Wati Rahayu', $karyawan->nama);
-        $this->assertSame('NIK-001', $karyawan->nik_pegawai);
+        $this->assertSame('048801028901', $karyawan->nik_pegawai);
+        $this->assertSame(1989, $karyawan->tahun_masuk);
         $this->assertTrue($karyawan->is_active);
 
         $log = AuditLog::query()->where('event', 'karyawan.create')->first();
@@ -52,6 +55,21 @@ class MasterKaryawanTest extends TestCase
         $this->assertSame('success', $log->result);
         $this->assertSame($karyawan->id, $log->subject_id);
         $this->assertSame($lembaga->id, $log->lembaga_id);
+    }
+
+    public function test_create_fails_when_lembaga_has_no_niy_kode(): void
+    {
+        $lembaga = Lembaga::factory()->create(['niy_kode' => null]);
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.karyawan.store'), [
+            'nama' => 'Wati Rahayu',
+            'jenis_kelamin' => 'P',
+            'tahun_masuk' => 1989,
+        ]);
+
+        $response->assertSessionHasErrors('tahun_masuk');
+        $this->assertSame(0, Karyawan::query()->count());
     }
 
     public function test_client_supplied_lembaga_id_and_is_active_are_ignored_on_create(): void
@@ -62,6 +80,8 @@ class MasterKaryawanTest extends TestCase
 
         $response = $this->actingAs($admin)->post(route('admin.karyawan.store'), [
             'nama' => 'Karyawan Aman',
+            'jenis_kelamin' => 'L',
+            'tahun_masuk' => 2020,
             'lembaga_id' => $otherLembaga->id,
             'is_active' => false,
         ]);
@@ -77,18 +97,24 @@ class MasterKaryawanTest extends TestCase
     {
         $lembaga = Lembaga::factory()->create();
         $admin = User::factory()->adminLembaga($lembaga->id)->create();
-        $karyawan = Karyawan::factory()->for($lembaga)->create(['nama' => 'Nama Lama']);
+        $karyawan = Karyawan::factory()->for($lembaga)->create([
+            'nama' => 'Nama Lama',
+            'nik_pegawai' => '048801012401',
+            'tahun_masuk' => 2020,
+            'jenis_kelamin' => 'L',
+        ]);
 
         $response = $this->actingAs($admin)->put(route('admin.karyawan.update', $karyawan), [
             'nama' => 'Nama Baru',
-            'nik_pegawai' => 'NIK-999',
+            'jabatan' => 'Kepala TU',
         ]);
 
         $response->assertRedirect(route('admin.karyawan.index'));
 
         $karyawan->refresh();
         $this->assertSame('Nama Baru', $karyawan->nama);
-        $this->assertSame('NIK-999', $karyawan->nik_pegawai);
+        $this->assertSame('Kepala TU', $karyawan->jabatan);
+        $this->assertSame('048801012401', $karyawan->nik_pegawai);
     }
 
     public function test_index_search_matches_nama_or_nik_pegawai(): void

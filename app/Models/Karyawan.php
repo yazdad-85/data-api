@@ -20,6 +20,7 @@ class Karyawan extends Model
     protected $fillable = [
         'lembaga_id',
         'nik_pegawai',
+        'tahun_masuk',
         'nama',
         'jenis_kelamin',
         'jabatan',
@@ -32,6 +33,7 @@ class Karyawan extends Model
     protected function casts(): array
     {
         return [
+            'tahun_masuk' => 'integer',
             'is_active' => 'boolean',
         ];
     }

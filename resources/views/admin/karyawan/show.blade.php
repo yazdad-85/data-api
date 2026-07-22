@@ -33,6 +33,10 @@
 
         <dl class="detail-grid">
             <div>
+                <dt class="detail-grid__label">Tahun masuk</dt>
+                <dd class="detail-grid__value">{{ $karyawan->tahun_masuk ?? '—' }}</dd>
+            </div>
+            <div>
                 <dt class="detail-grid__label">Jabatan</dt>
                 <dd class="detail-grid__value">{{ $karyawan->jabatan ?? '—' }}</dd>
             </div>

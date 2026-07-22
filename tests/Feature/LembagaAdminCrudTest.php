@@ -29,11 +29,11 @@ class LembagaAdminCrudTest extends TestCase
         $sa = $this->superAdmin();
 
         $response = $this->actingAs($sa)->post(route('admin.lembaga.store'), [
-            'kode' => 'LBG-001',
+            'niy_kode' => '01',
             'nama' => 'SMA Lembaga Baru',
         ]);
 
-        $lembaga = Lembaga::query()->where('kode', 'LBG-001')->firstOrFail();
+        $lembaga = Lembaga::query()->where('nama', 'SMA Lembaga Baru')->firstOrFail();
         $response->assertRedirect(route('admin.lembaga.show', $lembaga));
 
         $this->actingAs($sa)->get(route('admin.lembaga.index'))
@@ -43,13 +43,15 @@ class LembagaAdminCrudTest extends TestCase
         $this->actingAs($sa)->get(route('admin.lembaga.show', $lembaga))
             ->assertOk()
             ->assertSee('SMA Lembaga Baru')
-            ->assertSee('LBG-001');
+            ->assertSee($lembaga->kode);
+
+        $this->assertMatchesRegularExpression('/^LBG-\d{3}$/', $lembaga->kode);
 
         $log = AuditLog::query()->where('event', 'lembaga.create')->first();
         $this->assertNotNull($log);
         $this->assertSame('success', $log->result);
         $this->assertSame($lembaga->id, $log->subject_id);
-        $this->assertSame('LBG-001', $log->metadata['kode'] ?? null);
+        $this->assertSame($lembaga->kode, $log->metadata['kode'] ?? null);
     }
 
     public function test_super_admin_updates_lembaga_fields(): void
@@ -58,7 +60,7 @@ class LembagaAdminCrudTest extends TestCase
         $lembaga = Lembaga::factory()->create(['kode' => 'LBG-002', 'nama' => 'Nama Lama']);
 
         $this->actingAs($sa)->put(route('admin.lembaga.update', $lembaga), [
-            'kode' => 'LBG-002',
+            'niy_kode' => '02',
             'nama' => 'Nama Baru',
             'jenis' => 'madrasah',
             'kota' => 'Jakarta',

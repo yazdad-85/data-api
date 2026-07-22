@@ -19,7 +19,7 @@ class StoreLembagaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'kode' => ['required', 'string', 'max:30', Rule::unique('lembaga', 'kode')],
+            'niy_kode' => ['required', 'string', 'size:2', 'regex:/^\d{2}$/', Rule::unique('lembaga', 'niy_kode')],
             'nama' => ['required', 'string', 'max:150'],
             'jenis' => ['nullable', 'string', 'max:50'],
             'alamat' => ['nullable', 'string'],

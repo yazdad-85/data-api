@@ -12,10 +12,19 @@
         <div>
             <h1 class="page-header__title font-display">Tambah karyawan</h1>
             <p class="page-header__description">
-                Karyawan baru berstatus aktif secara default.
+                Karyawan baru berstatus aktif secara default. NIK pegawai digenerate otomatis (format NIY) dari tahun masuk dan jenis kelamin.
             </p>
         </div>
     </div>
+
+    @if (! $lembaga->niy_kode)
+        <div class="callout-warning">
+            <p>
+                Lembaga belum memiliki <strong>kode NIY</strong>. Hubungi Super Admin untuk melengkapi data lembaga
+                sebelum menambah karyawan.
+            </p>
+        </div>
+    @endif
 
     <div class="form-card">
         <form method="POST" action="{{ route('admin.karyawan.store') }}">
@@ -30,14 +39,18 @@
                     :error="$errors->first('nama')"
                 />
                 <x-ui.input
-                    name="nik_pegawai"
-                    label="NIK pegawai"
-                    :value="old('nik_pegawai')"
-                    :error="$errors->first('nik_pegawai')"
+                    name="tahun_masuk"
+                    type="number"
+                    label="Tahun masuk"
+                    required
+                    :value="old('tahun_masuk')"
+                    :error="$errors->first('tahun_masuk')"
+                    hint="Tahun penuh, mis. 1989 atau 2024."
                 />
                 <x-ui.select
                     name="jenis_kelamin"
                     label="Jenis kelamin"
+                    required
                     :error="$errors->first('jenis_kelamin')"
                 >
                     <option value="" @selected(old('jenis_kelamin') === null)>— Pilih —</option>
@@ -74,7 +87,7 @@
             </div>
 
             <div class="form-actions">
-                <x-ui.button type="submit">Simpan karyawan</x-ui.button>
+                <x-ui.button type="submit" :disabled="! $lembaga->niy_kode">Simpan karyawan</x-ui.button>
                 <x-ui.button href="{{ route('admin.karyawan.index') }}" variant="secondary">Batal</x-ui.button>
             </div>
         </form>

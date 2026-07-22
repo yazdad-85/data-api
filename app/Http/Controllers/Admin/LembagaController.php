@@ -9,8 +9,10 @@ use App\Models\Lembaga;
 use App\Models\User;
 use App\Services\AuditLogger;
 use App\Services\Auth\SessionInvalidator;
+use App\Support\Master\LembagaKodeGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
 
 class LembagaController extends Controller
@@ -18,6 +20,7 @@ class LembagaController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly SessionInvalidator $sessionInvalidator,
+        private readonly LembagaKodeGenerator $kodeGenerator,
     ) {}
 
     public function index(Request $request): View
@@ -54,7 +57,12 @@ class LembagaController extends Controller
 
     public function store(StoreLembagaRequest $request): RedirectResponse
     {
-        $lembaga = Lembaga::query()->create($request->validated());
+        $lembaga = DB::transaction(function () use ($request) {
+            return Lembaga::query()->create([
+                ...$request->validated(),
+                'kode' => $this->kodeGenerator->generate(),
+            ]);
+        });
 
         $this->auditLogger->record('lembaga.create', 'success', [
             'kode' => $lembaga->kode,

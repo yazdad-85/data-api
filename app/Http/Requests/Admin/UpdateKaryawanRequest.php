@@ -18,7 +18,6 @@ class UpdateKaryawanRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nik_pegawai' => ['nullable', 'string', 'max:40'],
             'nama' => ['required', 'string', 'max:150'],
             'jenis_kelamin' => ['nullable', Rule::in(['L', 'P'])],
             'jabatan' => ['nullable', 'string', 'max:100'],

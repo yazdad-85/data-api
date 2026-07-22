@@ -11,7 +11,7 @@
     <div class="page-header">
         <div>
             <h1 class="page-header__title font-display">Tambah lembaga</h1>
-            <p class="page-header__description">Lengkapi data lembaga baru. Status aktif diatur otomatis saat dibuat.</p>
+            <p class="page-header__description">Lengkapi data lembaga baru. Kode lembaga digenerate otomatis; status aktif diatur saat dibuat.</p>
         </div>
     </div>
 
@@ -21,12 +21,12 @@
 
             <div class="form-grid">
                 <x-ui.input
-                    name="kode"
-                    label="Kode lembaga"
+                    name="niy_kode"
+                    label="Kode NIY (2 digit)"
                     required
-                    :value="old('kode')"
-                    :error="$errors->first('kode')"
-                    hint="Maksimal 30 karakter, harus unik."
+                    :value="old('niy_kode')"
+                    :error="$errors->first('niy_kode')"
+                    hint="Digunakan untuk generate NIY guru, mis. 01, 02."
                 />
                 <x-ui.input
                     name="nama"

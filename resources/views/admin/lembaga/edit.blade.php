@@ -24,13 +24,18 @@
             @method('PUT')
 
             <div class="form-grid">
+                <div class="field">
+                    <span class="field-label">Kode lembaga</span>
+                    <p class="field-control" style="background: var(--color-surface-muted, #f3f4f6);">{{ $lembaga->kode }}</p>
+                    <p class="field-hint">Kode lembaga digenerate otomatis dan tidak dapat diubah.</p>
+                </div>
                 <x-ui.input
-                    name="kode"
-                    label="Kode lembaga"
+                    name="niy_kode"
+                    label="Kode NIY (2 digit)"
                     required
-                    :value="old('kode', $lembaga->kode)"
-                    :error="$errors->first('kode')"
-                    hint="Maksimal 30 karakter, harus unik."
+                    :value="old('niy_kode', $lembaga->niy_kode)"
+                    :error="$errors->first('niy_kode')"
+                    hint="Digunakan untuk generate NIY guru, mis. 01, 02."
                 />
                 <x-ui.input
                     name="nama"

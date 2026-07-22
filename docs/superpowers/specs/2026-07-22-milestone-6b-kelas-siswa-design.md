@@ -1,6 +1,6 @@
 # Design — Milestone 6b: Master Kelas & Siswa
 
-Status: **Approved (draft for review)**  
+Status: **Approved**  
 Tanggal: 2026-07-22  
 Basis: [SPEC.md](../../SPEC.md) §2.3–2.4, §3.5, §3.8, §5.2; [RULES.md](../../RULES.md) A5–A7, A12–A13, B4; [IMPLEMENTATION_TODO.md](../../IMPLEMENTATION_TODO.md) Milestone 6; M6a [2026-07-21-milestone-6a-master-ta-guru-karyawan-design.md](./2026-07-21-milestone-6a-master-ta-guru-karyawan-design.md)
 

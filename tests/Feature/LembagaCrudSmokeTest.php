@@ -43,15 +43,15 @@ class LembagaCrudSmokeTest extends TestCase
         $sa = $this->superAdmin();
 
         $this->actingAs($sa)->post(route('admin.lembaga.store'), [
-            'kode' => 'LBG-SMOKE',
+            'niy_kode' => '03',
             'nama' => 'Lembaga Smoke Test',
         ])->assertRedirect();
 
-        $lembaga = Lembaga::query()->where('kode', 'LBG-SMOKE')->firstOrFail();
+        $lembaga = Lembaga::query()->where('nama', 'Lembaga Smoke Test')->firstOrFail();
         $this->assertTrue($lembaga->is_active);
 
         $this->actingAs($sa)->put(route('admin.lembaga.update', $lembaga), [
-            'kode' => 'LBG-SMOKE',
+            'niy_kode' => '03',
             'nama' => 'Lembaga Smoke Test Updated',
         ])->assertRedirect(route('admin.lembaga.show', $lembaga));
 
