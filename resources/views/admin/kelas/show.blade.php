@@ -65,6 +65,7 @@
             </p>
         </div>
         <div class="page-header__actions">
+            <x-ui.button href="{{ route('admin.kelas.kenaikan.create', $kelas) }}">Kenaikan kelas</x-ui.button>
             <x-ui.button href="{{ route('admin.kelas.siswa.template', $kelas) }}" variant="secondary">Unduh template siswa</x-ui.button>
             <button type="button" class="btn btn-secondary" data-modal-open="import-siswa-kelas">Import siswa ke kelas ini</button>
         </div>

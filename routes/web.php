@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\KelasController;
+use App\Http\Controllers\Admin\KenaikanKelasController;
 use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
@@ -73,6 +74,8 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::get('/kelas/create', [KelasController::class, 'create'])->name('admin.kelas.create');
     Route::post('/kelas', [KelasController::class, 'store'])->name('admin.kelas.store');
     Route::get('/kelas/{kelas}', [KelasController::class, 'show'])->name('admin.kelas.show');
+    Route::get('/kelas/{kelas}/kenaikan', [KenaikanKelasController::class, 'create'])->name('admin.kelas.kenaikan.create');
+    Route::post('/kelas/{kelas}/kenaikan', [KenaikanKelasController::class, 'store'])->name('admin.kelas.kenaikan.store');
     Route::get('/kelas/{kelas}/siswa/template', [KelasController::class, 'siswaTemplate'])->name('admin.kelas.siswa.template');
     Route::post('/kelas/{kelas}/siswa/import', [KelasController::class, 'siswaImport'])->name('admin.kelas.siswa.import');
     Route::get('/kelas/{kelas}/edit', [KelasController::class, 'edit'])->name('admin.kelas.edit');
