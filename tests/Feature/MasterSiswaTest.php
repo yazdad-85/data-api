@@ -6,8 +6,10 @@ use App\Models\AuditLog;
 use App\Models\Kelas;
 use App\Models\Lembaga;
 use App\Models\Siswa;
+use App\Models\SiswaPenempatan;
 use App\Models\TahunAjaran;
 use App\Models\User;
+use App\Support\Master\PenempatanJenis;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -129,6 +131,43 @@ class MasterSiswaTest extends TestCase
 
         $response->assertSessionHasErrors('nis');
         $this->assertSame(1, Siswa::withTrashed()->count());
+    }
+
+    public function test_update_cannot_change_kelas_id_penempatan_remains(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelasAsal = Kelas::factory()->for($lembaga)->create(['tahun_ajaran_id' => $tahunAjaran->id]);
+        $kelasLain = Kelas::factory()->for($lembaga)->create(['tahun_ajaran_id' => $tahunAjaran->id]);
+        $siswa = Siswa::factory()->for($lembaga)->inKelas($kelasAsal)->create(['nis' => 'NIS-UPD']);
+        $penempatan = SiswaPenempatan::factory()->for($lembaga)->for($siswa)->open()->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'kelas_id' => $kelasAsal->id,
+            'jenis' => PenempatanJenis::AWAL,
+        ]);
+
+        $response = $this->actingAs($admin)->put(route('admin.siswa.update', $siswa), [
+            'nis' => 'NIS-UPD',
+            'nama' => 'Nama Baru',
+            'kelas_id' => $kelasLain->id,
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        $response->assertRedirect(route('admin.siswa.index'));
+
+        $siswa->refresh();
+        $this->assertSame('Nama Baru', $siswa->nama);
+        $this->assertSame($kelasAsal->id, $siswa->kelas_id);
+        $this->assertSame($tahunAjaran->id, $siswa->tahun_ajaran_id);
+
+        $penempatan->refresh();
+        $this->assertNull($penempatan->selesai_at);
+        $this->assertSame($kelasAsal->id, $penempatan->kelas_id);
+        $this->assertSame(
+            1,
+            SiswaPenempatan::withoutGlobalScopes()->where('siswa_id', $siswa->id)->count()
+        );
     }
 
     public function test_destroy_soft_deletes_siswa(): void

@@ -12,7 +12,9 @@
         <div>
             <h1 class="page-header__title font-display">Ubah siswa</h1>
             <p class="page-header__description">
-                Perbarui data untuk <strong>{{ $siswa->nama }}</strong>.
+                Perbarui data untuk <strong>{{ $siswa->nama }}</strong>. Kelas dan tahun ajaran tidak dapat diubah di sini —
+                gunakan aksi <strong>Tempatkan ke kelas</strong> atau <strong>Pindah kelas</strong> pada halaman detail siswa
+                agar riwayat penempatan tetap konsisten.
             </p>
         </div>
     </div>
@@ -79,31 +81,13 @@
                     :value="old('telepon', $siswa->telepon)"
                     :error="$errors->first('telepon')"
                 />
-                <x-ui.select
-                    name="kelas_id"
-                    label="Kelas"
-                    :error="$errors->first('kelas_id')"
-                >
-                    <option value="" @selected(old('kelas_id', $siswa->kelas_id) === null || old('kelas_id', $siswa->kelas_id) === '')>— Belum ada kelas —</option>
-                    @foreach ($kelasList as $kelas)
-                        <option value="{{ $kelas->id }}" @selected(old('kelas_id', $siswa->kelas_id) === $kelas->id)>
-                            {{ $kelas->nama }}@if ($kelas->tahunAjaran) ({{ $kelas->tahunAjaran->nama }})@endif
-                        </option>
-                    @endforeach
-                </x-ui.select>
-                <x-ui.select
-                    name="tahun_ajaran_id"
-                    label="Tahun ajaran"
-                    :error="$errors->first('tahun_ajaran_id')"
-                    hint="Wajib jika siswa ditempatkan di kelas."
-                >
-                    <option value="" @selected(old('tahun_ajaran_id', $siswa->tahun_ajaran_id) === null || old('tahun_ajaran_id', $siswa->tahun_ajaran_id) === '')>— Pilih —</option>
-                    @foreach ($tahunAjarans as $tahunAjaran)
-                        <option value="{{ $tahunAjaran->id }}" @selected(old('tahun_ajaran_id', $siswa->tahun_ajaran_id) === $tahunAjaran->id)>
-                            {{ $tahunAjaran->nama }}
-                        </option>
-                    @endforeach
-                </x-ui.select>
+                <div class="field">
+                    <span class="field-label">Kelas</span>
+                    <p class="field-hint">
+                        {{ $siswa->kelas->nama ?? 'Belum ada kelas' }} &middot;
+                        <a href="{{ route('admin.siswa.show', $siswa) }}">ubah lewat aksi lifecycle</a>
+                    </p>
+                </div>
                 <x-ui.input
                     name="nama_wali"
                     label="Nama wali"

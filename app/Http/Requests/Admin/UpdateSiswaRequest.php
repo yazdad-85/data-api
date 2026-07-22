@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Admin;
 
-use App\Models\Kelas;
 use App\Models\Siswa;
 use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Foundation\Http\FormRequest;
@@ -19,15 +18,10 @@ class UpdateSiswaRequest extends FormRequest
     {
         $merge = [];
 
-        foreach (['nisn', 'kelas_id', 'tahun_ajaran_id', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'nama_wali', 'telepon_wali'] as $field) {
+        foreach (['nisn', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'nama_wali', 'telepon_wali'] as $field) {
             if ($this->input($field) === '') {
                 $merge[$field] = null;
             }
-        }
-
-        if (! $this->filled('kelas_id')) {
-            $merge['kelas_id'] = null;
-            $merge['tahun_ajaran_id'] = null;
         }
 
         if ($merge !== []) {
@@ -40,8 +34,10 @@ class UpdateSiswaRequest extends FormRequest
      */
     public function rules(): array
     {
-        $lembagaId = $this->user()?->lembaga_id;
-
+        // kelas_id / tahun_ajaran_id are intentionally excluded here: changing a
+        // siswa's kelas must go through SiswaLifecycleService (tempatkan/pindah)
+        // so the siswa_penempatan snapshot stays in sync. Ordinary edit cannot
+        // touch enrollment.
         return [
             'nis' => ['required', 'string', 'max:30'],
             'nisn' => ['nullable', 'string', 'max:30'],
@@ -54,17 +50,6 @@ class UpdateSiswaRequest extends FormRequest
             'alamat' => ['nullable', 'string'],
             'nama_wali' => ['nullable', 'string', 'max:150'],
             'telepon_wali' => ['nullable', 'string', 'max:30'],
-            'kelas_id' => [
-                'nullable',
-                'uuid',
-                Rule::exists('kelas', 'id')->where(fn ($query) => $query->where('lembaga_id', $lembagaId)),
-            ],
-            'tahun_ajaran_id' => [
-                Rule::requiredIf(fn () => $this->filled('kelas_id')),
-                'nullable',
-                'uuid',
-                Rule::exists('tahun_ajaran', 'id')->where(fn ($query) => $query->where('lembaga_id', $lembagaId)),
-            ],
         ];
     }
 
@@ -74,7 +59,6 @@ class UpdateSiswaRequest extends FormRequest
             $lembagaId = $this->user()?->lembaga_id;
             $nis = $this->input('nis');
             $nisn = $this->input('nisn');
-            $kelasId = $this->input('kelas_id');
             $siswa = $this->route('siswa');
 
             if (! $lembagaId || ! $siswa instanceof Siswa) {
@@ -103,26 +87,6 @@ class UpdateSiswaRequest extends FormRequest
                 if ($exists) {
                     $validator->errors()->add('nisn', "NISN {$nisn} sudah digunakan di lembaga ini.");
                 }
-            }
-
-            if (! is_string($kelasId) || $kelasId === '') {
-                return;
-            }
-
-            $tahunAjaranId = $this->input('tahun_ajaran_id');
-            $kelas = Kelas::query()
-                ->where('lembaga_id', $lembagaId)
-                ->find($kelasId);
-
-            if (! $kelas instanceof Kelas || ! is_string($tahunAjaranId)) {
-                return;
-            }
-
-            if (! hash_equals((string) $kelas->tahun_ajaran_id, (string) $tahunAjaranId)) {
-                $validator->errors()->add(
-                    'tahun_ajaran_id',
-                    'Tahun ajaran harus sama dengan tahun ajaran kelas yang dipilih.',
-                );
             }
         });
     }

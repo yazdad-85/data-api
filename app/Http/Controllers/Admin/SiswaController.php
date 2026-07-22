@@ -169,16 +169,7 @@ class SiswaController extends Controller
         $user = $this->adminLembaga();
         abort_unless(hash_equals((string) $siswa->lembaga_id, (string) $user->lembaga_id), 404);
 
-        $kelasList = Kelas::query()
-            ->with('tahunAjaran')
-            ->orderBy('nama')
-            ->get();
-
-        $tahunAjarans = TahunAjaran::query()
-            ->orderByDesc('nama')
-            ->get();
-
-        return view('admin.siswa.edit', compact('siswa', 'kelasList', 'tahunAjarans'));
+        return view('admin.siswa.edit', compact('siswa'));
     }
 
     public function update(UpdateSiswaRequest $request, Siswa $siswa): RedirectResponse
@@ -186,7 +177,13 @@ class SiswaController extends Controller
         $user = $this->adminLembaga();
         abort_unless(hash_equals((string) $siswa->lembaga_id, (string) $user->lembaga_id), 404);
 
-        $siswa->update($request->validated());
+        // Belt-and-suspenders: kelas_id/tahun_ajaran_id must never change via
+        // ordinary edit, even if a caller bypasses UpdateSiswaRequest's rules.
+        // Use SiswaLifecycleService (tempatkan/pindah) to move a siswa's kelas.
+        $validated = $request->validated();
+        unset($validated['kelas_id'], $validated['tahun_ajaran_id']);
+
+        $siswa->update($validated);
 
         $this->auditLogger->record('siswa.update', 'success', [
             'nama' => $siswa->nama,
