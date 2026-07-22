@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\KelasController;
+use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
 use App\Http\Controllers\Admin\LembagaController;
@@ -79,6 +80,16 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::get('/kelas/{kelas}/edit', [KelasController::class, 'edit'])->name('admin.kelas.edit');
     Route::put('/kelas/{kelas}', [KelasController::class, 'update'])->name('admin.kelas.update');
     Route::delete('/kelas/{kelas}', [KelasController::class, 'destroy'])->name('admin.kelas.destroy');
+
+    Route::get('/siswa', [SiswaController::class, 'index'])->name('admin.siswa.index');
+    Route::get('/siswa/create', [SiswaController::class, 'create'])->name('admin.siswa.create');
+    Route::post('/siswa', [SiswaController::class, 'store'])->name('admin.siswa.store');
+    Route::get('/siswa/{siswa}', [SiswaController::class, 'show'])->name('admin.siswa.show');
+    Route::get('/siswa/{siswa}/edit', [SiswaController::class, 'edit'])->name('admin.siswa.edit');
+    Route::put('/siswa/{siswa}', [SiswaController::class, 'update'])->name('admin.siswa.update');
+    Route::post('/siswa/{siswa}/activate', [SiswaController::class, 'activate'])->name('admin.siswa.activate');
+    Route::post('/siswa/{siswa}/deactivate', [SiswaController::class, 'deactivate'])->name('admin.siswa.deactivate');
+    Route::delete('/siswa/{siswa}', [SiswaController::class, 'destroy'])->name('admin.siswa.destroy');
 
     Route::get('/lembaga', [LembagaController::class, 'index'])->name('admin.lembaga.index');
     Route::get('/lembaga/create', [LembagaController::class, 'create'])->name('admin.lembaga.create');
