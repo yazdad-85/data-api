@@ -199,6 +199,10 @@ class SiswaController extends Controller
         $user = $this->adminLembaga();
         abort_unless(hash_equals((string) $siswa->lembaga_id, (string) $user->lembaga_id), 404);
 
+        if ($redirect = $this->rejectOperationalToggleUnlessAktif($siswa)) {
+            return $redirect;
+        }
+
         $siswa->update(['is_active' => true]);
 
         $this->auditLogger->record('siswa.activate', 'success', [
@@ -214,6 +218,10 @@ class SiswaController extends Controller
     {
         $user = $this->adminLembaga();
         abort_unless(hash_equals((string) $siswa->lembaga_id, (string) $user->lembaga_id), 404);
+
+        if ($redirect = $this->rejectOperationalToggleUnlessAktif($siswa)) {
+            return $redirect;
+        }
 
         $siswa->update(['is_active' => false]);
 
@@ -320,6 +328,23 @@ class SiswaController extends Controller
             fn () => $this->lifecycle->setStatus($siswa, $to, $request->meta()),
             "Status siswa {$siswa->nama} diperbarui.",
         );
+    }
+
+    /**
+     * Aktivasi/nonaktif sementara hanya untuk siswa berstatus aktif (jeda operasional).
+     * Perubahan status lifecycle ditangani aksi terpisah di halaman detail siswa.
+     */
+    private function rejectOperationalToggleUnlessAktif(Siswa $siswa): ?RedirectResponse
+    {
+        if ($siswa->status_siswa === SiswaStatus::AKTIF) {
+            return null;
+        }
+
+        return redirect()
+            ->route('admin.siswa.index')
+            ->withErrors([
+                'siswa' => 'Aktivasi/nonaktif sementara hanya untuk siswa berstatus aktif. Gunakan aksi lifecycle di halaman detail siswa untuk mengubah status.',
+            ]);
     }
 
     /**

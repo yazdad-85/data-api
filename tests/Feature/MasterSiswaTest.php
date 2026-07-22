@@ -10,6 +10,7 @@ use App\Models\SiswaPenempatan;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Master\PenempatanJenis;
+use App\Support\Master\SiswaStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -190,18 +191,53 @@ class MasterSiswaTest extends TestCase
     {
         $lembaga = Lembaga::factory()->create();
         $admin = User::factory()->adminLembaga($lembaga->id)->create();
-        $siswa = Siswa::factory()->for($lembaga)->create(['is_active' => true]);
+        $siswa = Siswa::factory()->for($lembaga)->create([
+            'status_siswa' => SiswaStatus::AKTIF,
+            'is_active' => true,
+        ]);
 
         $this->actingAs($admin)->post(route('admin.siswa.deactivate', $siswa))
             ->assertRedirect(route('admin.siswa.index'));
-        $this->assertFalse($siswa->refresh()->is_active);
+        $siswa->refresh();
+        $this->assertFalse($siswa->is_active);
+        $this->assertSame(SiswaStatus::AKTIF, $siswa->status_siswa);
 
         $this->actingAs($admin)->post(route('admin.siswa.activate', $siswa))
             ->assertRedirect(route('admin.siswa.index'));
-        $this->assertTrue($siswa->refresh()->is_active);
+        $siswa->refresh();
+        $this->assertTrue($siswa->is_active);
+        $this->assertSame(SiswaStatus::AKTIF, $siswa->status_siswa);
 
         $this->assertNotNull(AuditLog::query()->where('event', 'siswa.deactivate')->first());
         $this->assertNotNull(AuditLog::query()->where('event', 'siswa.activate')->first());
+    }
+
+    public function test_activate_deactivate_rejected_when_status_not_aktif(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $calon = Siswa::factory()->for($lembaga)->calon()->create();
+
+        $this->actingAs($admin)->post(route('admin.siswa.activate', $calon))
+            ->assertRedirect(route('admin.siswa.index'))
+            ->assertSessionHasErrors('siswa');
+
+        $calon->refresh();
+        $this->assertFalse($calon->is_active);
+        $this->assertSame(SiswaStatus::CALON, $calon->status_siswa);
+
+        $lulus = Siswa::factory()->for($lembaga)->lulus()->create();
+
+        $this->actingAs($admin)->post(route('admin.siswa.deactivate', $lulus))
+            ->assertRedirect(route('admin.siswa.index'))
+            ->assertSessionHasErrors('siswa');
+
+        $lulus->refresh();
+        $this->assertFalse($lulus->is_active);
+        $this->assertSame(SiswaStatus::LULUS, $lulus->status_siswa);
+
+        $this->assertNull(AuditLog::query()->where('event', 'siswa.activate')->first());
+        $this->assertNull(AuditLog::query()->where('event', 'siswa.deactivate')->first());
     }
 
     public function test_show_records_master_view_audit_without_pii_dump(): void
