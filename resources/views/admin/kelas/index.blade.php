@@ -12,11 +12,12 @@
             <h1 class="page-header__title font-display">Kelas</h1>
             <p class="page-header__description">
                 Kelola data kelas lembaga Anda per tahun ajaran.
+                Import siswa dilakukan dari halaman Detail kelas (klik nama kelas di tabel), bukan dari tombol Import kelas di atas.
             </p>
         </div>
         <div class="page-header__actions">
-            <x-ui.button href="{{ route('admin.kelas.template') }}" variant="secondary">Unduh template</x-ui.button>
-            <button type="button" class="btn btn-secondary" data-modal-open="import-kelas">Import Excel</button>
+            <x-ui.button href="{{ route('admin.kelas.template') }}" variant="secondary">Unduh template kelas</x-ui.button>
+            <button type="button" class="btn btn-secondary" data-modal-open="import-kelas">Import kelas</button>
             <x-ui.button href="{{ route('admin.kelas.create') }}">Tambah kelas</x-ui.button>
         </div>
     </div>
@@ -150,7 +151,8 @@
     @endforeach
 
     <x-ui.modal id="import-kelas" title="Import data kelas">
-        <p>Unggah file Excel (.xlsx) sesuai template. Tahun ajaran dan wali kelas akan dicocokkan otomatis.</p>
+        <p>Unggah file Excel (.xlsx) <strong>template kelas</strong> (kolom: nama, tahun_ajaran, …).</p>
+        <p>Untuk import <strong>siswa</strong>, buka Detail kelas → Unduh template siswa → Import siswa ke kelas ini.</p>
 
         <form id="import-kelas-form" method="POST" action="{{ route('admin.kelas.import') }}" enctype="multipart/form-data">
             @csrf
