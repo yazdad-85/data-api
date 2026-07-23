@@ -300,36 +300,40 @@ Test wajib:
 - [x] Backfill migration tidak merusak siswa tanpa kelas.
 - [x] Super Admin ditolak (403) dari route kenaikan/lifecycle.
 
-## Milestone 7 - API client authentication
+## Milestone 7 - API client authentication — **selesai**
 
 Tujuan: integrasi aplikasi konsumen aman dan scoped.
 
-- [ ] Middleware API key mendukung `X-API-Key`.
-- [ ] Opsional dukung `Authorization: Bearer`.
-- [ ] Parse format `dc_live_<prefix>_<secret>`.
-- [ ] Lookup prefix unik.
-- [ ] Verifikasi digest HMAC dengan `hash_equals`.
-- [ ] Tolak key invalid dengan 401 generik.
-- [ ] Tolak API client inactive/revoked dengan 403.
-- [ ] Tolak lembaga inactive dengan 403 `LEMBAGA_INACTIVE`.
-- [ ] Update `last_used_at` dan `last_used_ip`.
-- [ ] Rate limit 120/menit/key + limit tambahan per IP.
-- [ ] Pastikan header auth tidak pernah masuk log aplikasi.
+Spek: [2026-07-23-milestone-7-api-client-auth-design.md](./superpowers/specs/2026-07-23-milestone-7-api-client-auth-design.md).
+
+Catatan: smoke endpoint `GET /api/v1/health` dan `GET /api/v1/me` sudah disertakan di M7 sebagai smoke autentikasi; endpoint daftar resource (`/api/v1/guru`, dst.) tetap di **Milestone 8**.
+
+- [x] Middleware API key mendukung `X-API-Key`.
+- [x] Opsional dukung `Authorization: Bearer`.
+- [x] Parse format `dc_live_<prefix>_<secret>`.
+- [x] Lookup prefix unik.
+- [x] Verifikasi digest HMAC dengan `hash_equals`.
+- [x] Tolak key invalid dengan 401 generik.
+- [x] Tolak API client inactive/revoked dengan 403.
+- [x] Tolak lembaga inactive dengan 403 `LEMBAGA_INACTIVE`.
+- [x] Update `last_used_at` dan `last_used_ip`.
+- [x] Rate limit 120/menit/key + limit tambahan per IP.
+- [x] Pastikan header auth tidak pernah masuk log aplikasi.
 
 Review wajib:
 
-- [ ] Review middleware untuk timing-safe compare dan secret handling.
-- [ ] Review rate limit key/IP.
-- [ ] Perbaiki semua temuan review sebelum test.
+- [x] Review middleware untuk timing-safe compare dan secret handling.
+- [x] Review rate limit key/IP.
+- [x] Perbaiki semua temuan review sebelum test.
 
 Test wajib:
 
-- [ ] Tanpa key ditolak 401.
-- [ ] Key salah ditolak 401.
-- [ ] Key revoked ditolak 403.
-- [ ] Lembaga inactive ditolak 403.
-- [ ] Key A tidak bisa baca lembaga B.
-- [ ] Rate limit bekerja.
+- [x] Tanpa key ditolak 401.
+- [x] Key salah ditolak 401.
+- [x] Key revoked ditolak 403.
+- [x] Lembaga inactive ditolak 403.
+- [x] Key A tidak bisa baca lembaga B.
+- [x] Rate limit bekerja.
 
 ## Milestone 8 - API tarik penuh
 
