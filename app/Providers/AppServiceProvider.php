@@ -19,6 +19,7 @@ use App\Policies\LembagaPolicy;
 use App\Policies\SiswaPolicy;
 use App\Policies\TahunAjaranPolicy;
 use App\Policies\UserPolicy;
+use App\Support\Api\ApiClientContext;
 use App\Support\Navigation\AdminMenu;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -56,6 +57,21 @@ class AppServiceProvider extends ServiceProvider
                 Limit::perMinute(5)->by($email.'|'.$request->ip()),
                 Limit::perMinute(20)->by('ip:'.$request->ip()),
             ];
+        });
+
+        // Read limits from config at call time so tests can lower them per request.
+        RateLimiter::for('api-client-key', function (Request $request) {
+            $client = ApiClientContext::get($request);
+            $key = $client?->api_key_prefix ?? 'unknown';
+            $perMinute = (int) config('security.api_rate_per_minute', 120);
+
+            return Limit::perMinute($perMinute)->by('api-key:'.$key);
+        });
+
+        RateLimiter::for('api-client-ip', function (Request $request) {
+            $perMinute = (int) config('security.api_ip_rate_per_minute', 240);
+
+            return Limit::perMinute($perMinute)->by('api-ip:'.$request->ip());
         });
 
         Gate::policy(ApiClient::class, ApiClientPolicy::class);
