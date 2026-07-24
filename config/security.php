@@ -12,4 +12,6 @@ return [
     'api_rate_per_minute' => (int) env('API_RATE_PER_MINUTE', 120),
 
     'api_ip_rate_per_minute' => (int) env('API_IP_RATE_PER_MINUTE', 240),
+
+    'api_sync_max_since_days' => (int) env('API_SYNC_MAX_SINCE_DAYS', 90),
 ];

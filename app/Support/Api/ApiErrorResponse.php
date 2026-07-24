@@ -13,6 +13,9 @@ use Illuminate\Http\JsonResponse;
  * - LEMBAGA_INACTIVE    → "Lembaga tidak aktif."
  * - RATE_LIMITED        → "Terlalu banyak permintaan."
  * - FORBIDDEN           → "Profil field tidak diizinkan." / "Scope tidak mencukupi."
+ * - INVALID_SINCE       → "Parameter since tidak valid."
+ * - SINCE_TOO_OLD       → "Parameter since terlalu lama; gunakan tarik penuh."
+ * - INVALID_CURSOR      → "Cursor atau watermark tidak valid."
  */
 final class ApiErrorResponse
 {
@@ -25,6 +28,12 @@ final class ApiErrorResponse
     public const RATE_LIMITED = 'RATE_LIMITED';
 
     public const FORBIDDEN = 'FORBIDDEN';
+
+    public const INVALID_SINCE = 'INVALID_SINCE';
+
+    public const SINCE_TOO_OLD = 'SINCE_TOO_OLD';
+
+    public const INVALID_CURSOR = 'INVALID_CURSOR';
 
     public static function make(string $code, string $message, int $status): JsonResponse
     {
