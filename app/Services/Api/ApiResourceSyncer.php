@@ -8,6 +8,7 @@ use App\Support\Api\ApiResourceCatalog;
 use App\Support\Api\ApiSyncCursor;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 
 final class ApiResourceSyncer
@@ -52,7 +53,10 @@ final class ApiResourceSyncer
         /** @var class-string<Model> $modelClass */
         $modelClass = $entry['model'];
         $table = (new $modelClass)->getTable();
-        $changedAtSql = "GREATEST({$table}.updated_at, COALESCE({$table}.deleted_at, {$table}.updated_at))";
+        $changedAtFunction = DB::connection((new $modelClass)->getConnectionName())->getDriverName() === 'sqlite'
+            ? 'MAX'
+            : 'GREATEST';
+        $changedAtSql = "{$changedAtFunction}({$table}.updated_at, COALESCE({$table}.deleted_at, {$table}.updated_at))";
 
         $builder = $modelClass::query()->withoutGlobalScopes()
             ->where("{$table}.lembaga_id", $client->lembaga_id)
