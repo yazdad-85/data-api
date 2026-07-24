@@ -335,39 +335,45 @@ Test wajib:
 - [x] Key A tidak bisa baca lembaga B.
 - [x] Rate limit bekerja.
 
-## Milestone 8 - API tarik penuh
+## Milestone 8 - API tarik penuh — **selesai**
 
 Tujuan: aplikasi konsumen bisa mengambil snapshot resource sesuai scope.
 
-- [ ] `GET /api/v1/health` tanpa info internal.
-- [ ] `GET /api/v1/me`.
-- [ ] `GET /api/v1/guru`.
-- [ ] `GET /api/v1/siswa`.
-- [ ] `GET /api/v1/karyawan`.
-- [ ] `GET /api/v1/kelas`.
-- [ ] `GET /api/v1/tahun-ajaran`.
-- [ ] Enforce scope resource, contoh `siswa:read`.
-- [ ] Enforce field profile `minimal`, `academic`, `contact`.
-- [ ] Query `include_deleted`.
-- [ ] Query `active_only`.
-- [ ] Query `fields` hanya jika diizinkan client.
-- [ ] Pagination default 100, max 200.
-- [ ] Response timestamp ISO-8601 UTC.
-- [ ] Error body konsisten `message`, `code`, `request_id`.
+Spek: [2026-07-24-milestone-8-api-full-pull-design.md](./superpowers/specs/2026-07-24-milestone-8-api-full-pull-design.md).
+
+Catatan: `GET /api/v1/health` dan `GET /api/v1/me` sudah dikerjakan di **M7** (tidak diulang). Arsitektur M8: `ApiResourceCatalog` + `ApiFieldProfiler` + `ApiResourceLister` + `ApiResourceTransformer` di belakang satu `ResourceListController` (`GET /api/v1/{resource}`).
+
+- [x] `GET /api/v1/health` tanpa info internal. _(M7)_
+- [x] `GET /api/v1/me`. _(M7)_
+- [x] `GET /api/v1/guru`.
+- [x] `GET /api/v1/siswa`.
+- [x] `GET /api/v1/karyawan`.
+- [x] `GET /api/v1/kelas`.
+- [x] `GET /api/v1/tahun-ajaran`.
+- [x] Enforce scope resource, contoh `siswa:read`.
+- [x] Enforce field profile `minimal`, `academic`, `contact`.
+- [x] Query `include_deleted`.
+- [x] Query `active_only`.
+- [x] Query `fields` hanya jika diizinkan client.
+- [x] Pagination default 100, max 200 (clamp, bukan 422).
+- [x] Response timestamp ISO-8601 UTC.
+- [x] Error body konsisten `message`, `code`, `request_id`.
 
 Review wajib:
 
-- [ ] Review field mapping agar tidak ada PII berlebih.
-- [ ] Review query untuk N+1 dan index.
-- [ ] Perbaiki semua temuan review sebelum test.
+- [x] Review field mapping agar tidak ada PII berlebih (field list per profil terkunci di catalog §6.2).
+- [x] Review query untuk N+1 dan index (eager load `penempatanAktif`/`penempatans` `withoutGlobalScopes`).
+- [x] Perbaiki semua temuan review sebelum test.
 
 Test wajib:
 
-- [ ] Scope resource membatasi endpoint.
-- [ ] Field profile minimal tidak mengirim kontak/alamat/wali.
-- [ ] `per_page > 200` dibatasi/ditolak sesuai implementasi.
-- [ ] `include_deleted` mengirim soft deleted bila diizinkan.
-- [ ] Error code resmi sesuai SPEC.
+- [x] Scope resource membatasi endpoint.
+- [x] Field profile minimal tidak mengirim kontak/alamat/wali.
+- [x] `per_page > 200` dibatasi/ditolak sesuai implementasi (clamp ke 200).
+- [x] `include_deleted` mengirim soft deleted bila diizinkan.
+- [x] Error code resmi sesuai SPEC.
+- [x] Embed siswa bertingkat (`penempatan_aktif` di academic, `riwayat_penempatan` di contact).
+- [x] Isolasi tenant lewat `withoutGlobalScopes()` + `lembaga_id`.
 
 ## Milestone 9 - API sync delta
 

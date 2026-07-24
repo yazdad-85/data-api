@@ -373,11 +373,15 @@ Query opsional:
 
 Rate limit dasar: **120 request / menit / API key**, dengan limit tambahan per IP dan endpoint berat (429 jika melebihi).
 
+> Catatan implementasi (M8): `per_page` di-**clamp** ke rentang 1..200 (nilai > 200 → 200), bukan ditolak 422. Kolom bertipe tanggal (mis. `tanggal_lahir`, `tanggal_mulai`, `mulai_at`) dikirim sebagai `Y-m-d`; timestamp/datetime (`created_at`, `updated_at`, `deleted_at`) sebagai ISO-8601 UTC `Z`.
+
 Profil field:
 
 - `minimal`: field identitas operasional saja, mis. `id`, `lembaga_id`, `nama`, kode induk utama, relasi kelas/tahun ajaran, `is_active`, timestamp.
 - `academic`: `minimal` + field akademik/kepegawaian yang dibutuhkan aplikasi sekolah.
 - `contact`: `academic` + kontak/alamat/wali. Profil ini hanya diberikan jika aplikasi konsumen benar-benar membutuhkan PII kontak.
+
+Embed lifecycle siswa (M8): profil `academic` menambahkan objek `penempatan_aktif` (`id`, `kelas_id`, `tahun_ajaran_id`, `mulai_at`, `jenis`) atau `null`; profil `contact` menambahkan juga array `riwayat_penempatan` (urut `mulai_at` asc, plus `selesai_at`).
 
 Response:
 
