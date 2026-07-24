@@ -1,6 +1,6 @@
 # Design — Milestone 9: API Sync Delta
 
-Status: **DRAFT — menunggu review pemilik**  
+Status: **DISETUJUI — 24 Jul 2026**  
 Tanggal: 2026-07-24  
 Basis: [SPEC.md](../../SPEC.md) §4.4, §4.5; [RULES.md](../../RULES.md) A8, B4 (sync watermark/cursor); [IMPLEMENTATION_TODO.md](../../IMPLEMENTATION_TODO.md) Milestone 9; M8 [2026-07-24-milestone-8-api-full-pull-design.md](./2026-07-24-milestone-8-api-full-pull-design.md); M7 [2026-07-23-milestone-7-api-client-auth-design.md](./2026-07-23-milestone-7-api-client-auth-design.md)
 
