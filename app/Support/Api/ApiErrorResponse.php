@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
  * - API_CLIENT_INACTIVE → "API client tidak aktif."
  * - LEMBAGA_INACTIVE    → "Lembaga tidak aktif."
  * - RATE_LIMITED        → "Terlalu banyak permintaan."
+ * - FORBIDDEN           → "Profil field tidak diizinkan." / "Scope tidak mencukupi."
  */
 final class ApiErrorResponse
 {
@@ -22,6 +23,8 @@ final class ApiErrorResponse
     public const LEMBAGA_INACTIVE = 'LEMBAGA_INACTIVE';
 
     public const RATE_LIMITED = 'RATE_LIMITED';
+
+    public const FORBIDDEN = 'FORBIDDEN';
 
     public static function make(string $code, string $message, int $status): JsonResponse
     {
