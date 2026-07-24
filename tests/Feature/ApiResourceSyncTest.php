@@ -37,10 +37,19 @@ class ApiResourceSyncTest extends TestCase
         ['plain' => $plain, 'lembaga' => $lembaga] = $this->makeClient();
         $since = now()->subMinute()->utc()->toIso8601String();
 
-        $guru = Guru::factory()->create(['lembaga_id' => $lembaga->id, 'nama' => 'Nama Awal']);
+        $guru = Guru::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'nama' => 'Nama Awal',
+            'email' => 'guru@example.test',
+            'telepon' => '081234567890',
+            'alamat' => 'Jl. Contoh 1',
+        ]);
         $created = $this->sync($plain, ['since' => $since])->assertOk();
         $createdChange = $this->changeFor($created, $guru->id);
         $this->assertSame('Nama Awal', $createdChange['nama']);
+        $this->assertSame('guru@example.test', $createdChange['email']);
+        $this->assertSame('081234567890', $createdChange['telepon']);
+        $this->assertNull($createdChange['deleted_at']);
         $this->assertArrayHasKey('changed_at', $createdChange);
 
         $guru->update(['nama' => 'Nama Diperbarui']);
@@ -51,8 +60,11 @@ class ApiResourceSyncTest extends TestCase
         $deleted = $this->sync($plain, ['since' => $since])->assertOk();
         $tombstone = $this->changeFor($deleted, $guru->id);
         $this->assertSame(['id', 'deleted_at', 'changed_at'], array_keys($tombstone));
+        $this->assertNotNull($tombstone['deleted_at']);
         $this->assertArrayNotHasKey('nama', $tombstone);
         $this->assertArrayNotHasKey('email', $tombstone);
+        $this->assertArrayNotHasKey('telepon', $tombstone);
+        $this->assertArrayNotHasKey('alamat', $tombstone);
     }
 
     public function test_multi_page_cursor_no_duplicates(): void
@@ -93,17 +105,21 @@ class ApiResourceSyncTest extends TestCase
         $this->assertSame((string) $first->id, $pageOne->json('changes.0.id'));
         $this->assertNotNull($pageOne->json('next_cursor'));
 
-        Carbon::setTestNow(now()->addSecond());
-        $late->update(['nama' => 'Sesudah Watermark']);
-
-        $pageTwo = $this->sync($plain, [
+        $continuationQuery = [
             'since' => $pageOne->json('since'),
             'watermark' => $pageOne->json('watermark'),
             'cursor' => $pageOne->json('next_cursor'),
             'per_page' => 1,
-        ])->assertOk();
+        ];
 
-        $this->assertSame([], $pageTwo->json('changes'));
+        $pageTwoBeforeUpdate = $this->sync($plain, $continuationQuery)->assertOk();
+        $this->assertSame('Sebelum Watermark', $this->changeFor($pageTwoBeforeUpdate, $late->id)['nama']);
+
+        Carbon::setTestNow(now()->addSecond());
+        $late->update(['nama' => 'Sesudah Watermark']);
+
+        $pageTwoAfterUpdate = $this->sync($plain, $continuationQuery)->assertOk();
+        $this->assertSame([], $pageTwoAfterUpdate->json('changes'));
     }
 
     public function test_missing_since_returns_invalid_since(): void
@@ -264,7 +280,7 @@ class ApiResourceSyncTest extends TestCase
     private function changeFor(TestResponse $response, string $id): array
     {
         foreach ($response->json('changes') as $change) {
-            if ($change['id'] === $id) {
+            if ($change['id'] === (string) $id) {
                 return $change;
             }
         }
