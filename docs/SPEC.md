@@ -414,6 +414,7 @@ Aturan:
 - Paginasi sync memakai cursor berbasis `(changed_at, id)`, bukan page number.
 - `per_page` default 100, max 200.
 - Tombstone soft-delete cukup memuat `id`, `deleted_at`, `changed_at`, dan relasi minimum; jangan dump PII penuh untuk record terhapus.
+- Tidak ada endpoint sync terpisah untuk `siswa_penempatan`. Perubahan enrollment/status penempatan tersinkron lewat `GET /api/v1/siswa/sync` karena lifecycle M6c selalu menyentuh `siswa.updated_at` saat mutasi penempatan.
 
 Response:
 

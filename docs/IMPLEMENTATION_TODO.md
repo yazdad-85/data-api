@@ -377,34 +377,36 @@ Test wajib:
 
 ## Milestone 9 - API sync delta
 
+Status: **Selesai** — spek [2026-07-24-milestone-9-api-sync-delta-design.md](./superpowers/specs/2026-07-24-milestone-9-api-sync-delta-design.md)
+
 Tujuan: sinkronisasi tidak melewatkan data saat perubahan banyak.
 
-- [ ] `GET /api/v1/{resource}/sync`.
-- [ ] Validasi `since` wajib ISO-8601 UTC.
-- [ ] Tolak `since` masa depan.
-- [ ] Tolak `since` lebih dari 90 hari dengan `SINCE_TOO_OLD`.
-- [ ] Hitung `changed_at = greatest(updated_at, deleted_at)`.
-- [ ] Buat watermark server pada awal sync.
-- [ ] Query `changed_at > since` dan `changed_at <= watermark`.
-- [ ] Cursor pagination berbasis `(changed_at, id)`.
-- [ ] `next_cursor` dikirim jika masih ada data.
-- [ ] Tombstone delete hanya field minimum.
-- [ ] App integrator di docs diarahkan menyimpan watermark hanya saat `next_cursor = null`.
+- [x] `GET /api/v1/{resource}/sync`.
+- [x] Validasi `since` wajib ISO-8601 UTC.
+- [x] Tolak `since` masa depan.
+- [x] Tolak `since` lebih dari 90 hari dengan `SINCE_TOO_OLD`.
+- [x] Hitung `changed_at = greatest(updated_at, deleted_at)`.
+- [x] Buat watermark server pada awal sync.
+- [x] Query `changed_at > since` dan `changed_at <= watermark`.
+- [x] Cursor pagination berbasis `(changed_at, id)`.
+- [x] `next_cursor` dikirim jika masih ada data.
+- [x] Tombstone delete hanya field minimum.
+- [x] App integrator di docs diarahkan menyimpan watermark hanya saat `next_cursor = null`.
 
 Review wajib:
 
-- [ ] Review logic cursor untuk race condition.
-- [ ] Review soft delete tombstone agar tidak dump PII.
-- [ ] Review performa index.
-- [ ] Perbaiki semua temuan review sebelum test.
+- [x] Review logic cursor untuk race condition.
+- [x] Review soft delete tombstone agar tidak dump PII.
+- [x] Review performa index.
+- [x] Perbaiki semua temuan review sebelum test.
 
 Test wajib:
 
-- [ ] Create/update/delete muncul di sync.
-- [ ] Data tidak terlewat saat jumlah perubahan lebih dari `per_page`.
-- [ ] Update baru setelah watermark tidak masuk batch lama.
-- [ ] Cursor invalid ditolak.
-- [ ] Tombstone delete minim PII.
+- [x] Create/update/delete muncul di sync.
+- [x] Data tidak terlewat saat jumlah perubahan lebih dari `per_page`.
+- [x] Update baru setelah watermark tidak masuk batch lama.
+- [x] Cursor invalid ditolak.
+- [x] Tombstone delete minim PII.
 
 ## Milestone 10 - Hardening aplikasi
 
