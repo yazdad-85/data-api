@@ -3,7 +3,26 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>@yield('title', 'Pusat Data') — Pusat Data</title>
+    @php
+        $pageTitle = trim($__env->yieldContent('title'));
+        $authUser = auth()->user();
+        $appName = 'Pusat Data';
+
+        if ($authUser?->isSuperAdmin()) {
+            // Super Admin: tab hanya nama aplikasi (bukan nama lembaga yang sedang dilihat).
+            $documentTitle = $appName;
+        } elseif ($authUser?->isAdminLembaga() && $authUser->lembaga) {
+            $lembagaNama = $authUser->lembaga->nama;
+            $documentTitle = $pageTitle !== '' && $pageTitle !== $appName
+                ? $pageTitle.' — '.$lembagaNama.' — '.$appName
+                : $lembagaNama.' — '.$appName;
+        } else {
+            $documentTitle = $pageTitle !== '' && $pageTitle !== $appName
+                ? $pageTitle.' — '.$appName
+                : $appName;
+        }
+    @endphp
+    <title>{{ $documentTitle }}</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>

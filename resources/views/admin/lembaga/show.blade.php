@@ -1,6 +1,6 @@
 @extends('layouts.admin')
 
-@section('title', $lembaga->nama)
+@section('title', 'Detail lembaga')
 
 @section('breadcrumb')
     <a href="{{ route('admin.dashboard') }}">Dashboard</a> /

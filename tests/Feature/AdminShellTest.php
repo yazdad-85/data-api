@@ -31,9 +31,28 @@ class AdminShellTest extends TestCase
         $response->assertSee('Lembaga aktif');
         $response->assertSee('API client aktif');
         $response->assertDontSee('admin-sidebar__badge');
+        $response->assertSee('<title>Pusat Data</title>', false);
 
         $menu = app(AdminMenu::class)->forUser($user);
         $this->assertSame(['Dashboard', 'Lembaga'], $menu->pluck('label')->all());
+    }
+
+    public function test_super_admin_lembaga_show_tab_title_is_app_name_not_lembaga_nama(): void
+    {
+        config(['security.mfa.super_admin_required' => false]);
+
+        $lembaga = Lembaga::factory()->create(['nama' => 'UD Farida Tab Test']);
+        $user = User::factory()->create([
+            'role' => 'super_admin',
+            'lembaga_id' => null,
+        ]);
+
+        $response = $this->actingAs($user)->get(route('admin.lembaga.show', $lembaga));
+
+        $response->assertOk();
+        $response->assertSee('UD Farida Tab Test');
+        $response->assertSee('<title>Pusat Data</title>', false);
+        $response->assertDontSee('<title>UD Farida Tab Test', false);
     }
 
     public function test_admin_lembaga_dashboard_shows_ordered_menu_without_sa_items(): void
@@ -49,6 +68,7 @@ class AdminShellTest extends TestCase
         $response->assertSee('Sekolah Contoh');
         $response->assertSee('API client');
         $response->assertDontSee('admin-sidebar__badge');
+        $response->assertSee('<title>Dashboard — Sekolah Contoh — Pusat Data</title>', false);
 
         $menu = app(AdminMenu::class)->forUser($user);
         $apiClientItem = $menu->firstWhere('label', 'API client');
