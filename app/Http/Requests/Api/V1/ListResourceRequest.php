@@ -18,6 +18,21 @@ class ListResourceRequest extends FormRequest
     }
 
     /**
+     * Normalise textual booleans ("true"/"false") from the query string so the
+     * `boolean` rule accepts them alongside 1/0 (design §5).
+     */
+    protected function prepareForValidation(): void
+    {
+        foreach (['include_deleted', 'active_only'] as $flag) {
+            if ($this->has($flag)) {
+                $this->merge([
+                    $flag => filter_var($this->query($flag), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $this->query($flag),
+                ]);
+            }
+        }
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function rules(): array
