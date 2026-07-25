@@ -39,4 +39,25 @@ class AppHardeningTest extends TestCase
             ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
             ->assertHeader('Content-Security-Policy', config('security.headers.csp'));
     }
+
+    public function test_api_with_browser_origin_has_no_cors_allow_origin(): void
+    {
+        $response = $this->withHeaders(['Origin' => 'https://evil.example'])
+            ->getJson('/api/v1/health');
+
+        $response->assertOk()
+            ->assertExactJson(['status' => 'ok']);
+
+        $this->assertNull($response->headers->get('Access-Control-Allow-Origin'));
+    }
+
+    public function test_api_options_preflight_does_not_allow_evil_origin(): void
+    {
+        $response = $this->call('OPTIONS', '/api/v1/health', server: [
+            'HTTP_ORIGIN' => 'https://evil.example',
+            'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
+        ]);
+
+        $this->assertNull($response->headers->get('Access-Control-Allow-Origin'));
+    }
 }
