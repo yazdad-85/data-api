@@ -3,12 +3,49 @@
 namespace Tests\Feature;
 
 use App\Logging\RedactLogContext;
+use Illuminate\Http\Middleware\TrustProxies;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class AppHardeningTest extends TestCase
 {
+    private string|false $originalTrustedProxies;
+
+    public function createApplication()
+    {
+        TrustProxies::flushState();
+
+        $this->originalTrustedProxies = getenv('TRUSTED_PROXIES');
+
+        if ($this->name() === 'test_hsts_set_when_forwarded_proto_is_sent_by_a_trusted_proxy') {
+            putenv('TRUSTED_PROXIES=127.0.0.1');
+            $_ENV['TRUSTED_PROXIES'] = '127.0.0.1';
+            $_SERVER['TRUSTED_PROXIES'] = '127.0.0.1';
+        } else {
+            putenv('TRUSTED_PROXIES');
+            unset($_ENV['TRUSTED_PROXIES'], $_SERVER['TRUSTED_PROXIES']);
+        }
+
+        return parent::createApplication();
+    }
+
+    protected function tearDown(): void
+    {
+        TrustProxies::flushState();
+
+        if ($this->originalTrustedProxies === false) {
+            putenv('TRUSTED_PROXIES');
+            unset($_ENV['TRUSTED_PROXIES'], $_SERVER['TRUSTED_PROXIES']);
+        } else {
+            putenv("TRUSTED_PROXIES={$this->originalTrustedProxies}");
+            $_ENV['TRUSTED_PROXIES'] = $this->originalTrustedProxies;
+            $_SERVER['TRUSTED_PROXIES'] = $this->originalTrustedProxies;
+        }
+
+        parent::tearDown();
+    }
+
     public function test_api_health_has_security_headers_without_hsts_in_local(): void
     {
         $response = $this->getJson('/api/v1/health');
@@ -31,6 +68,33 @@ class AppHardeningTest extends TestCase
 
         $response->assertOk()
             ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+
+    public function test_hsts_set_when_forwarded_proto_is_sent_by_a_trusted_proxy(): void
+    {
+        $this->app['env'] = 'production';
+
+        $response = $this->call('GET', '/api/v1/health', server: [
+            'HTTP_X_FORWARDED_PROTO' => 'https',
+            'REMOTE_ADDR' => '127.0.0.1',
+        ]);
+
+        $response->assertOk()
+            ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+
+    public function test_forwarded_proto_is_ignored_without_trusted_proxies(): void
+    {
+        $this->app['env'] = 'production';
+
+        $response = $this->call('GET', '/api/v1/health', server: [
+            'HTTP_X_FORWARDED_PROTO' => 'https',
+            'REMOTE_ADDR' => '127.0.0.1',
+        ]);
+
+        $response->assertOk();
+
+        $this->assertNull($response->headers->get('Strict-Transport-Security'));
     }
 
     public function test_web_login_page_has_security_headers(): void

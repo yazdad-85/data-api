@@ -21,6 +21,19 @@ return Application::configure(basePath: dirname(__DIR__))
         apiPrefix: 'api',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        $trustedProxies = array_values(array_filter(
+            array_map(trim(...), explode(',', (string) env('TRUSTED_PROXIES', ''))),
+            fn (string $proxy): bool => $proxy !== '',
+        ));
+
+        $middleware->trustProxies(
+            at: $trustedProxies === ['*'] ? '*' : $trustedProxies,
+            headers: Request::HEADER_X_FORWARDED_FOR |
+                Request::HEADER_X_FORWARDED_HOST |
+                Request::HEADER_X_FORWARDED_PORT |
+                Request::HEADER_X_FORWARDED_PROTO,
+        );
+
         $middleware->append([
             AssignRequestId::class,
             SecurityHeaders::class,

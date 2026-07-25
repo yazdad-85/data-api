@@ -10,6 +10,7 @@ Basis: [SPEC.md](./SPEC.md), [RULES.md](./RULES.md).
 - `APP_DEBUG=false`
 - `APP_KEY=` (32-byte base64, `php artisan key:generate`)
 - `APP_URL=https://...` (HTTPS)
+- `TRUSTED_PROXIES=` (IP/CIDR ingress Apache/Cloudflare, atau `*` hanya jika app selalu diakses melalui satu proxy tepercaya)
 - `SESSION_SECURE_COOKIE=true`
 - `SESSION_SAME_SITE=lax`
 - `SESSION_HTTP_ONLY=true`
@@ -20,6 +21,7 @@ Basis: [SPEC.md](./SPEC.md), [RULES.md](./RULES.md).
 
 - Security headers (CSP dasar, nosniff, frame deny, referrer) pada semua response
 - HSTS aktif saat `production` **dan** request HTTPS
+- Tanpa `TRUSTED_PROXIES`, `X-Forwarded-Proto: https` diabaikan; HSTS tidak dikirim dan Laravel dapat menganggap request HTTPS tidak aman.
 - CORS fase 1: **server-to-server**; browser origin default deny (tidak ada whitelist per lembaga)
 - Log context redaction (password / API key / token / PII keys) aktif pada channel `single` dan `daily`. Default `LOG_CHANNEL=stack` dengan `LOG_STACK=single` tetap ter-redact karena stack meneruskan log ke processor channel anak `single`.
 - Jika `LOG_CHANNEL` / `LOG_STACK` dialihkan ke channel lain (misalnya `stderr`, `papertrail`, atau `syslog`), tambahkan tap redaction pada channel tersebut; tanpa tap, context log tidak akan ter-redact.
