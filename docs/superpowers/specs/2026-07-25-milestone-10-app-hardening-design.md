@@ -1,6 +1,6 @@
 # Design — Milestone 10: Hardening Aplikasi
 
-Status: **DRAFT — menunggu review pemilik**  
+Status: **DISETUJUI — 25 Jul 2026**  
 Tanggal: 2026-07-25  
 Basis: [SPEC.md](../../SPEC.md) §6.1; [RULES.md](../../RULES.md) B4.1–B4.3; [IMPLEMENTATION_TODO.md](../../IMPLEMENTATION_TODO.md) Milestone 10; M3 [2026-07-18-milestone-3-auth-hardening-design.md](./2026-07-18-milestone-3-auth-hardening-design.md); M7 [2026-07-23-milestone-7-api-client-auth-design.md](./2026-07-23-milestone-7-api-client-auth-design.md)
 
