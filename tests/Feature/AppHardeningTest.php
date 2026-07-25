@@ -61,4 +61,10 @@ class AppHardeningTest extends TestCase
         $response->assertStatus(204);
         $this->assertNull($response->headers->get('Access-Control-Allow-Origin'));
     }
+
+    public function test_session_defaults_are_hardened(): void
+    {
+        $this->assertTrue((bool) config('session.http_only'));
+        $this->assertSame('lax', config('session.same_site'));
+    }
 }
