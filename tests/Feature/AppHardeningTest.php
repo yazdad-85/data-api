@@ -58,6 +58,7 @@ class AppHardeningTest extends TestCase
             'HTTP_ACCESS_CONTROL_REQUEST_METHOD' => 'GET',
         ]);
 
+        $response->assertStatus(204);
         $this->assertNull($response->headers->get('Access-Control-Allow-Origin'));
     }
 }
