@@ -8,6 +8,7 @@ Basis: [SPEC.md](./SPEC.md), [RULES.md](./RULES.md).
 
 - `APP_ENV=production`
 - `APP_DEBUG=false`
+- `APP_KEY=` (32-byte base64, `php artisan key:generate`)
 - `APP_URL=https://...` (HTTPS)
 - `SESSION_SECURE_COOKIE=true`
 - `SESSION_SAME_SITE=lax`
@@ -20,7 +21,7 @@ Basis: [SPEC.md](./SPEC.md), [RULES.md](./RULES.md).
 - Security headers (CSP dasar, nosniff, frame deny, referrer) pada semua response
 - HSTS aktif saat `production` **dan** request HTTPS
 - CORS fase 1: **server-to-server**; browser origin default deny (tidak ada whitelist per lembaga)
-- Log context di-redact untuk password / API key / token / PII keys
+- Log context redaction (password / API key / token / PII keys) — Task 4 milestone ini; belum aktif sampai kode redaction di-merge
 
 ## Jangan
 

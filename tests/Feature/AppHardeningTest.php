@@ -62,9 +62,32 @@ class AppHardeningTest extends TestCase
         $this->assertNull($response->headers->get('Access-Control-Allow-Origin'));
     }
 
-    public function test_session_defaults_are_hardened(): void
+    public function test_login_response_sets_hardened_session_cookie(): void
     {
-        $this->assertTrue((bool) config('session.http_only'));
-        $this->assertSame('lax', config('session.same_site'));
+        $response = $this->get('/login');
+
+        $response->assertOk();
+
+        $cookie = collect($response->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === config('session.cookie'));
+
+        $this->assertNotNull($cookie);
+        $this->assertTrue($cookie->isHttpOnly());
+        $this->assertSame('lax', strtolower((string) $cookie->getSameSite()));
+    }
+
+    public function test_login_response_sets_secure_session_cookie_when_configured(): void
+    {
+        config(['session.secure' => true]);
+
+        $response = $this->get('/login');
+
+        $response->assertOk();
+
+        $cookie = collect($response->headers->getCookies())
+            ->first(fn ($c) => $c->getName() === config('session.cookie'));
+
+        $this->assertNotNull($cookie);
+        $this->assertTrue($cookie->isSecure());
     }
 }
