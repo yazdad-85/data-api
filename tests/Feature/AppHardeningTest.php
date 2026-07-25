@@ -6,13 +6,6 @@ use Tests\TestCase;
 
 class AppHardeningTest extends TestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->withoutVite();
-    }
-
     public function test_api_health_has_security_headers_without_hsts_in_local(): void
     {
         $response = $this->getJson('/api/v1/health');
@@ -21,9 +14,9 @@ class AppHardeningTest extends TestCase
             ->assertExactJson(['status' => 'ok'])
             ->assertHeader('X-Content-Type-Options', 'nosniff')
             ->assertHeader('X-Frame-Options', 'DENY')
-            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+            ->assertHeader('Content-Security-Policy', config('security.headers.csp'));
 
-        $this->assertNotEmpty($response->headers->get('Content-Security-Policy'));
         $this->assertNull($response->headers->get('Strict-Transport-Security'));
     }
 
@@ -42,6 +35,8 @@ class AppHardeningTest extends TestCase
         $this->get('/login')
             ->assertOk()
             ->assertHeader('X-Content-Type-Options', 'nosniff')
-            ->assertHeader('X-Frame-Options', 'DENY');
+            ->assertHeader('X-Frame-Options', 'DENY')
+            ->assertHeader('Referrer-Policy', 'strict-origin-when-cross-origin')
+            ->assertHeader('Content-Security-Policy', config('security.headers.csp'));
     }
 }
