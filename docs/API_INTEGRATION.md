@@ -14,9 +14,15 @@ https://data.example.id
 
 ## 2. Quick start
 
+### Prasyarat
+
+- Base URL production diberikan oleh operator Pusat Data; `https://data.example.id` dalam dokumen ini hanya placeholder.
+- Super Admin membuat atau me-rotate API client untuk lembaga melalui admin UI, lalu menyerahkan plain key kepada integrator satu kali. Simpan key itu di secret store; Admin Lembaga hanya dapat melihat daftar client milik lembaganya dan tidak dapat membuat atau me-rotate key.
+- Ganti API key dan UUID dummy dalam seluruh contoh dengan nilai milik Anda.
+
 Contoh berikut memakai satu API key dan UUID dummy yang konsisten. Key `dc_live_demo12345678_00000000000000000000000000000000` adalah data contoh, bukan secret asli.
 
-### 1. Periksa layanan
+### Langkah 1 — Periksa layanan
 
 ```bash
 curl --request GET \
@@ -27,7 +33,7 @@ curl --request GET \
 {"status":"ok"}
 ```
 
-### 2. Periksa identitas client
+### Langkah 2 — Periksa identitas client
 
 ```bash
 curl --request GET \
@@ -48,9 +54,9 @@ curl --request GET \
 }
 ```
 
-### 3. Ambil satu data guru
+### Langkah 3 — Ambil satu data guru
 
-Client pada contoh `/me` memiliki scope `guru:read` dan profile `minimal`, sehingga respons berikut berisi field profile minimal.
+Client pada contoh `/me` memiliki scope `guru:read` dan profil field `minimal`, sehingga respons berikut berisi field profil minimal. Parameter `per_page` dan parameter query lain dijelaskan di §6.
 
 ```bash
 curl --request GET \
@@ -125,7 +131,7 @@ Contoh key hilang, salah format, tidak dikenal, atau tidak cocok akan menghasilk
 
 Nilai `{resource}` hanya dapat berupa `tahun-ajaran`, `guru`, `kelas`, `siswa`, atau `karyawan`. Method selain `GET` menghasilkan `405 Method Not Allowed`.
 
-Envelope daftar memiliki bentuk berikut:
+Envelope daftar memiliki bentuk berikut. `synced_at` adalah waktu server saat response dibuat, dalam UTC:
 
 ```json
 {
@@ -156,7 +162,7 @@ Envelope sync memiliki bentuk berikut. Detail alur tarik penuh dan sync delta di
 }
 ```
 
-## 5. Resource, scope, dan field profile
+## 5. Resource, scope, dan profil field
 
 Setiap resource memerlukan scope read berikut:
 
@@ -168,23 +174,17 @@ Setiap resource memerlukan scope read berikut:
 | `siswa` | `siswa:read` |
 | `karyawan` | `karyawan:read` |
 
-Profile field bertingkat: `minimal ⊂ academic ⊂ contact`. Tanpa query parameter `fields`, profile efektif adalah profile yang di-assign ke client, bukan selalu `minimal`. Client dapat meminta profile lebih rendah; permintaan profile di atas ceiling client menghasilkan `403 FORBIDDEN` dengan pesan `Profil field tidak diizinkan.`.
+Profil field bertingkat: `minimal ⊂ academic ⊂ contact`. Tanpa query parameter `fields`, profil efektif adalah profil yang di-assign ke client, bukan selalu `minimal`. Client dapat meminta profil lebih rendah; permintaan profil di atas ceiling client menghasilkan `403 FORBIDDEN` dengan pesan `Profil field tidak diizinkan.`.
 
-Daftar berikut adalah field kumulatif persis yang tersedia pada setiap profile.
+Daftar berikut adalah field kumulatif persis yang tersedia pada setiap profil.
 
 ### `tahun-ajaran`
 
-Ketiga profile (`minimal`, `academic`, dan `contact`) identik: `id`, `lembaga_id`, `nama`, `tanggal_mulai`, `tanggal_selesai`, `is_aktif`, `created_at`, `updated_at`.
-
-| Profile | Field |
-|---|---|
-| `minimal` | `id`, `lembaga_id`, `nama`, `tanggal_mulai`, `tanggal_selesai`, `is_aktif`, `created_at`, `updated_at` |
-| `academic` | `id`, `lembaga_id`, `nama`, `tanggal_mulai`, `tanggal_selesai`, `is_aktif`, `created_at`, `updated_at` |
-| `contact` | `id`, `lembaga_id`, `nama`, `tanggal_mulai`, `tanggal_selesai`, `is_aktif`, `created_at`, `updated_at` |
+Ketiga profil (`minimal`, `academic`, dan `contact`) identik: `id`, `lembaga_id`, `nama`, `tanggal_mulai`, `tanggal_selesai`, `is_aktif`, `created_at`, `updated_at`.
 
 ### `guru`
 
-| Profile | Field |
+| Profil | Field |
 |---|---|
 | `minimal` | `id`, `lembaga_id`, `niy`, `nama`, `is_active`, `created_at`, `updated_at` |
 | `academic` | `id`, `lembaga_id`, `niy`, `nama`, `is_active`, `created_at`, `updated_at`, `nuptk`, `tahun_masuk`, `jenis_kelamin`, `tempat_lahir`, `tanggal_lahir`, `status_kepegawaian` |
@@ -192,7 +192,7 @@ Ketiga profile (`minimal`, `academic`, dan `contact`) identik: `id`, `lembaga_id
 
 ### `kelas`
 
-| Profile | Field |
+| Profil | Field |
 |---|---|
 | `minimal` | `id`, `lembaga_id`, `tahun_ajaran_id`, `nama`, `created_at`, `updated_at` |
 | `academic` | `id`, `lembaga_id`, `tahun_ajaran_id`, `nama`, `created_at`, `updated_at`, `tingkat`, `wali_kelas_guru_id` |
@@ -200,17 +200,17 @@ Ketiga profile (`minimal`, `academic`, dan `contact`) identik: `id`, `lembaga_id
 
 ### `siswa`
 
-| Profile | Field |
+| Profil | Field |
 |---|---|
 | `minimal` | `id`, `lembaga_id`, `nis`, `nama`, `status_siswa`, `is_active`, `kelas_id`, `tahun_ajaran_id`, `created_at`, `updated_at` |
 | `academic` | `id`, `lembaga_id`, `nis`, `nama`, `status_siswa`, `is_active`, `kelas_id`, `tahun_ajaran_id`, `created_at`, `updated_at`, `nisn`, `jenis_kelamin`, `tempat_lahir`, `tanggal_lahir`, `status_at`, `status_alasan`, `status_asal`, `status_tujuan` |
 | `contact` | `id`, `lembaga_id`, `nis`, `nama`, `status_siswa`, `is_active`, `kelas_id`, `tahun_ajaran_id`, `created_at`, `updated_at`, `nisn`, `jenis_kelamin`, `tempat_lahir`, `tanggal_lahir`, `status_at`, `status_alasan`, `status_asal`, `status_tujuan`, `email`, `telepon`, `alamat`, `nama_wali`, `telepon_wali` |
 
-Profile `academic` menambahkan embed `penempatan_aktif`: objek atau `null` dengan field `id`, `kelas_id`, `tahun_ajaran_id`, `mulai_at`, dan `jenis`. Profile `contact` juga menambahkan `riwayat_penempatan`: array objek yang masing-masing memiliki `id`, `kelas_id`, `tahun_ajaran_id`, `mulai_at`, `selesai_at`, dan `jenis`.
+Profil `academic` menambahkan embed `penempatan_aktif`: objek atau `null` dengan field `id`, `kelas_id`, `tahun_ajaran_id`, `mulai_at`, dan `jenis`. Profil `contact` juga menambahkan `riwayat_penempatan`: array objek yang masing-masing memiliki `id`, `kelas_id`, `tahun_ajaran_id`, `mulai_at`, `selesai_at`, dan `jenis`.
 
 ### `karyawan`
 
-| Profile | Field |
+| Profil | Field |
 |---|---|
 | `minimal` | `id`, `lembaga_id`, `nik_pegawai`, `nama`, `is_active`, `created_at`, `updated_at` |
 | `academic` | `id`, `lembaga_id`, `nik_pegawai`, `nama`, `is_active`, `created_at`, `updated_at`, `tahun_masuk`, `jenis_kelamin`, `jabatan` |
