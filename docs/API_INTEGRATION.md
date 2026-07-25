@@ -257,7 +257,7 @@ Contoh response daftar lengkap berikut menunjukkan hasil dengan `include_deleted
       "deleted_at": null
     },
     {
-      "id": "44444444-4444-4444-8444-444444444444",
+      "id": "55555555-5555-4555-8555-555555555555",
       "lembaga_id": "11111111-1111-4111-8111-111111111111",
       "niy": "G-002",
       "nama": "Tono Pratama",
@@ -287,9 +287,19 @@ curl --request GET \
 
 Sync delta mengambil perubahan setelah `since` tanpa kehilangan perubahan yang datang ketika halaman sedang diproses:
 
+| Parameter | Ketentuan |
+|---|---|
+| `since` | Wajib. Timestamp ISO-8601 UTC; umur maksimum default 90 hari. |
+| `watermark` | Wajib bersama `cursor` pada halaman lanjutan; gunakan nilai dari response halaman pertama. |
+| `cursor` | Wajib pada halaman lanjutan; opaque dan gunakan nilai `next_cursor` dari response sebelumnya. |
+| `fields` | Opsional. Profil field yang diminta tidak boleh melampaui ceiling profil client (§5). |
+| `per_page` | Default `100`; nilai di-clamp ke 1–200. |
+
 1. Halaman pertama: kirim `since` saja. Server menetapkan `watermark` UTC untuk rangkaian sync itu.
 2. Jika `next_cursor` tidak `null`, kirim ulang `since` yang sama, `watermark` yang sama, dan `cursor` dari response sebelumnya.
-3. Terapkan setiap halaman secara idempoten di penyimpanan lokal. Simpan `watermark` (atau `synced_at` lokal) hanya setelah halaman dengan `next_cursor === null` berhasil diterapkan.
+3. Terapkan setiap halaman secara idempoten di penyimpanan lokal. Setelah halaman dengan `next_cursor === null` berhasil diterapkan, persist nilai `watermark` dari response; jangan persist waktu lokal atau `synced_at`.
+
+Ulangi langkah 2–3 sampai `next_cursor === null`. Sync delta berikutnya memakai watermark tersimpan tersebut sebagai `since`.
 
 `cursor` bersifat opaque: jangan di-decode, dimodifikasi, atau dibuat sendiri. Mengirim `watermark` tanpa `cursor` menghasilkan `INVALID_CURSOR`. Parameter `fields` didukung dan mengikuti ceiling profil client yang sama seperti endpoint daftar (§5). `per_page` juga menggunakan default 100 dan clamp 1–200.
 
@@ -323,13 +333,13 @@ curl --request GET \
       "deleted_at": null
     },
     {
-      "id": "44444444-4444-4444-8444-444444444444",
+      "id": "55555555-5555-4555-8555-555555555555",
       "deleted_at": "2026-07-25T01:30:00Z",
       "changed_at": "2026-07-25T01:30:00Z"
     }
   ],
   "change_count": 2,
-  "next_cursor": "eyJjIjoiMjAyNi0wNy0yNVQwMTozMDowMFoiLCJpIjoiNDQ0NDQ0NDQtNDQ0NC00NDQ0LTg0NDQtNDQ0NDQ0NDQ0NDQ0In0"
+  "next_cursor": "eyJjIjoiMjAyNi0wNy0yNVQwMTozMDowMFoiLCJpIjoiNTU1NTU1NTUtNTU1NS00NTU1LTg1NTUtNTU1NTU1NTU1NTU1In0"
 }
 ```
 
@@ -340,7 +350,7 @@ Gunakan cursor apa adanya untuk halaman berikut:
 ```bash
 curl --request GET \
   --header 'X-API-Key: dc_live_demo12345678_00000000000000000000000000000000' \
-  'https://data.example.id/api/v1/guru/sync?since=2026-07-24T02%3A00%3A00Z&watermark=2026-07-25T02%3A00%3A00Z&cursor=eyJjIjoiMjAyNi0wNy0yNVQwMTozMDowMFoiLCJpIjoiNDQ0NDQ0NDQtNDQ0NC00NDQ0LTg0NDQtNDQ0NDQ0NDQ0NDQ0In0&per_page=2'
+  'https://data.example.id/api/v1/guru/sync?since=2026-07-24T02%3A00%3A00Z&watermark=2026-07-25T02%3A00%3A00Z&cursor=eyJjIjoiMjAyNi0wNy0yNVQwMTozMDowMFoiLCJpIjoiNTU1NTU1NTUtNTU1NS00NTU1LTg1NTUtNTU1NTU1NTU1NTU1In0&per_page=2'
 ```
 
 Response terakhir tidak memiliki cursor lanjutan:
@@ -354,7 +364,7 @@ Response terakhir tidak memiliki cursor lanjutan:
   "synced_at": "2026-07-25T02:01:00Z",
   "changes": [
     {
-      "id": "22222222-2222-4222-8222-222222222222",
+      "id": "66666666-6666-4666-8666-666666666666",
       "lembaga_id": "11111111-1111-4111-8111-111111111111",
       "niy": "G-003",
       "nama": "Wati Lestari",
@@ -405,7 +415,22 @@ Error bisnis menggunakan envelope berikut:
 
 Klien dapat mengirim `X-Request-ID` sepanjang 8–64 karakter yang hanya berisi `[A-Za-z0-9._-]`. Nilai valid tersebut di-echo pada header response dan field `request_id`; bila tidak dikirim atau tidak valid, server membuat ID baru.
 
-Error validasi parameter yang ditangani Laravel menggunakan HTTP 422 dengan bentuk `{message, errors}`, bukan envelope bisnis. Slug resource yang tidak dikenal menghasilkan 404 JSON framework.
+Error validasi parameter yang ditangani Laravel menggunakan HTTP 422 dengan bentuk berikut, bukan envelope bisnis:
+
+```json
+{
+  "message": "The per page field must be at least 1.",
+  "errors": {"per_page": ["The per page field must be at least 1."]}
+}
+```
+
+Slug resource yang tidak dikenal menghasilkan 404 JSON framework:
+
+```json
+{"message": "Not Found"}
+```
+
+Kedua bentuk tersebut tidak memiliki `code` atau `request_id` bisnis.
 
 Batas default adalah 120 request per menit per API key dan 240 request per menit per IP. Keduanya dapat diubah operator melalui `API_RATE_PER_MINUTE` dan `API_IP_RATE_PER_MINUTE`. Jika salah satu batas terlampaui, response 429 membawa header `Retry-After` dalam detik. API tidak mengirim header `X-RateLimit-*`.
 
