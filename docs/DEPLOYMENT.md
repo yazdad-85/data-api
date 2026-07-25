@@ -33,7 +33,23 @@ cp .env.example .env   # isi nilai production (lihat §4)
 php artisan key:generate
 ```
 
-Direktori `storage/` dan `bootstrap/cache` harus writable oleh user web server. Cara mengatur owner dan permission bergantung pada OS dan model proses Apache/PHP, sehingga merupakan **(pilihan operator / OS)**.
+Gunakan virtual host Apache yang mengarah ke `public/`, misalnya:
+
+```apache
+<VirtualHost *:80>
+    ServerName <host>
+    DocumentRoot /path/to/app/public
+
+    <Directory /path/to/app/public>
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+```
+
+Ganti `<host>` dan `/path/to/app` sesuai release Anda; path absolut, port, dan cara mengaktifkan modul Apache merupakan **(pilihan operator)**. `mod_rewrite` harus aktif karena `public/.htaccess` meneruskan request ke front controller Laravel.
+
+User proses web server (namanya bervariasi per OS) harus dapat menulis `storage/` dan `bootstrap/cache`; contoh pola umum adalah `chown -R <web-user>: storage bootstrap/cache`, dengan `<web-user>` sebagai placeholder **(pilihan operator)**.
 
 ## 4. Env production
 
@@ -49,9 +65,20 @@ Lengkapi `.env` dengan nilai production. Arti dan batasan keamanan setiap nilai 
 
 `TRUSTED_PROXIES` hanya memuat IP/CIDR ingress Apache/Cloudflare, bukan IP laptop atau PC lembaga. Nilai `API_KEY_PEPPER` harus berupa rahasia acak yang panjang dan sudah tersedia sebelum API client dibuat.
 
+Dengan `SESSION_SECURE_COOKIE=true`, login admin tidak bekerja lewat HTTP polos. Uji login admin setelah TLS aktif (§7), atau set sementara ke `false` hanya di lingkungan uji privat—jangan lakukan ini pada production publik.
+
 Periksa juga `LOG_CHANNEL` dan `LOG_STACK`. Redaction context log dipasang pada channel `single` dan `daily`; bila log diarahkan ke channel lain, operator perlu memastikan channel tersebut juga memiliki redaction yang setara.
 
 ## 5. Migrasi dan Super Admin
+
+Sebelum migrasi, buat database dan user PostgreSQL khusus aplikasi melalui `psql` dengan akun administrator database **(pilihan operator)**:
+
+```sql
+CREATE USER pusat_data_app WITH PASSWORD '<password-kuat>';
+CREATE DATABASE pusat_data OWNER pusat_data_app;
+```
+
+Nama database dan user adalah **(pilihan operator)**, tetapi harus cocok dengan `DB_DATABASE`, `DB_USERNAME`, dan `DB_PASSWORD` di `.env`. Database hanya boleh listen di localhost atau jaringan privat; detail firewall dibahas pada §8.
 
 Setelah database production tersedia dan `.env` sudah lengkap, jalankan:
 
@@ -71,7 +98,8 @@ Pastikan `API_KEY_PEPPER` sudah diisi sebelum membuat API client. Terapkan migra
 Setelah dependency aplikasi tersedia, bangun aset dan cache Laravel:
 
 ```bash
-npm ci        # atau npm install — pilihan operator
+npm ci        # memerlukan package-lock.json
+npm install   # alternatif **(pilihan operator)**
 npm run build
 php artisan config:cache
 php artisan route:cache
@@ -79,6 +107,14 @@ php artisan view:cache
 ```
 
 Jalankan ulang `php artisan config:cache` setiap kali `.env` berubah. Pada fase 1, `queue:work` dan `schedule:run` tidak wajib karena kode tidak memiliki job atau schedule aplikasi. `php artisan storage:link` bersifat opsional; upload publik berada di luar scope fase 1.
+
+### Verifikasi cepat
+
+```bash
+curl -s https://<host>/api/v1/health
+```
+
+Atau panggil endpoint yang sama melalui localhost; response harus `{"status":"ok"}`. Uji login admin setelah TLS aktif (§7) karena cookie sesi bersifat secure. Verifikasi post-deploy lengkap tersedia pada §10.
 
 ## 7. TLS, Cloudflare, dan trusted proxies
 
