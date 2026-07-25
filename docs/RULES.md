@@ -61,7 +61,7 @@ Isi: aturan bisnis yang wajib ditegakkan + aturan kerja implementasi nanti.
 5. Yang disimpan di DB: `api_key_prefix` unik + `api_key_digest` HMAC-SHA256 dengan pepper/env; plain key tidak disimpan.
 6. Lookup memakai prefix, verifikasi digest memakai `hash_equals` / compare timing-safe.
 7. Scope wajib dicek di server; contoh `siswa:read`, `guru:read`, `kelas:read`.
-8. Profil field wajib meminimalkan PII; default `minimal`, `contact` hanya untuk client yang benar-benar perlu.
+8. Profil field wajib meminimalkan PII; `minimal` adalah default DB saat client baru dibuat (efektif runtime mengikuti A13.2); `contact` hanya untuk client yang benar-benar perlu.
 9. Rotate key mematikan key lama **segera**; UI wajib modal peringatan dampak ke app konsumen.
 10. Semua request API tanpa key / key salah → 401 (pesan generik, jangan bocorkan detail key).
 11. Semua request write master dengan API key → 403/405.
@@ -76,7 +76,7 @@ Isi: aturan bisnis yang wajib ditegakkan + aturan kerja implementasi nanti.
 4. Jika app bingung/korup, boleh fallback ke **tarik penuh**.
 5. `since` wajib valid ISO-8601 UTC; invalid → 400.
 6. `since` di masa depan → 400.
-7. Query sync dibatasi umur maksimum `since` (default: 90 hari); lebih lama → arahkan tarik penuh.
+7. Query sync dibatasi umur maksimum `since` (default: 90 hari, dapat dikonfigurasi melalui `API_SYNC_MAX_SINCE_DAYS`); lebih lama → arahkan tarik penuh.
 8. Urutan delta: `(changed_at ASC, id ASC)` sebagai tie-breaker bila timestamp sama.
 9. Paginasi sync memakai cursor, bukan page number.
 10. App baru boleh menyimpan `watermark`/`synced_at` sebagai sync terakhir setelah semua cursor selesai.
@@ -229,7 +229,7 @@ Karena ini **Pusat Data**, keamanan harus dijaga dari **semua sisi**. Keamanan b
 2. Paginasi default untuk tarik penuh.
 3. Error body konsisten (`message`, `code`, `request_id`).
 4. Versioning path `/api/v1`.
-5. Rate limit API konsumen: **120 request / menit / API key** + limit tambahan per IP dan endpoint berat; login admin: lihat B4.2.
+5. Rate limit API konsumen (default, dapat dikonfigurasi): **120 request / menit / API key** (`API_RATE_PER_MINUTE`) dan **240 request / menit / IP** (`API_IP_RATE_PER_MINUTE`); endpoint berat boleh lebih ketat; login admin: lihat B4.2.
 6. Health endpoint tidak boleh mengekspos versi stack atau info internal.
 7. Kode error resmi fase 1 minimal: `UNAUTHENTICATED`, `FORBIDDEN`, `LEMBAGA_INACTIVE`, `API_CLIENT_INACTIVE`, `RATE_LIMITED`, `INVALID_SINCE`, `SINCE_TOO_OLD`, `INVALID_CURSOR`, `VALIDATION_FAILED`.
 8. Sync wajib memakai watermark + cursor; page number tidak dipakai untuk sync delta.

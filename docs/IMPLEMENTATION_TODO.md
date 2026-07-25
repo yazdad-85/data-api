@@ -417,7 +417,7 @@ Tujuan: baseline security production-ready sebelum staging publik.
 - [x] Security headers middleware: HSTS production, X-Content-Type-Options, X-Frame-Options/CSP dasar, Referrer-Policy.
 - [x] CORS default deny untuk browser origin.
 - [x] APP_DEBUG false di production template/deploy notes.
-- [x] Session production: secure, httpOnly, same_site ketat.
+- [x] Session production: secure, httpOnly, same_site=lax.
 - [x] Logging redaction untuk auth/API key/password/token.
 - [x] Error production tidak bocor stack trace.
 - [x] Health endpoint tetap minimal.
