@@ -220,20 +220,224 @@ Nilai kolom bertipe date menggunakan format `Y-m-d`. Timestamp, termasuk `create
 
 ## 6. Tarik penuh
 
-_(diisi pada bagian berikutnya)_
+Gunakan endpoint daftar untuk membuat snapshot awal atau menarik ulang seluruh resource:
+
+```bash
+curl --request GET \
+  --header 'X-API-Key: dc_live_demo12345678_00000000000000000000000000000000' \
+  'https://data.example.id/api/v1/guru?include_deleted=true&active_only=true&fields=minimal&per_page=200'
+```
+
+| Parameter | Default | Keterangan |
+|---|---:|---|
+| `include_deleted` | `false` | Jika `true`, sertakan record soft-deleted dan field `deleted_at` pada setiap baris. |
+| `active_only` | `false` | Jika `true`, hanya record dengan kolom aktif bernilai `true`. Berlaku untuk `tahun-ajaran` (`is_aktif`), `guru`, `siswa`, dan `karyawan` (`is_active`); tidak berpengaruh pada `kelas`. |
+| `fields` | profil client | Profil field yang diminta (`minimal`, `academic`, atau `contact`), selama tidak melampaui profil client seperti dijelaskan di §5. |
+| `page` | `1` | Nomor halaman, mulai dari 1. |
+| `per_page` | `100` | Jumlah baris per halaman. Nilai dibatasi (clamp) ke 1–200; nilai di atas 200 menjadi 200, bukan error. |
+
+Urutan stabil membantu pemrosesan halaman: `nama ASC, id ASC`. Resource `tahun-ajaran` merupakan pengecualian: `nama DESC, id ASC`.
+
+Contoh response daftar lengkap berikut menunjukkan hasil dengan `include_deleted=true` dan profil `minimal`:
+
+```json
+{
+  "resource": "guru",
+  "lembaga_id": "11111111-1111-4111-8111-111111111111",
+  "synced_at": "2026-07-25T02:00:00Z",
+  "data": [
+    {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "lembaga_id": "11111111-1111-4111-8111-111111111111",
+      "niy": "G-001",
+      "nama": "Siti Aminah",
+      "is_active": true,
+      "created_at": "2026-07-25T02:00:00Z",
+      "updated_at": "2026-07-25T02:00:00Z",
+      "deleted_at": null
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "lembaga_id": "11111111-1111-4111-8111-111111111111",
+      "niy": "G-002",
+      "nama": "Tono Pratama",
+      "is_active": true,
+      "created_at": "2026-07-24T02:00:00Z",
+      "updated_at": "2026-07-24T02:00:00Z",
+      "deleted_at": "2026-07-25T01:30:00Z"
+    }
+  ],
+  "meta": {
+    "page": 1,
+    "per_page": 200,
+    "total": 2
+  }
+}
+```
+
+Untuk melanjutkan ke halaman kedua, ubah hanya parameter `page`:
+
+```bash
+curl --request GET \
+  --header 'X-API-Key: dc_live_demo12345678_00000000000000000000000000000000' \
+  'https://data.example.id/api/v1/guru?page=2&per_page=200'
+```
 
 ## 7. Sync delta
 
-_(diisi pada bagian berikutnya)_
+Sync delta mengambil perubahan setelah `since` tanpa kehilangan perubahan yang datang ketika halaman sedang diproses:
+
+1. Halaman pertama: kirim `since` saja. Server menetapkan `watermark` UTC untuk rangkaian sync itu.
+2. Jika `next_cursor` tidak `null`, kirim ulang `since` yang sama, `watermark` yang sama, dan `cursor` dari response sebelumnya.
+3. Terapkan setiap halaman secara idempoten di penyimpanan lokal. Simpan `watermark` (atau `synced_at` lokal) hanya setelah halaman dengan `next_cursor === null` berhasil diterapkan.
+
+`cursor` bersifat opaque: jangan di-decode, dimodifikasi, atau dibuat sendiri. Mengirim `watermark` tanpa `cursor` menghasilkan `INVALID_CURSOR`. Parameter `fields` didukung dan mengikuti ceiling profil client yang sama seperti endpoint daftar (§5). `per_page` juga menggunakan default 100 dan clamp 1–200.
+
+Tidak ada endpoint sync tersendiri untuk penempatan siswa. Perubahan penempatan memperbarui `siswa.updated_at`, sehingga akan muncul pada sync resource `siswa`.
+
+Contoh halaman pertama:
+
+```bash
+curl --request GET \
+  --header 'X-API-Key: dc_live_demo12345678_00000000000000000000000000000000' \
+  'https://data.example.id/api/v1/guru/sync?since=2026-07-24T02%3A00%3A00Z&per_page=2'
+```
+
+```json
+{
+  "resource": "guru",
+  "lembaga_id": "11111111-1111-4111-8111-111111111111",
+  "since": "2026-07-24T02:00:00Z",
+  "watermark": "2026-07-25T02:00:00Z",
+  "synced_at": "2026-07-25T02:00:00Z",
+  "changes": [
+    {
+      "id": "33333333-3333-4333-8333-333333333333",
+      "lembaga_id": "11111111-1111-4111-8111-111111111111",
+      "niy": "G-001",
+      "nama": "Siti Aminah",
+      "is_active": true,
+      "created_at": "2026-07-25T01:00:00Z",
+      "updated_at": "2026-07-25T01:00:00Z",
+      "changed_at": "2026-07-25T01:00:00Z",
+      "deleted_at": null
+    },
+    {
+      "id": "44444444-4444-4444-8444-444444444444",
+      "deleted_at": "2026-07-25T01:30:00Z",
+      "changed_at": "2026-07-25T01:30:00Z"
+    }
+  ],
+  "change_count": 2,
+  "next_cursor": "eyJjIjoiMjAyNi0wNy0yNVQwMTozMDowMFoiLCJpIjoiNDQ0NDQ0NDQtNDQ0NC00NDQ0LTg0NDQtNDQ0NDQ0NDQ0NDQ0In0"
+}
+```
+
+Tombstone selalu tepat berbentuk `{id, deleted_at, changed_at}`; jangan mengharapkan field resource lain pada record yang telah dihapus.
+
+Gunakan cursor apa adanya untuk halaman berikut:
+
+```bash
+curl --request GET \
+  --header 'X-API-Key: dc_live_demo12345678_00000000000000000000000000000000' \
+  'https://data.example.id/api/v1/guru/sync?since=2026-07-24T02%3A00%3A00Z&watermark=2026-07-25T02%3A00%3A00Z&cursor=eyJjIjoiMjAyNi0wNy0yNVQwMTozMDowMFoiLCJpIjoiNDQ0NDQ0NDQtNDQ0NC00NDQ0LTg0NDQtNDQ0NDQ0NDQ0NDQ0In0&per_page=2'
+```
+
+Response terakhir tidak memiliki cursor lanjutan:
+
+```json
+{
+  "resource": "guru",
+  "lembaga_id": "11111111-1111-4111-8111-111111111111",
+  "since": "2026-07-24T02:00:00Z",
+  "watermark": "2026-07-25T02:00:00Z",
+  "synced_at": "2026-07-25T02:01:00Z",
+  "changes": [
+    {
+      "id": "22222222-2222-4222-8222-222222222222",
+      "lembaga_id": "11111111-1111-4111-8111-111111111111",
+      "niy": "G-003",
+      "nama": "Wati Lestari",
+      "is_active": true,
+      "created_at": "2026-07-25T01:45:00Z",
+      "updated_at": "2026-07-25T01:45:00Z",
+      "changed_at": "2026-07-25T01:45:00Z",
+      "deleted_at": null
+    }
+  ],
+  "change_count": 1,
+  "next_cursor": null
+}
+```
+
+Nilai `since` maksimum berumur 90 hari secara default. Operator dapat mengubahnya melalui `API_SYNC_MAX_SINCE_DAYS`. Jika server mengembalikan `SINCE_TOO_OLD`, lakukan fallback ke tarik penuh, lalu mulai rangkaian sync delta berikutnya dari waktu snapshot lokal selesai diterapkan:
+
+```json
+{
+  "message": "Parameter since terlalu lama; gunakan tarik penuh.",
+  "code": "SINCE_TOO_OLD",
+  "request_id": "44444444-4444-4444-8444-444444444444"
+}
+```
 
 ## 8. Error dan rate limit
 
-_(diisi pada bagian berikutnya)_
+Error bisnis menggunakan envelope berikut:
+
+```json
+{
+  "message": "Pesan kesalahan.",
+  "code": "ERROR_CODE",
+  "request_id": "44444444-4444-4444-8444-444444444444"
+}
+```
+
+| HTTP | `code` | Pesan persis |
+|---:|---|---|
+| 401 | `UNAUTHENTICATED` | `Autentikasi gagal.` |
+| 403 | `API_CLIENT_INACTIVE` | `API client tidak aktif.` |
+| 403 | `LEMBAGA_INACTIVE` | `Lembaga tidak aktif.` |
+| 403 | `FORBIDDEN` | `Scope tidak mencukupi.` atau `Profil field tidak diizinkan.` |
+| 429 | `RATE_LIMITED` | `Terlalu banyak permintaan.` |
+| 400 | `INVALID_SINCE` | `Parameter since tidak valid.` |
+| 400 | `SINCE_TOO_OLD` | `Parameter since terlalu lama; gunakan tarik penuh.` |
+| 400 | `INVALID_CURSOR` | `Cursor atau watermark tidak valid.` |
+
+Klien dapat mengirim `X-Request-ID` sepanjang 8–64 karakter yang hanya berisi `[A-Za-z0-9._-]`. Nilai valid tersebut di-echo pada header response dan field `request_id`; bila tidak dikirim atau tidak valid, server membuat ID baru.
+
+Error validasi parameter yang ditangani Laravel menggunakan HTTP 422 dengan bentuk `{message, errors}`, bukan envelope bisnis. Slug resource yang tidak dikenal menghasilkan 404 JSON framework.
+
+Batas default adalah 120 request per menit per API key dan 240 request per menit per IP. Keduanya dapat diubah operator melalui `API_RATE_PER_MINUTE` dan `API_IP_RATE_PER_MINUTE`. Jika salah satu batas terlampaui, response 429 membawa header `Retry-After` dalam detik. API tidak mengirim header `X-RateLimit-*`.
+
+```http
+HTTP/1.1 429 Too Many Requests
+Content-Type: application/json
+Retry-After: 37
+X-Request-ID: 44444444-4444-4444-8444-444444444444
+```
+
+```json
+{
+  "message": "Terlalu banyak permintaan.",
+  "code": "RATE_LIMITED",
+  "request_id": "44444444-4444-4444-8444-444444444444"
+}
+```
 
 ## 9. Retry
 
-_(diisi pada bagian berikutnya)_
+- Untuk HTTP 429, tunggu selama nilai header `Retry-After`, lalu ulangi request yang identik.
+- Untuk HTTP 5xx, timeout, atau gangguan jaringan, gunakan backoff eksponensial dengan jitter. Jumlah percobaan maksimum adalah pilihan integrator sesuai kebutuhan operasionalnya.
+- Request sync aman diulang: gunakan triplet `since`, `watermark`, dan `cursor` yang sama persis untuk halaman yang gagal.
+- Jangan menaikkan watermark lokal sebelum menerima dan berhasil menerapkan halaman dengan `next_cursor === null`.
+- Jangan retry otomatis untuk 400, 401, atau 403. Perbaiki parameter, API key, status client/lembaga, scope, atau profil field terlebih dahulu.
 
 ## 10. Checklist sebelum production
 
-_(diisi pada bagian berikutnya)_
+- [ ] Simpan API key di secret store dan jangan pernah menulis plain key ke log.
+- [ ] Verifikasi scope dan profil field client sesuai data yang benar-benar dibutuhkan.
+- [ ] Uji sync multi-halaman, termasuk penerapan tombstone.
+- [ ] Tangani 429 dan 5xx dengan aturan retry di §9.
+- [ ] Siapkan fallback tarik penuh untuk `SINCE_TOO_OLD`.
+- [ ] Jadwalkan sync berkala sesuai kebutuhan aplikasi.
+- [ ] Simpan watermark sync secara persisten dan perbarui hanya setelah rangkaian sync selesai.
