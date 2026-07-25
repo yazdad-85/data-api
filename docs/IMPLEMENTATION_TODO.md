@@ -417,7 +417,7 @@ Tujuan: baseline security production-ready sebelum staging publik.
 - [x] Security headers middleware: HSTS production, X-Content-Type-Options, X-Frame-Options/CSP dasar, Referrer-Policy.
 - [x] CORS default deny untuk browser origin.
 - [x] APP_DEBUG false di production template/deploy notes.
-- [x] Session production: secure, httpOnly, same_site ketat.
+- [x] Session production: secure, httpOnly, same_site=lax.
 - [x] Logging redaction untuk auth/API key/password/token.
 - [x] Error production tidak bocor stack trace.
 - [x] Health endpoint tetap minimal.
@@ -438,25 +438,27 @@ Test wajib:
 
 ## Milestone 11 - Dokumentasi integrator dan operasional
 
+Status: **Selesai** — spek [2026-07-25-milestone-11-docs-integrator-ops-design.md](./superpowers/specs/2026-07-25-milestone-11-docs-integrator-ops-design.md)
+
 Tujuan: aplikasi konsumen dan operator punya panduan jelas.
 
-- [ ] Buat `docs/API_INTEGRATION.md`.
-- [ ] Dokumentasikan auth header.
-- [ ] Dokumentasikan scope dan field profile.
-- [ ] Dokumentasikan tarik penuh.
-- [ ] Dokumentasikan sync watermark/cursor.
-- [ ] Dokumentasikan error code.
-- [ ] Dokumentasikan retry untuk 429/5xx.
-- [ ] Buat `docs/DEPLOYMENT.md`.
-- [ ] Dokumentasikan Apache + PHP + PostgreSQL.
-- [ ] Dokumentasikan Cloudflare wajib sebelum produksi publik.
-- [ ] Dokumentasikan backup terenkripsi/offsite, RPO/RTO, restore test.
-- [ ] Dokumentasikan response incident ringkas: rotate key, disable akun, blok IP, restore backup.
+- [x] Buat `docs/API_INTEGRATION.md`.
+- [x] Dokumentasikan auth header.
+- [x] Dokumentasikan scope dan field profile.
+- [x] Dokumentasikan tarik penuh.
+- [x] Dokumentasikan sync watermark/cursor.
+- [x] Dokumentasikan error code.
+- [x] Dokumentasikan retry untuk 429/5xx.
+- [x] Buat `docs/DEPLOYMENT.md`.
+- [x] Dokumentasikan Apache + PHP + PostgreSQL.
+- [x] Dokumentasikan Cloudflare wajib sebelum produksi publik.
+- [x] Dokumentasikan backup terenkripsi/offsite, RPO/RTO, restore test.
+- [x] Dokumentasikan response incident ringkas: rotate key, disable akun, blok IP, restore backup.
 
 Review wajib:
 
-- [ ] Review dokumentasi integrator dengan contoh request/response.
-- [ ] Review deployment checklist agar tidak membuka DB ke publik.
+- [x] Review dokumentasi integrator dengan contoh request/response.
+- [x] Review deployment checklist agar tidak membuka DB ke publik.
 
 ## Milestone 12 - Final review, UAT, dan go-live checklist
 

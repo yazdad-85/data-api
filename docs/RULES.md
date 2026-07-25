@@ -61,7 +61,7 @@ Isi: aturan bisnis yang wajib ditegakkan + aturan kerja implementasi nanti.
 5. Yang disimpan di DB: `api_key_prefix` unik + `api_key_digest` HMAC-SHA256 dengan pepper/env; plain key tidak disimpan.
 6. Lookup memakai prefix, verifikasi digest memakai `hash_equals` / compare timing-safe.
 7. Scope wajib dicek di server; contoh `siswa:read`, `guru:read`, `kelas:read`.
-8. Profil field wajib meminimalkan PII; default `minimal`, `contact` hanya untuk client yang benar-benar perlu.
+8. Profil field wajib meminimalkan PII; `minimal` adalah default DB saat client baru dibuat (efektif runtime mengikuti A13.2); `contact` hanya untuk client yang benar-benar perlu.
 9. Rotate key mematikan key lama **segera**; UI wajib modal peringatan dampak ke app konsumen.
 10. Semua request API tanpa key / key salah → 401 (pesan generik, jangan bocorkan detail key).
 11. Semua request write master dengan API key → 403/405.
@@ -76,7 +76,7 @@ Isi: aturan bisnis yang wajib ditegakkan + aturan kerja implementasi nanti.
 4. Jika app bingung/korup, boleh fallback ke **tarik penuh**.
 5. `since` wajib valid ISO-8601 UTC; invalid → 400.
 6. `since` di masa depan → 400.
-7. Query sync dibatasi umur maksimum `since` (default: 90 hari); lebih lama → arahkan tarik penuh.
+7. Query sync dibatasi umur maksimum `since` (default: 90 hari, dapat dikonfigurasi melalui `API_SYNC_MAX_SINCE_DAYS`); lebih lama → arahkan tarik penuh.
 8. Urutan delta: `(changed_at ASC, id ASC)` sebagai tie-breaker bila timestamp sama.
 9. Paginasi sync memakai cursor, bukan page number.
 10. App baru boleh menyimpan `watermark`/`synced_at` sebagai sync terakhir setelah semua cursor selesai.
@@ -102,7 +102,7 @@ Isi: aturan bisnis yang wajib ditegakkan + aturan kerja implementasi nanti.
 ### A13. Minimisasi PII
 
 1. API konsumen hanya menerima field yang sesuai kebutuhan aplikasi dan scope client.
-2. Default response API memakai profil `minimal`.
+2. Tanpa parameter `fields`, profil efektif response API adalah `field_profile` yang di-assign ke API client. `minimal` hanya default saat client baru dibuat; client dapat meminta profil lebih rendah melalui `fields`, sedangkan permintaan di atas ceiling profil client ditolak **403**.
 3. Field kontak, alamat, tanggal lahir, dan data wali hanya keluar melalui profil `contact` yang disetujui Super Admin.
 4. Audit log dan error response tidak boleh memuat PII penuh.
 
@@ -184,7 +184,7 @@ Karena ini **Pusat Data**, keamanan harus dijaga dari **semua sisi**. Keamanan b
 1. Password admin di-hash (algoritma default Laravel yang kuat).
 2. Kebijakan password: minimal **12 karakter**; disarankan campuran huruf/angka.
 3. Proteksi brute-force login (throttle / lockout): **5 percobaan / menit / email+IP** dan limit tambahan per IP.
-4. Session aman: `httpOnly`, `secure`, `same_site` ketat di produksi.
+4. Session aman: `httpOnly` dan `secure` wajib di produksi; `same_site=lax` (keputusan M10).
 5. Logout & invalidate session saat nonaktifkan user.
 6. Prinsip least privilege: Super Admin vs Admin Lembaga sesuai ROLE.
 7. MFA/TOTP Super Admin **wajib sebelum produksi publik**; recovery code disimpan hashed.
@@ -229,7 +229,7 @@ Karena ini **Pusat Data**, keamanan harus dijaga dari **semua sisi**. Keamanan b
 2. Paginasi default untuk tarik penuh.
 3. Error body konsisten (`message`, `code`, `request_id`).
 4. Versioning path `/api/v1`.
-5. Rate limit API konsumen: **120 request / menit / API key** + limit tambahan per IP dan endpoint berat; login admin: lihat B4.2.
+5. Rate limit API konsumen (default, dapat dikonfigurasi): **120 request / menit / API key** (`API_RATE_PER_MINUTE`) dan **240 request / menit / IP** (`API_IP_RATE_PER_MINUTE`); endpoint berat boleh lebih ketat; login admin: lihat B4.2.
 6. Health endpoint tidak boleh mengekspos versi stack atau info internal.
 7. Kode error resmi fase 1 minimal: `UNAUTHENTICATED`, `FORBIDDEN`, `LEMBAGA_INACTIVE`, `API_CLIENT_INACTIVE`, `RATE_LIMITED`, `INVALID_SINCE`, `SINCE_TOO_OLD`, `INVALID_CURSOR`, `VALIDATION_FAILED`.
 8. Sync wajib memakai watermark + cursor; page number tidak dipakai untuk sync delta.

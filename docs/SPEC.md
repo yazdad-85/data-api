@@ -335,6 +335,8 @@ PostgreSQL wajib ikut menjaga batas lembaga, bukan hanya policy aplikasi:
 
 ## 4. API aplikasi konsumen
 
+Panduan integrator lengkap, termasuk contoh request/response dan strategi retry, tersedia di [API_INTEGRATION.md](./API_INTEGRATION.md).
+
 Base path resmi fase 1: `/api/v1`
 
 Auth: header `X-API-Key` dari API client aktif.
@@ -366,12 +368,12 @@ Query opsional:
 | Query | Arti |
 |-------|------|
 | `include_deleted` | `true`/`false` (default false) |
-| `active_only` | `true`/`false` (default false; memfilter `is_active`) |
+| `active_only` | `true`/`false` (default false; memfilter kolom aktif per resource: `is_active`; `tahun-ajaran` memakai `is_aktif`; `kelas` tidak memiliki kolom aktif sehingga parameter diabaikan) |
 | `fields` | `minimal`/`academic`/`contact` jika diizinkan oleh client |
 | `page` | Halaman (default 1) |
 | `per_page` | Item per halaman (default **100**, max **200**) |
 
-Rate limit dasar: **120 request / menit / API key**, dengan limit tambahan per IP dan endpoint berat (429 jika melebihi).
+Rate limit dasar default: **120 request / menit / API key** dan 240 request / menit / IP; keduanya dapat dikonfigurasi melalui `API_RATE_PER_MINUTE` dan `API_IP_RATE_PER_MINUTE` (429 jika melebihi).
 
 > Catatan implementasi (M8): `per_page` di-**clamp** ke rentang 1..200 (nilai > 200 → 200), bukan ditolak 422. Kolom bertipe tanggal (mis. `tanggal_lahir`, `tanggal_mulai`, `mulai_at`) dikirim sebagai `Y-m-d`; timestamp/datetime (`created_at`, `updated_at`, `deleted_at`) sebagai ISO-8601 UTC `Z`.
 
@@ -407,11 +409,13 @@ Aturan:
 
 - Wajib `since` (ISO-8601 UTC); format invalid → **400**.
 - `since` di masa depan → **400**.
-- Umur `since` > **90 hari** → **400** dengan pesan gunakan tarik penuh.
+- Umur `since` > **90 hari** secara default → **400** dengan pesan gunakan tarik penuh; batas ini dapat dikonfigurasi melalui `API_SYNC_MAX_SINCE_DAYS`.
 - Server menetapkan `watermark` UTC pada awal sync; semua page/cursor dalam satu sesi hanya mengambil perubahan `> since` dan `<= watermark`.
+- `watermark` tidak disimpan di server; pada halaman lanjutan integrator wajib mengirim ulang nilai `watermark` dari halaman pertama apa adanya.
 - Kembalikan record dengan `changed_at > since` dan `changed_at <= watermark`, dengan `changed_at = greatest(updated_at, deleted_at)`.
 - Urutan hasil: `(changed_at ASC, id ASC)`.
 - Paginasi sync memakai cursor berbasis `(changed_at, id)`, bukan page number.
+- `fields` opsional: `minimal`/`academic`/`contact`; profil yang diminta tidak boleh melampaui ceiling profil client, sama seperti §4.3.
 - `per_page` default 100, max 200.
 - Tombstone soft-delete cukup memuat `id`, `deleted_at`, `changed_at`, dan relasi minimum; jangan dump PII penuh untuk record terhapus.
 - Tidak ada endpoint sync terpisah untuk `siswa_penempatan`. Perubahan enrollment/status penempatan tersinkron lewat `GET /api/v1/siswa/sync` karena lifecycle M6c selalu menyentuh `siswa.updated_at` saat mutasi penempatan.
@@ -440,7 +444,7 @@ App menyimpan `watermark`/`synced_at` terakhir hanya setelah semua cursor selesa
 
 ```json
 {
-  "message": "since tidak valid",
+  "message": "Parameter since tidak valid.",
   "code": "INVALID_SINCE",
   "request_id": "..."
 }
@@ -461,6 +465,8 @@ Kode error resmi fase 1:
 | `SINCE_TOO_OLD` | 400 | `since` melewati batas umur sync |
 | `INVALID_CURSOR` | 400 | Cursor/watermark tidak valid |
 | `VALIDATION_FAILED` | 422 | Input dashboard/admin tidak valid |
+
+Slug resource tidak dikenal menghasilkan 404 JSON framework, bukan envelope bisnis. Error validasi request API menghasilkan 422 Laravel berbentuk `{message, errors}`; `VALIDATION_FAILED` tetap dipakai untuk dashboard/admin.
 
 ### 4.6 Export multi-resource
 
