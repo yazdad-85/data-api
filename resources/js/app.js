@@ -13,6 +13,11 @@ document.addEventListener('click', (event) => {
         document.documentElement.classList.remove('sidebar-open');
         return;
     }
+    const selectOnClick = event.target.closest('[data-select-on-click]');
+    if (selectOnClick && typeof selectOnClick.select === 'function') {
+        selectOnClick.select();
+        return;
+    }
     const opener = event.target.closest('[data-modal-open]');
     if (opener) {
         const modal = document.getElementById(opener.dataset.modalOpen);

@@ -32,7 +32,7 @@
         <div class="password-display">
             <div class="field">
                 <label for="admin-password" class="field-label">Kata sandi</label>
-                <input id="admin-password" type="text" class="field-control" value="{{ $plainPassword }}" readonly onclick="this.select()">
+                <input id="admin-password" type="text" class="field-control" value="{{ $plainPassword }}" readonly data-select-on-click>
             </div>
             <x-ui.button type="button" variant="secondary" data-copy-target="admin-password">Salin</x-ui.button>
         </div>
