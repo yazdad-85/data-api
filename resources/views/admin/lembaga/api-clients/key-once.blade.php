@@ -48,7 +48,7 @@
                     class="field-control"
                     value="{{ $plainKey }}"
                     readonly
-                    onclick="this.select()"
+                    data-select-on-click
                 >
             </div>
             <x-ui.button type="button" variant="secondary" data-copy-target="api-client-key">Salin</x-ui.button>

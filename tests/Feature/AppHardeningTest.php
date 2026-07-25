@@ -157,6 +157,25 @@ class AppHardeningTest extends TestCase
         }
     }
 
+    public function test_blade_views_do_not_contain_inline_event_handler_attributes(): void
+    {
+        $violations = [];
+
+        foreach (new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator(resource_path('views'))) as $file) {
+            if (! $file->isFile() || $file->getExtension() !== 'php') {
+                continue;
+            }
+
+            $contents = file_get_contents($file->getPathname());
+
+            if ($contents !== false && preg_match('/\bon[a-z0-9_-]+\s*=\s*["\']/i', $contents)) {
+                $violations[] = $file->getPathname();
+            }
+        }
+
+        $this->assertSame([], $violations, 'Inline event handler attributes found in: '.implode(', ', $violations));
+    }
+
     public function test_api_exception_in_production_does_not_leak_stack(): void
     {
         config(['app.debug' => false]);

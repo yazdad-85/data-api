@@ -410,7 +410,7 @@ Test wajib:
 
 ## Milestone 10 - Hardening aplikasi
 
-Status: **Selesai**
+Status: **Selesai** — spek [2026-07-25-milestone-10-app-hardening-design.md](./superpowers/specs/2026-07-25-milestone-10-app-hardening-design.md)
 
 Tujuan: baseline security production-ready sebelum staging publik.
 
@@ -427,7 +427,7 @@ Review wajib:
 
 - [x] Review config production dan middleware header.
 - [x] Review log redaction.
-- [ ] Perbaiki semua temuan review sebelum test.
+- [x] Perbaiki semua temuan review sebelum test.
 
 Test wajib:
 
