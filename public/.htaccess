@@ -5,6 +5,10 @@
 
     RewriteEngine On
 
+    # Behind TLS-terminating reverse proxy (Cloudflare / Nginx): mark request HTTPS for PHP/Laravel.
+    RewriteCond %{HTTP:X-Forwarded-Proto} =https
+    RewriteRule ^ - [E=HTTPS:on]
+
     # Handle Authorization Header
     RewriteCond %{HTTP:Authorization} .
     RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]

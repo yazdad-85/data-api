@@ -124,7 +124,9 @@ Origin VPS sebaiknya hanya menerima traffic dari Cloudflare agar edge tidak dapa
 
 Pasang TLS juga pada origin. Sertifikat Let's Encrypt/ACME atau Cloudflare Origin Certificate merupakan **(pilihan operator)**. Pastikan alur HTTPS dari pengunjung sampai origin sudah sesuai dengan konfigurasi proxy yang dipilih.
 
-Isi `TRUSTED_PROXIES` dengan IP/CIDR ingress yang benar-benar berada di depan Laravel, seperti Cloudflare atau Apache—bukan IP laptop/PC lembaga. Laravel hanya meneruskan header `X-Forwarded-For`, `X-Forwarded-Host`, `X-Forwarded-Port`, dan `X-Forwarded-Proto` dari proxy yang dipercaya. Nilai `*` hanya boleh dipakai bila aplikasi selalu hanya dapat diakses melalui satu proxy tepercaya. Tanpa konfigurasi ini, `X-Forwarded-Proto` diabaikan; HSTS tidak terkirim dan Laravel dapat menganggap request HTTPS tidak aman, sehingga cookie secure dapat bermasalah. Lihat [PRODUCTION_NOTES.md](./PRODUCTION_NOTES.md) untuk penjelasan perbedaan akses lembaga, Cloudflare, dan trusted proxy.
+Isi `TRUSTED_PROXIES` dengan IP/CIDR ingress yang benar-benar berada di depan Laravel, seperti reverse proxy internal atau Cloudflare—bukan IP laptop/PC lembaga. Nilai ini dibaca dari `config/security.php` sehingga tetap benar setelah `php artisan config:cache`.
+
+Jika TLS diputus di reverse proxy (Apache origin hanya HTTP), pastikan proxy mengirim `X-Forwarded-Proto: https`. `public/.htaccess` juga menandai `HTTPS=on` bila header itu ada, agar `$request->secure()` dan HSTS bekerja di Apache. Lihat [PRODUCTION_NOTES.md](./PRODUCTION_NOTES.md) untuk penjelasan perbedaan akses lembaga, Cloudflare, dan trusted proxy.
 
 Setelah TLS dan proxy benar, uji login admin lewat HTTPS. Ini melanjutkan peringatan §4: `SESSION_SECURE_COOKIE=true` memang tidak dapat bekerja pada HTTP polos.
 

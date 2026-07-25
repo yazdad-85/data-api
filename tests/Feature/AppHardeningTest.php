@@ -73,6 +73,25 @@ class AppHardeningTest extends TestCase
     public function test_hsts_set_when_forwarded_proto_is_sent_by_a_trusted_proxy(): void
     {
         $this->app['env'] = 'production';
+        config(['security.trusted_proxies' => '127.0.0.1']);
+
+        $response = $this->call('GET', '/api/v1/health', server: [
+            'HTTP_X_FORWARDED_PROTO' => 'https',
+            'REMOTE_ADDR' => '127.0.0.1',
+        ]);
+
+        $response->assertOk()
+            ->assertHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+    }
+
+    public function test_hsts_uses_config_trusted_proxies_when_runtime_env_is_blank(): void
+    {
+        $this->app['env'] = 'production';
+
+        // Simulate `config:cache`: runtime env() is empty, but cached config still has the value.
+        putenv('TRUSTED_PROXIES');
+        unset($_ENV['TRUSTED_PROXIES'], $_SERVER['TRUSTED_PROXIES']);
+        config(['security.trusted_proxies' => '127.0.0.1']);
 
         $response = $this->call('GET', '/api/v1/health', server: [
             'HTTP_X_FORWARDED_PROTO' => 'https',
@@ -86,6 +105,7 @@ class AppHardeningTest extends TestCase
     public function test_forwarded_proto_is_ignored_without_trusted_proxies(): void
     {
         $this->app['env'] = 'production';
+        config(['security.trusted_proxies' => '']);
 
         $response = $this->call('GET', '/api/v1/health', server: [
             'HTTP_X_FORWARDED_PROTO' => 'https',

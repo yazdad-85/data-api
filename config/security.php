@@ -15,6 +15,9 @@ return [
 
     'api_sync_max_since_days' => (int) env('API_SYNC_MAX_SINCE_DAYS', 90),
 
+    // Comma-separated IPs/CIDRs, or "*". Read via config so it survives `php artisan config:cache`.
+    'trusted_proxies' => (string) env('TRUSTED_PROXIES', ''),
+
     'headers' => [
         'csp' => env(
             'SECURITY_CSP',
