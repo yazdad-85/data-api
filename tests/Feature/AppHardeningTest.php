@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Logging\RedactLogContext;
+use Illuminate\Support\Facades\Log;
 use Tests\TestCase;
 
 class AppHardeningTest extends TestCase
@@ -89,5 +91,39 @@ class AppHardeningTest extends TestCase
 
         $this->assertNotNull($cookie);
         $this->assertTrue($cookie->isSecure());
+    }
+
+    public function test_log_context_redaction_is_wired_and_reaches_the_log_sink(): void
+    {
+        $this->assertContains(RedactLogContext::class, config('logging.channels.single.tap', []));
+        $this->assertContains(RedactLogContext::class, config('logging.channels.daily.tap', []));
+
+        $path = storage_path('logs/m10-redaction-test.log');
+
+        @unlink($path);
+
+        config([
+            'logging.channels.m10_test' => [
+                'driver' => 'single',
+                'path' => $path,
+                'level' => 'debug',
+                'tap' => [RedactLogContext::class],
+            ],
+        ]);
+
+        try {
+            Log::channel('m10_test')->info('login attempt', [
+                'password' => 'SuperSecret123',
+            ]);
+
+            $contents = file_get_contents($path);
+
+            $this->assertNotFalse($contents);
+            $this->assertStringNotContainsString('SuperSecret123', $contents);
+            $this->assertStringContainsString('[REDACTED]', $contents);
+        } finally {
+            Log::forgetChannel('m10_test');
+            @unlink($path);
+        }
     }
 }
