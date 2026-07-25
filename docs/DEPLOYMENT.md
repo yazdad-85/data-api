@@ -111,10 +111,10 @@ Jalankan ulang `php artisan config:cache` setiap kali `.env` berubah. Pada fase 
 ### Verifikasi cepat
 
 ```bash
-curl -s https://<host>/api/v1/health
+curl -s http://127.0.0.1/api/v1/health
 ```
 
-Atau panggil endpoint yang sama melalui localhost; response harus `{"status":"ok"}`. Uji login admin setelah TLS aktif (§7) karena cookie sesi bersifat secure. Verifikasi post-deploy lengkap tersedia pada §10.
+Sebelum TLS dipasang, panggil endpoint melalui localhost/HTTP; response harus `{"status":"ok"}`. Setelah §7 selesai, ulangi health check melalui HTTPS pada host publik. Uji login admin hanya setelah TLS aktif karena cookie sesi bersifat secure. Verifikasi post-deploy lengkap tersedia pada §10.
 
 ## 7. TLS, Cloudflare, dan trusted proxies
 
@@ -132,7 +132,7 @@ Setelah TLS dan proxy benar, uji login admin lewat HTTPS. Ini melanjutkan pering
 
 Buka dari internet hanya port HTTP/HTTPS (80/443). Batasi SSH dengan port alternatif, allowlist, fail2ban, atau kontrol setara sebagai **(pilihan operator)**.
 
-PostgreSQL hanya boleh listen pada localhost atau jaringan privat dan tidak pernah terbuka ke publik. Jangan buka port `5432` di firewall publik; uji dari jaringan eksternal harus gagal. Aturan request limit Apache atau modul setara untuk menambah perlindungan abuse juga merupakan **(pilihan operator)**.
+PostgreSQL hanya boleh listen pada localhost atau jaringan privat dan tidak pernah terbuka ke publik. Jangan buka port `5432` di firewall publik; uji koneksi eksternal dilakukan dengan prosedur pada §10. Aturan request limit Apache atau modul setara untuk menambah perlindungan abuse juga merupakan **(pilihan operator)**.
 
 ## 9. Backup, RPO/RTO, restore test
 
@@ -154,27 +154,49 @@ Lakukan restore test pada salinan lingkungan yang aman, catat waktu pemulihan da
 
 ## 10. Verifikasi post-deploy
 
-Selesaikan semua pemeriksaan berikut setelah deploy:
+Selesaikan semua pemeriksaan berikut setelah deploy. Setiap pemeriksaan menyatakan apa yang dicek, cara menjalankannya, dan hasil yang diharapkan.
 
-1. `GET /api/v1/health` mengembalikan tepat `{"status":"ok"}`.
-2. Login admin dan MFA Super Admin berfungsi melalui HTTPS.
-3. Header keamanan muncul; `Strict-Transport-Security` muncul saat `APP_ENV=production`, request HTTPS, dan trusted proxy sudah benar.
-4. `APP_DEBUG=false`; respons error 500 tidak menampilkan stack trace.
-5. PostgreSQL tidak dapat diakses dari luar; uji koneksi eksternal gagal.
-6. Rate limit aktif: request yang melampaui batas menerima `429` beserta header `Retry-After`.
-7. Redaction context log aktif; secret yang dikirim di context tidak tertulis plain pada log.
+1. **Health.** Jalankan `curl -s https://<host>/api/v1/health`. Hasilnya harus tepat `{"status":"ok"}`.
+2. **Login admin dan MFA.** Buka `https://<host>/login`, login sebagai Super Admin, lalu pastikan diminta kode TOTP. Setelah kode valid, dashboard admin harus terbuka.
+3. **Header keamanan.** Jalankan `curl -sI https://<host>/login`. Response harus memuat `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, dan `Content-Security-Policy`. `Strict-Transport-Security` harus muncul ketika `APP_ENV=production`, request HTTPS, dan `TRUSTED_PROXIES` sudah benar.
+4. **Mode debug.** Periksa `APP_DEBUG=false` di `.env`, lalu jalankan `php artisan config:show app.debug`. Pada lingkungan uji, akses URL API yang tidak ada, misalnya `https://<host>/api/v1/tidak-ada`, untuk memeriksa respons 404/500 generik tanpa `trace` atau nama exception. Jangan sengaja memicu error pada data production.
+5. **Isolasi database.** Dari mesin di luar VPS, jalankan `nc -zv <host-publik> 5432` atau koneksi `psql -h <host-publik>`. Koneksi harus gagal atau timeout.
+6. **Rate limit.** Dengan API key uji dan batas default 120 request/menit, jalankan lebih dari 120 request ke `/api/v1/me` dalam satu menit, misalnya:
+
+   ```bash
+   for i in $(seq 1 121); do
+     curl -sS -o /dev/null -D - \
+       -H "X-API-Key: <api-key-uji>" \
+       https://<host>/api/v1/me
+   done
+   ```
+
+   Response setelah batas terlampaui harus `429` dan memuat header `Retry-After`. Jika `API_RATE_PER_MINUTE` diubah, gunakan jumlah request di atas nilai konfigurasi tersebut.
+7. **Redaction log.** Di lingkungan uji, jalankan `php artisan tinker`, lalu `Log::info('cek', ['password' => 'rahasia123']);`. Periksa `storage/logs/laravel.log` atau file channel log aktif. Log harus memuat `[REDACTED]`, bukan `rahasia123`.
 
 ## 11. Incident response
 
-Saat ada indikasi kompromi atau penyalahgunaan, simpan bukti yang diperlukan dan lakukan tindakan pembatasan berikut sesuai dampak:
+Utamakan **containment dulu**: hentikan akses yang diduga bocor dengan rotate/revoke key atau blok IP bila serangan masih aktif, sebelum investigasi panjang. Setelah akses dihentikan dan sebelum perubahan lanjutan, salin file log terkait dan catat waktu kejadian.
 
-1. Rotate atau revoke API key melalui UI admin oleh Super Admin. Jika key masih perlu dipakai, berikan key baru kepada integrator melalui kanal aman; plain key baru hanya tampil sekali.
-2. Nonaktifkan akun admin yang terdampak melalui UI admin oleh Super Admin.
-3. Nonaktifkan lembaga bila perlu; semua API key lembaga tersebut akan menerima `403` sampai lembaga diaktifkan kembali.
-4. Blok IP sumber penyalahgunaan di firewall atau Cloudflare **(pilihan operator)**.
-5. Jika data terdampak, restore backup menggunakan prosedur dan hasil restore test pada §9.
+### API key bocor
 
-Pantau log untuk spike `401`, `403`, dan `429` sebagai sinyal akses anomali. Setelah insiden terkendali, tinjau audit log dan dokumentasikan waktu, dampak, tindakan, serta tindak lanjut.
+1. Sebagai Super Admin, buka detail lembaga lalu bagian API client per lembaga untuk rotate atau revoke key yang bocor.
+2. Bila integrasi harus berlanjut, kirim key baru melalui kanal aman; plain key baru hanya tampil sekali.
+3. Pantau `401` dari pemakai yang masih menggunakan key lama. Blok IP sumber penyalahgunaan di firewall atau Cloudflare **(pilihan operator)** bila serangan aktif.
+
+### Akun admin dicurigai
+
+1. Sebagai Super Admin, buka detail lembaga lalu bagian admin lembaga dan nonaktifkan akun yang dicurigai.
+2. Reset kredensial akun tersebut sebelum diaktifkan kembali.
+3. Audit aktivitas akun untuk membatasi dampak dan menentukan perubahan lanjutan.
+
+### Data terindikasi rusak atau terhapus
+
+1. Nonaktifkan sementara akun admin terkait melalui bagian admin lembaga agar akses tulis berhenti.
+2. Nilai dampak dan restore backup memakai prosedur serta hasil restore test pada §9.
+3. Jika seluruh lembaga perlu dihentikan, nonaktifkan lembaga; semua API key lembaga tersebut akan menerima `403` sampai lembaga diaktifkan kembali.
+
+Pantau log untuk spike `401`, `403`, dan `429` sebagai sinyal akses anomali. Tidak ada halaman UI audit terpisah; periksa tabel `audit_logs` melalui `psql` bila diperlukan. Fitur `AuditLogger` mencatat event, hasil, subjek, `request_id`, metadata yang telah di-redact, IP, dan user agent; gunakan catatan tersebut bersama log aplikasi untuk mendokumentasikan waktu, dampak, tindakan, dan tindak lanjut.
 
 ## 12. Checklist go-live
 
