@@ -440,6 +440,8 @@ Test wajib:
 
 Status: **Selesai** — spek [2026-07-25-milestone-11-docs-integrator-ops-design.md](./superpowers/specs/2026-07-25-milestone-11-docs-integrator-ops-design.md)
 
+Deliverable: [API_INTEGRATION.md](./API_INTEGRATION.md) (integrator), [DEPLOYMENT.md](./DEPLOYMENT.md) (operator), ringkasan env [PRODUCTION_NOTES.md](./PRODUCTION_NOTES.md).
+
 Tujuan: aplikasi konsumen dan operator punya panduan jelas.
 
 - [x] Buat `docs/API_INTEGRATION.md`.
@@ -484,6 +486,6 @@ Fase 1 dianggap selesai hanya jika:
 - [ ] Semua milestone 1-12 selesai.
 - [ ] Tidak ada temuan kritis/tinggi yang belum diperbaiki.
 - [ ] Test wajib di RULES B7 hijau.
-- [ ] Dokumentasi integrator tersedia.
+- [x] Dokumentasi integrator tersedia.
 - [ ] Checklist hardening produksi hijau.
 - [ ] Pemilik kebutuhan menyetujui UAT.
