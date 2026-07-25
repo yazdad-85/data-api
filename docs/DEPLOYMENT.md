@@ -118,24 +118,71 @@ Atau panggil endpoint yang sama melalui localhost; response harus `{"status":"ok
 
 ## 7. TLS, Cloudflare, dan trusted proxies
 
-_(diisi pada bagian berikutnya)_
+Sebelum aplikasi dibuka ke publik, aktifkan Cloudflare sebagai orange cloud / full proxy. Ini wajib untuk produksi publik, bukan sekadar pilihan DNS.
+
+Origin VPS sebaiknya hanya menerima traffic dari Cloudflare agar edge tidak dapat dibypass. Pembatasan IP origin atau Cloudflare Authenticated Origin Pull merupakan **(pilihan operator)**; gunakan daftar/rule resmi yang sesuai dengan lingkungan, tanpa menyalin CIDR dari contoh tidak terverifikasi.
+
+Pasang TLS juga pada origin. Sertifikat Let's Encrypt/ACME atau Cloudflare Origin Certificate merupakan **(pilihan operator)**. Pastikan alur HTTPS dari pengunjung sampai origin sudah sesuai dengan konfigurasi proxy yang dipilih.
+
+Isi `TRUSTED_PROXIES` dengan IP/CIDR ingress yang benar-benar berada di depan Laravel, seperti Cloudflare atau Apache—bukan IP laptop/PC lembaga. Laravel hanya meneruskan header `X-Forwarded-For`, `X-Forwarded-Host`, `X-Forwarded-Port`, dan `X-Forwarded-Proto` dari proxy yang dipercaya. Nilai `*` hanya boleh dipakai bila aplikasi selalu hanya dapat diakses melalui satu proxy tepercaya. Tanpa konfigurasi ini, `X-Forwarded-Proto` diabaikan; HSTS tidak terkirim dan Laravel dapat menganggap request HTTPS tidak aman, sehingga cookie secure dapat bermasalah. Lihat [PRODUCTION_NOTES.md](./PRODUCTION_NOTES.md) untuk penjelasan perbedaan akses lembaga, Cloudflare, dan trusted proxy.
+
+Setelah TLS dan proxy benar, uji login admin lewat HTTPS. Ini melanjutkan peringatan §4: `SESSION_SECURE_COOKIE=true` memang tidak dapat bekerja pada HTTP polos.
 
 ## 8. Firewall dan isolasi database
 
-_(diisi pada bagian berikutnya)_
+Buka dari internet hanya port HTTP/HTTPS (80/443). Batasi SSH dengan port alternatif, allowlist, fail2ban, atau kontrol setara sebagai **(pilihan operator)**.
+
+PostgreSQL hanya boleh listen pada localhost atau jaringan privat dan tidak pernah terbuka ke publik. Jangan buka port `5432` di firewall publik; uji dari jaringan eksternal harus gagal. Aturan request limit Apache atau modul setara untuk menambah perlindungan abuse juga merupakan **(pilihan operator)**.
 
 ## 9. Backup, RPO/RTO, restore test
 
-_(diisi pada bagian berikutnya)_
+Terapkan backup database dengan aturan fase 1 berikut.
+
+| Aturan | Nilai |
+|--------|-------|
+| Dump DB | terjadwal (min. harian) |
+| Enkripsi | wajib |
+| Lokasi | offsite, tidak dapat diakses publik |
+| Retensi | ≥ 30 hari (fase 1) |
+| RPO | ≤ 24 jam |
+| RTO | target ≤ 4 jam |
+| Restore test | sebelum go-live + berkala |
+
+Tool dump, enkripsi, penyimpanan offsite, dan penjadwalan adalah **(pilihan operator)**. Contoh kategori yang dapat digabungkan adalah `pg_dump`, enkripsi, dan object storage, tanpa mengikat perintah, flag, atau provider tertentu. Jangan commit backup ke git dan jangan menempatkannya di document root.
+
+Lakukan restore test pada salinan lingkungan yang aman, catat waktu pemulihan dan hasil verifikasi data, lalu perbaiki prosedur bila target RPO/RTO tidak terpenuhi.
 
 ## 10. Verifikasi post-deploy
 
-_(diisi pada bagian berikutnya)_
+Selesaikan semua pemeriksaan berikut setelah deploy:
+
+1. `GET /api/v1/health` mengembalikan tepat `{"status":"ok"}`.
+2. Login admin dan MFA Super Admin berfungsi melalui HTTPS.
+3. Header keamanan muncul; `Strict-Transport-Security` muncul saat `APP_ENV=production`, request HTTPS, dan trusted proxy sudah benar.
+4. `APP_DEBUG=false`; respons error 500 tidak menampilkan stack trace.
+5. PostgreSQL tidak dapat diakses dari luar; uji koneksi eksternal gagal.
+6. Rate limit aktif: request yang melampaui batas menerima `429` beserta header `Retry-After`.
+7. Redaction context log aktif; secret yang dikirim di context tidak tertulis plain pada log.
 
 ## 11. Incident response
 
-_(diisi pada bagian berikutnya)_
+Saat ada indikasi kompromi atau penyalahgunaan, simpan bukti yang diperlukan dan lakukan tindakan pembatasan berikut sesuai dampak:
+
+1. Rotate atau revoke API key melalui UI admin oleh Super Admin. Jika key masih perlu dipakai, berikan key baru kepada integrator melalui kanal aman; plain key baru hanya tampil sekali.
+2. Nonaktifkan akun admin yang terdampak melalui UI admin oleh Super Admin.
+3. Nonaktifkan lembaga bila perlu; semua API key lembaga tersebut akan menerima `403` sampai lembaga diaktifkan kembali.
+4. Blok IP sumber penyalahgunaan di firewall atau Cloudflare **(pilihan operator)**.
+5. Jika data terdampak, restore backup menggunakan prosedur dan hasil restore test pada §9.
+
+Pantau log untuk spike `401`, `403`, dan `429` sebagai sinyal akses anomali. Setelah insiden terkendali, tinjau audit log dan dokumentasikan waktu, dampak, tindakan, serta tindak lanjut.
 
 ## 12. Checklist go-live
 
-_(diisi pada bagian berikutnya)_
+- [ ] Semua pemeriksaan §10 hijau.
+- [ ] Cloudflare orange cloud / full proxy aktif.
+- [ ] `TRUSTED_PROXIES` terisi hanya dengan ingress Cloudflare/Apache yang tepercaya.
+- [ ] Restore backup telah diuji.
+- [ ] MFA Super Admin aktif.
+- [ ] `API_KEY_PEPPER` sudah terisi.
+- [ ] Tidak ada secret di git.
+- [ ] Dokumen integrator [API_INTEGRATION.md](./API_INTEGRATION.md) telah diserahkan kepada lembaga.
