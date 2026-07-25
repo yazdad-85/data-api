@@ -199,7 +199,7 @@ Karena ini **Pusat Data**, keamanan harus dijaga dari **semua sisi**. Keamanan b
 6. Jangan log secrets (password, API key plain, token).
 7. Error produksi tidak membocorkan stack trace ke klien.
 8. Paginasi & batasan ukuran response untuk mencegah abuse resource (`per_page` max 200).
-9. CORS fase 1: asumsikan integrasi **server-to-server**; default **deny** origin browser. Whitelist origin per lembaga → fase 2.
+9. CORS fase 1: asumsikan integrasi **server-to-server** (backend lembaga → API dengan API key); default **deny** origin browser. Laptop/PC lembaga **tidak** didaftarkan ke whitelist IP. Whitelist origin browser per lembaga → fase 2. `TRUSTED_PROXIES` hanya untuk IP ingress Cloudflare/Apache (lihat `docs/PRODUCTION_NOTES.md`).
 10. Field sensitif (hash password, `mfa_secret`, `recovery_codes_hash`, `api_key_digest`) tidak boleh muncul di response API/JSON admin.
 11. Akses/view data PII siswa/guru oleh admin dicatat di audit log (siapa, kapan, entitas — tanpa dump data penuh).
 12. Response API wajib mengikuti scope resource dan profil field API client.

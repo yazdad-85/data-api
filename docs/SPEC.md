@@ -542,7 +542,7 @@ Wajib sebelum produksi:
 6. Proteksi DDoS/abuse berlapis: **Cloudflare** (wajib produksi) + rate limit app + Apache + firewall/fail2ban VPS
 7. Backup terenkripsi + offsite + uji restore; RPO fase 1 max 24 jam, RTO target max 4 jam
 8. Origin VPS di-harden agar tidak mudah di-bypass dari Cloudflare
-9. CORS default deny; integrasi fase 1 server-to-server
+9. CORS default deny; integrasi fase 1 **server-to-server** (API key dari backend lembaga — bukan browser/laptop langsung). Cloudflare wajib sebelum publik. Detail akses vs `TRUSTED_PROXIES`: `docs/PRODUCTION_NOTES.md`
 10. Password admin min 12 karakter; login throttle 5/menit/email+IP dan limit tambahan per IP
 11. MFA/TOTP Super Admin aktif sebelum produksi publik
 
