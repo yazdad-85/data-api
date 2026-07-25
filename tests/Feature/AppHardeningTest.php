@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Logging\RedactLogContext;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Route;
 use Tests\TestCase;
 
 class AppHardeningTest extends TestCase
@@ -125,5 +126,54 @@ class AppHardeningTest extends TestCase
             Log::forgetChannel('m10_test');
             @unlink($path);
         }
+    }
+
+    public function test_stack_channel_inherits_redaction_from_single_child_channel(): void
+    {
+        $path = storage_path('logs/m10-stack-redaction-test.log');
+
+        @unlink($path);
+        Log::forgetChannel('stack');
+        Log::forgetChannel('single');
+        config([
+            'logging.channels.stack.channels' => ['single'],
+            'logging.channels.single.path' => $path,
+        ]);
+
+        try {
+            Log::channel('stack')->info('login attempt', [
+                'password' => 'SuperSecret123',
+            ]);
+
+            $contents = file_get_contents($path);
+
+            $this->assertNotFalse($contents);
+            $this->assertStringNotContainsString('SuperSecret123', $contents);
+            $this->assertStringContainsString('[REDACTED]', $contents);
+        } finally {
+            Log::forgetChannel('stack');
+            Log::forgetChannel('single');
+            @unlink($path);
+        }
+    }
+
+    public function test_api_exception_in_production_does_not_leak_stack(): void
+    {
+        config(['app.debug' => false]);
+        $this->app['env'] = 'production';
+
+        Route::get('/api/v1/__boom', function () {
+            throw new \RuntimeException('secret-internal-detail');
+        });
+
+        $response = $this->withExceptionHandling()->getJson('/api/v1/__boom');
+
+        $response->assertStatus(500)
+            ->assertExactJson(['message' => 'Server Error']);
+
+        $body = $response->getContent();
+        $this->assertStringNotContainsString('secret-internal-detail', $body);
+        $this->assertStringNotContainsString('RuntimeException', $body);
+        $this->assertStringNotContainsString('stacktrace', strtolower($body));
     }
 }

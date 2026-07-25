@@ -21,7 +21,8 @@ Basis: [SPEC.md](./SPEC.md), [RULES.md](./RULES.md).
 - Security headers (CSP dasar, nosniff, frame deny, referrer) pada semua response
 - HSTS aktif saat `production` **dan** request HTTPS
 - CORS fase 1: **server-to-server**; browser origin default deny (tidak ada whitelist per lembaga)
-- Log context redaction (password / API key / token / PII keys) — Task 4 milestone ini; belum aktif sampai kode redaction di-merge
+- Log context redaction (password / API key / token / PII keys) aktif pada channel `single` dan `daily`. Default `LOG_CHANNEL=stack` dengan `LOG_STACK=single` tetap ter-redact karena stack meneruskan log ke processor channel anak `single`.
+- Jika `LOG_CHANNEL` / `LOG_STACK` dialihkan ke channel lain (misalnya `stderr`, `papertrail`, atau `syslog`), tambahkan tap redaction pada channel tersebut; tanpa tap, context log tidak akan ter-redact.
 
 ## Jangan
 

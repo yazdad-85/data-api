@@ -410,29 +410,31 @@ Test wajib:
 
 ## Milestone 10 - Hardening aplikasi
 
+Status: **Selesai**
+
 Tujuan: baseline security production-ready sebelum staging publik.
 
-- [ ] Security headers middleware: HSTS production, X-Content-Type-Options, X-Frame-Options/CSP dasar, Referrer-Policy.
-- [ ] CORS default deny untuk browser origin.
-- [ ] APP_DEBUG false di production template/deploy notes.
-- [ ] Session production: secure, httpOnly, same_site ketat.
-- [ ] Logging redaction untuk auth/API key/password/token.
-- [ ] Error production tidak bocor stack trace.
-- [ ] Health endpoint tetap minimal.
-- [ ] Tambah dokumentasi env production.
+- [x] Security headers middleware: HSTS production, X-Content-Type-Options, X-Frame-Options/CSP dasar, Referrer-Policy.
+- [x] CORS default deny untuk browser origin.
+- [x] APP_DEBUG false di production template/deploy notes.
+- [x] Session production: secure, httpOnly, same_site ketat.
+- [x] Logging redaction untuk auth/API key/password/token.
+- [x] Error production tidak bocor stack trace.
+- [x] Health endpoint tetap minimal.
+- [x] Tambah dokumentasi env production.
 
 Review wajib:
 
-- [ ] Review config production dan middleware header.
-- [ ] Review log redaction.
+- [x] Review config production dan middleware header.
+- [x] Review log redaction.
 - [ ] Perbaiki semua temuan review sebelum test.
 
 Test wajib:
 
-- [ ] Header keamanan muncul di response.
-- [ ] CORS browser default deny.
-- [ ] Secret tidak muncul di response/log aplikasi.
-- [ ] Health endpoint hanya `{ "status": "ok" }`.
+- [x] Header keamanan muncul di response.
+- [x] CORS browser default deny.
+- [x] Secret tidak muncul di response/log aplikasi.
+- [x] Health endpoint hanya `{ "status": "ok" }`.
 
 ## Milestone 11 - Dokumentasi integrator dan operasional
 
