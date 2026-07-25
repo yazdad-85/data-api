@@ -1,6 +1,6 @@
 # Production notes (app)
 
-Ringkas untuk operator. Detail infra (Apache, Cloudflare, firewall) → Milestone 11 `DEPLOYMENT.md`.
+Ringkas untuk operator. Detail infra (Apache, Cloudflare, firewall) → [DEPLOYMENT.md](./DEPLOYMENT.md); panduan integrator API → [API_INTEGRATION.md](./API_INTEGRATION.md).
 
 Basis: [SPEC.md](./SPEC.md), [RULES.md](./RULES.md).
 

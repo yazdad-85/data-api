@@ -102,7 +102,7 @@ Isi: aturan bisnis yang wajib ditegakkan + aturan kerja implementasi nanti.
 ### A13. Minimisasi PII
 
 1. API konsumen hanya menerima field yang sesuai kebutuhan aplikasi dan scope client.
-2. Default response API memakai profil `minimal`.
+2. Tanpa parameter `fields`, profil efektif response API adalah `field_profile` yang di-assign ke API client. `minimal` hanya default saat client baru dibuat; client dapat meminta profil lebih rendah melalui `fields`, sedangkan permintaan di atas ceiling profil client ditolak **403**.
 3. Field kontak, alamat, tanggal lahir, dan data wali hanya keluar melalui profil `contact` yang disetujui Super Admin.
 4. Audit log dan error response tidak boleh memuat PII penuh.
 
@@ -184,7 +184,7 @@ Karena ini **Pusat Data**, keamanan harus dijaga dari **semua sisi**. Keamanan b
 1. Password admin di-hash (algoritma default Laravel yang kuat).
 2. Kebijakan password: minimal **12 karakter**; disarankan campuran huruf/angka.
 3. Proteksi brute-force login (throttle / lockout): **5 percobaan / menit / email+IP** dan limit tambahan per IP.
-4. Session aman: `httpOnly`, `secure`, `same_site` ketat di produksi.
+4. Session aman: `httpOnly` dan `secure` wajib di produksi; `same_site=lax` (keputusan M10).
 5. Logout & invalidate session saat nonaktifkan user.
 6. Prinsip least privilege: Super Admin vs Admin Lembaga sesuai ROLE.
 7. MFA/TOTP Super Admin **wajib sebelum produksi publik**; recovery code disimpan hashed.
