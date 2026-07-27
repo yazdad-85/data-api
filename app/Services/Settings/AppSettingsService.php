@@ -11,13 +11,27 @@ use Illuminate\Support\Facades\Storage;
 
 class AppSettingsService
 {
+    private const CACHE_KEY = 'app_settings.current';
+
     public function current(): AppSettings
     {
-        return Cache::remember(
-            'app_settings.current',
+        $attributes = Cache::remember(
+            self::CACHE_KEY,
             60,
-            fn (): AppSettings => AppSettings::query()->findOrFail(1),
+            function (): array {
+                return AppSettings::query()->findOrFail(1)->getAttributes();
+            },
         );
+
+        // Stale cache from older deploys may contain a serialized Eloquent model
+        // (__PHP_Incomplete_Class) instead of a plain attributes array.
+        if (! is_array($attributes)) {
+            Cache::forget(self::CACHE_KEY);
+            $attributes = AppSettings::query()->findOrFail(1)->getAttributes();
+            Cache::put(self::CACHE_KEY, $attributes, 60);
+        }
+
+        return $this->hydrate($attributes);
     }
 
     public function updateBranding(?string $appName = null, ?string $logoPath = null, ?string $faviconPath = null, bool $clearLogo = false): AppSettings
@@ -49,7 +63,7 @@ class AppSettingsService
 
     public function forget(): void
     {
-        Cache::forget('app_settings.current');
+        Cache::forget(self::CACHE_KEY);
     }
 
     /**
@@ -76,6 +90,19 @@ class AppSettingsService
                 ? Storage::disk('public')->url($settings->favicon_path)
                 : ($settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : null),
         ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $attributes
+     */
+    private function hydrate(array $attributes): AppSettings
+    {
+        $settings = new AppSettings;
+        $settings->forceFill($attributes);
+        $settings->exists = true;
+        $settings->syncOriginal();
+
+        return $settings;
     }
 
     /**

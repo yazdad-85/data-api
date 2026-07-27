@@ -94,4 +94,15 @@ class AppSettingsServiceTest extends TestCase
         $this->assertNull($branding['logo_url']);
         $this->assertNull($branding['favicon_url']);
     }
+
+    public function test_current_recovers_from_stale_serialized_model_cache(): void
+    {
+        Cache::put('app_settings.current', new \stdClass, 60);
+
+        $settings = app(AppSettingsService::class)->current();
+
+        $this->assertInstanceOf(AppSettings::class, $settings);
+        $this->assertSame('Pusat Data', $settings->app_name);
+        $this->assertIsArray(Cache::get('app_settings.current'));
+    }
 }
