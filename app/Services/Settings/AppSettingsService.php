@@ -3,15 +3,18 @@
 namespace App\Services\Settings;
 
 use App\Models\AppSettings;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class AppSettingsService
 {
-    private ?AppSettings $cached = null;
-
     public function current(): AppSettings
     {
-        return $this->cached ??= AppSettings::query()->findOrFail(1);
+        return Cache::remember(
+            'app_settings.current',
+            60,
+            fn (): AppSettings => AppSettings::query()->findOrFail(1),
+        );
     }
 
     public function updateBranding(?string $appName = null, ?string $logoPath = null, ?string $faviconPath = null, bool $clearLogo = false): AppSettings
@@ -43,7 +46,7 @@ class AppSettingsService
 
     public function forget(): void
     {
-        $this->cached = null;
+        Cache::forget('app_settings.current');
     }
 
     /**
