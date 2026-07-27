@@ -36,7 +36,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(\App\Services\Settings\AppSettingsService::class);
     }
 
     /**

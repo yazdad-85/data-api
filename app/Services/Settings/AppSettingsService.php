@@ -1,0 +1,66 @@
+<?php
+
+namespace App\Services\Settings;
+
+use App\Models\AppSettings;
+use Illuminate\Support\Facades\Storage;
+
+class AppSettingsService
+{
+    private ?AppSettings $cached = null;
+
+    public function current(): AppSettings
+    {
+        return $this->cached ??= AppSettings::query()->findOrFail(1);
+    }
+
+    public function updateBranding(?string $appName = null, ?string $logoPath = null, ?string $faviconPath = null, bool $clearLogo = false): AppSettings
+    {
+        $settings = $this->current();
+
+        if ($appName !== null) {
+            $settings->app_name = $appName;
+        }
+
+        if ($clearLogo) {
+            $settings->logo_path = null;
+            $settings->favicon_path = null;
+        } else {
+            if ($logoPath !== null) {
+                $settings->logo_path = $logoPath;
+            }
+
+            if ($faviconPath !== null) {
+                $settings->favicon_path = $faviconPath;
+            }
+        }
+
+        $settings->save();
+        $this->forget();
+
+        return $this->current();
+    }
+
+    public function forget(): void
+    {
+        $this->cached = null;
+    }
+
+    /**
+     * @return array{name: string, logo_url: string|null, favicon_url: string|null}
+     */
+    public function branding(): array
+    {
+        $settings = $this->current();
+
+        return [
+            'name' => $settings->app_name,
+            'logo_url' => $settings->logo_path
+                ? Storage::disk('public')->url($settings->logo_path)
+                : null,
+            'favicon_url' => $settings->favicon_path
+                ? Storage::disk('public')->url($settings->favicon_path)
+                : ($settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : null),
+        ];
+    }
+}
