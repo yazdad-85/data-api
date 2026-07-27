@@ -152,14 +152,21 @@ class AdminProfileTest extends TestCase
             'session.driver' => 'database',
         ]);
 
-        $user = User::factory()->create([
-            'role' => 'super_admin',
-            'lembaga_id' => null,
+        $lembaga = Lembaga::factory()->create();
+        $user = User::factory()->adminLembaga($lembaga->id)->create([
+            'email' => 'password@example.test',
             'password' => 'OldPassword123!',
         ]);
 
-        $this->actingAs($user);
-        $currentSessionId = session()->getId();
+        $loginResponse = $this->post('/login', [
+            'email' => $user->email,
+            'password' => 'OldPassword123!',
+        ]);
+        $loginResponse->assertRedirect(route('admin.dashboard'));
+
+        $sessionCookie = $loginResponse->getCookie(config('session.cookie'));
+        $this->assertNotNull($sessionCookie);
+        $currentSessionId = $sessionCookie->getValue();
 
         DB::table('sessions')->insert([
             'id' => 'remote-session',
@@ -170,28 +177,21 @@ class AdminProfileTest extends TestCase
             'last_activity' => time(),
         ]);
 
-        if (! DB::table('sessions')->where('id', $currentSessionId)->exists()) {
-            DB::table('sessions')->insert([
-                'id' => $currentSessionId,
-                'user_id' => $user->id,
-                'ip_address' => '127.0.0.1',
-                'user_agent' => 'PHPUnit',
-                'payload' => base64_encode('current'),
-                'last_activity' => time(),
-            ]);
-        }
+        $this->assertDatabaseHas('sessions', ['id' => $currentSessionId]);
 
-        $this->put(route('admin.profile.password'), [
-            'current_password' => 'OldPassword123!',
-            'password' => 'NewPassword123!',
-            'password_confirmation' => 'NewPassword123!',
-        ])->assertRedirect(route('admin.profile.show'))
+        $this->withCookie($sessionCookie->getName(), $sessionCookie->getValue())
+            ->put(route('admin.profile.password'), [
+                'current_password' => 'OldPassword123!',
+                'password' => 'NewPassword123!',
+                'password_confirmation' => 'NewPassword123!',
+            ])->assertRedirect(route('admin.profile.show'))
             ->assertSessionHas('status');
 
         $user->refresh();
         $this->assertTrue(Hash::check('NewPassword123!', $user->password));
         $this->assertFalse(Hash::check('OldPassword123!', $user->password));
         $this->assertDatabaseMissing('sessions', ['id' => 'remote-session']);
+        $this->assertDatabaseMissing('sessions', ['id' => $currentSessionId]);
         $this->assertAuthenticatedAs($user);
 
         $this->assertDatabaseHas('audit_logs', [

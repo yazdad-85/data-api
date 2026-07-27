@@ -45,18 +45,17 @@ class ProfileController extends Controller
     public function updatePassword(UpdatePasswordRequest $request): RedirectResponse
     {
         $user = $request->user();
-        $currentSessionId = $request->session()->getId();
 
         $user->forceFill([
             'password' => $request->validated('password'),
         ])->save();
 
+        $request->session()->regenerate(true);
+
         $this->sessionInvalidator->invalidateOtherSessions(
             (string) $user->getAuthIdentifier(),
-            $currentSessionId,
+            $request->session()->getId(),
         );
-
-        $request->session()->regenerate();
 
         $this->auditLogger->record(
             'profile.password_change',
