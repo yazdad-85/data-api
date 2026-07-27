@@ -152,6 +152,8 @@ Terapkan backup database dengan aturan fase 1 berikut.
 
 Tool dump, enkripsi, penyimpanan offsite, dan penjadwalan adalah **(pilihan operator)**. Contoh kategori yang dapat digabungkan adalah `pg_dump`, enkripsi, dan object storage, tanpa mengikat perintah, flag, atau provider tertentu. Jangan commit backup ke git dan jangan menempatkannya di document root.
 
+UI Super Admin dapat mengunduh dump PostgreSQL dari **Pengaturan**; restore tetap dilakukan manual oleh operator (`psql` / panel), bukan dari aplikasi.
+
 Lakukan restore test pada salinan lingkungan yang aman, catat waktu pemulihan dan hasil verifikasi data, lalu perbaiki prosedur bila target RPO/RTO tidak terpenuhi.
 
 ## 10. Verifikasi post-deploy

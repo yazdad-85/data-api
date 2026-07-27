@@ -500,6 +500,7 @@ Stack UI fase 1: **Blade + Livewire**. Bahasa: **Indonesia**.
   - **Rotate key:** modal peringatan "app konsumen harus update key segera"; key lama dicabut.
   - **Generate key:** layar copy-once; teks "key tidak bisa dilihat lagi".
 - Profil akun sendiri (nama, ganti password).
+- Pengaturan aplikasi: nama tampilan + logo (favicon otomatis dari logo); unduh backup database PostgreSQL (wajib password saat ini; restore manual di server).
 - (Opsional) pantau jumlah master per lembaga
 
 ### 5.2 Admin Lembaga
