@@ -82,4 +82,16 @@ class AppSettingsServiceTest extends TestCase
             'app_name' => 'Invalid',
         ]);
     }
+
+    public function test_branding_returns_defaults_when_app_settings_table_missing(): void
+    {
+        \Illuminate\Support\Facades\Schema::dropIfExists('app_settings');
+        Cache::forget('app_settings.current');
+
+        $branding = app(AppSettingsService::class)->branding();
+
+        $this->assertSame('Pusat Data', $branding['name']);
+        $this->assertNull($branding['logo_url']);
+        $this->assertNull($branding['favicon_url']);
+    }
 }

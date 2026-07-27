@@ -3,7 +3,10 @@
 namespace App\Services\Settings;
 
 use App\Models\AppSettings;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
 
 class AppSettingsService
@@ -54,7 +57,15 @@ class AppSettingsService
      */
     public function branding(): array
     {
-        $settings = $this->current();
+        try {
+            if (! Schema::hasTable('app_settings')) {
+                return $this->defaultBranding();
+            }
+
+            $settings = $this->current();
+        } catch (QueryException|ModelNotFoundException) {
+            return $this->defaultBranding();
+        }
 
         return [
             'name' => $settings->app_name,
@@ -64,6 +75,18 @@ class AppSettingsService
             'favicon_url' => $settings->favicon_path
                 ? Storage::disk('public')->url($settings->favicon_path)
                 : ($settings->logo_path ? Storage::disk('public')->url($settings->logo_path) : null),
+        ];
+    }
+
+    /**
+     * @return array{name: string, logo_url: string|null, favicon_url: string|null}
+     */
+    private function defaultBranding(): array
+    {
+        return [
+            'name' => 'Pusat Data',
+            'logo_url' => null,
+            'favicon_url' => null,
         ];
     }
 }
