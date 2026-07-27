@@ -77,6 +77,7 @@ class SessionInvalidatorTest extends TestCase
         config(['session.driver' => 'database']);
 
         $user = User::factory()->create();
+        $other = User::factory()->create();
 
         DB::table('sessions')->insert([
             [
@@ -95,12 +96,21 @@ class SessionInvalidatorTest extends TestCase
                 'payload' => base64_encode('drop'),
                 'last_activity' => time(),
             ],
+            [
+                'id' => 'session-other-user',
+                'user_id' => $other->id,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'PHPUnit',
+                'payload' => base64_encode('other-user'),
+                'last_activity' => time(),
+            ],
         ]);
 
         app(SessionInvalidator::class)->invalidateOtherSessions($user->id, 'session-keep');
 
         $this->assertDatabaseHas('sessions', ['id' => 'session-keep']);
         $this->assertDatabaseMissing('sessions', ['id' => 'session-drop']);
+        $this->assertDatabaseHas('sessions', ['id' => 'session-other-user']);
     }
 
     public function test_invalidate_other_sessions_does_not_logout_current_user(): void
