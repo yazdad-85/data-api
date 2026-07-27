@@ -102,7 +102,7 @@ class AdminSettingsTest extends TestCase
 
         $this->actingAs($user)
             ->put(route('admin.settings.branding'), [
-                'app_name' => 'Pusat Data',
+                'app_name' => 'Yayasan Logo',
                 'logo' => UploadedFile::fake()->image('brand.png', 120, 60),
             ])
             ->assertRedirect(route('admin.settings.show'));
@@ -110,6 +110,12 @@ class AdminSettingsTest extends TestCase
         $settings = app(AppSettingsService::class)->current();
         Storage::disk('public')->assertExists($settings->logo_path);
         Storage::disk('public')->assertExists($settings->favicon_path);
+
+        $this->actingAs($user)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Yayasan Logo')
+            ->assertSee('admin-sidebar__logo', false);
 
         $this->actingAs($user)
             ->put(route('admin.settings.branding'), [

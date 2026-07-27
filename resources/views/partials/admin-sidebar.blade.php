@@ -2,12 +2,16 @@
     @php
         $branding = app_branding();
     @endphp
-    <div class="admin-sidebar__brand font-display">
+    <div class="admin-sidebar__brand font-display" style="display: flex; align-items: center; gap: 0.65rem;">
         @if ($branding['logo_url'])
-            <img src="{{ $branding['logo_url'] }}" alt="{{ $branding['name'] }}" style="max-height: 36px; max-width: 180px;">
-        @else
-            {{ $branding['name'] }}
+            <img
+                src="{{ $branding['logo_url'] }}"
+                alt=""
+                class="admin-sidebar__logo"
+                style="max-height: 36px; max-width: 48px; object-fit: contain; flex-shrink: 0;"
+            >
         @endif
+        <span class="admin-sidebar__brand-name">{{ $branding['name'] }}</span>
     </div>
     <nav class="admin-sidebar__nav">
         @foreach ($menu as $item)

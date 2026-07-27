@@ -94,10 +94,28 @@ body {
 }
 
 .admin-sidebar__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
     font-size: 1.35rem;
     font-weight: 600;
     padding: 0.35rem 0.65rem 1.25rem;
     letter-spacing: 0.01em;
+}
+
+.admin-sidebar__logo {
+    max-height: 36px;
+    max-width: 48px;
+    width: auto;
+    height: auto;
+    object-fit: contain;
+    flex-shrink: 0;
+}
+
+.admin-sidebar__brand-name {
+    min-width: 0;
+    line-height: 1.2;
+    overflow-wrap: anywhere;
 }
 
 .admin-sidebar__nav {
