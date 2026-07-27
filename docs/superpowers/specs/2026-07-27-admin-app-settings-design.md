@@ -1,6 +1,6 @@
 # Design: Pengaturan aplikasi (Super Admin)
 
-Status: **DRAFT — menunggu review pemilik**  
+Status: **DISETUJUI — 27 Jul 2026**  
 Tanggal: 27 Jul 2026  
 Basis: SPEC §5.1, RULES B4.3 (audit tanpa secret), DEPLOYMENT §backup operator
 
