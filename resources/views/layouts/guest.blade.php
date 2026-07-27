@@ -24,6 +24,10 @@
             </div>
         </main>
     </div>
-    @include('partials.footer')
+    <footer class="auth-footer">
+        <span class="font-display" style="font-weight:600;">{{ $branding['name'] }}</span>
+        <span aria-hidden="true"> · </span>
+        <span>&copy; {{ now()->year }}</span>
+    </footer>
 </body>
 </html>

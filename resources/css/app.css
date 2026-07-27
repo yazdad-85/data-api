@@ -1052,7 +1052,7 @@ body {
 }
 
 .auth-shell {
-    min-height: calc(100vh - 3.5rem);
+    min-height: calc(100vh - 2.5rem);
     display: grid;
     grid-template-columns: minmax(0, 1.15fr) minmax(360px, 0.85fr);
     background:
@@ -1060,19 +1060,33 @@ body {
         linear-gradient(135deg, #063b37 0%, #0a4f4f 45%, #0f6b6b 100%);
 }
 
+.auth-footer {
+    padding: 0.75rem clamp(1.5rem, 4vw, 4rem);
+    background: #042422;
+    color: rgb(255 255 255 / 0.65);
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
 .auth-hero {
     position: relative;
     overflow: hidden;
     color: #f3fbf9;
+    min-height: 100%;
 }
 
-.auth-hero__inner {
-    min-height: 100%;
-    padding: 3rem clamp(1.5rem, 4vw, 4rem);
+/* Teks content: di kiri bawah, absolute terhadap hero */
+.auth-hero__content {
+    position: relative;
+    z-index: 3;
+    padding: 3rem clamp(1.5rem, 4vw, 4rem) 2.5rem;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: 1rem;
+    justify-content: flex-end;
+    min-height: 100%;
+    gap: 0.85rem;
 }
 
 .auth-hero__eyebrow {
@@ -1109,16 +1123,17 @@ body {
 
 .auth-hero__body {
     margin: 0;
-    max-width: 34rem;
-    font-size: 1.02rem;
+    max-width: 32rem;
+    font-size: 1rem;
     line-height: 1.7;
-    color: rgb(255 255 255 / 0.84);
+    color: rgb(255 255 255 / 0.82);
 }
 
 .auth-hero__badges {
     display: flex;
     flex-wrap: wrap;
-    gap: 0.75rem;
+    gap: 0.65rem;
+    padding-bottom: 0.5rem;
 }
 
 .auth-hero__badge {
@@ -1126,23 +1141,26 @@ body {
     background: rgb(255 255 255 / 0.08);
     color: #fff7da;
     border-radius: 999px;
-    padding: 0.45rem 0.85rem;
-    font-size: 0.9rem;
+    padding: 0.4rem 0.85rem;
+    font-size: 0.88rem;
 }
 
-.auth-hero__visual {
-    position: relative;
-    min-height: 280px;
-    margin-top: 1rem;
-}
-
+/* Karakter: absolute di kanan bawah, memenuhi tinggi hero */
 .auth-hero__guardian {
-    position: relative;
+    position: absolute;
+    bottom: 0;
+    right: 0;
     z-index: 2;
-    display: block;
-    max-width: min(420px, 100%);
-    filter: drop-shadow(0 25px 55px rgb(0 0 0 / 0.28));
+    height: 90%;
+    max-height: 700px;
+    width: auto;
+    /* Sembunyikan area transparent checkerboard dengan multiply */
+    mix-blend-mode: normal;
+    /* Hilangkan kotak transparan PNG di atas background hijau */
+    filter: drop-shadow(-20px 0 40px rgb(0 0 0 / 0.3));
     animation: auth-float 6s ease-in-out infinite;
+    /* Potong batas kanan */
+    transform-origin: bottom right;
 }
 
 .auth-hero__orb,
@@ -1266,7 +1284,7 @@ body {
     background: var(--brand-deep);
 }
 
-.auth-shell--ready .auth-hero__inner,
+.auth-shell--ready .auth-hero__content,
 .auth-shell--ready .auth-panel {
     animation: auth-enter 0.7s ease-out both;
 }
@@ -1307,17 +1325,23 @@ body {
         min-height: auto;
     }
 
-    .auth-hero__title {
-        max-width: none;
-        font-size: clamp(2rem, 8vw, 3.1rem);
+    .auth-hero {
+        min-height: 56vw;
     }
 
-    .auth-hero__visual {
-        min-height: 180px;
+    .auth-hero__content {
+        padding: 2rem 1.5rem 1.5rem;
+        justify-content: flex-start;
+    }
+
+    .auth-hero__title {
+        max-width: none;
+        font-size: clamp(1.8rem, 6vw, 2.8rem);
     }
 
     .auth-hero__guardian {
-        max-width: 240px;
+        height: 80%;
+        max-height: 320px;
     }
 }
 
@@ -1325,7 +1349,7 @@ body {
     .auth-hero__guardian,
     .auth-hero__orb,
     .auth-hero__orbit,
-    .auth-shell--ready .auth-hero__inner,
+    .auth-shell--ready .auth-hero__content,
     .auth-shell--ready .auth-panel {
         animation: none !important;
     }
