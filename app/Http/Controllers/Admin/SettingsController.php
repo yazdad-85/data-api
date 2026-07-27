@@ -49,13 +49,15 @@ class SettingsController extends Controller
             );
             $logoChanged = true;
         } elseif ($request->hasFile('logo')) {
-            $this->logoProcessor->delete($settings->logo_path, $settings->favicon_path);
+            $oldLogoPath = $settings->logo_path;
+            $oldFaviconPath = $settings->favicon_path;
             $paths = $this->logoProcessor->store($request->file('logo'));
             $this->settings->updateBranding(
                 appName: $request->validated('app_name'),
                 logoPath: $paths['logo_path'],
                 faviconPath: $paths['favicon_path'],
             );
+            $this->logoProcessor->delete($oldLogoPath, $oldFaviconPath);
             $logoChanged = true;
         } else {
             $this->settings->updateBranding(appName: $request->validated('app_name'));
@@ -74,9 +76,9 @@ class SettingsController extends Controller
     public function downloadBackup(DownloadBackupRequest $request): StreamedResponse|RedirectResponse
     {
         try {
-            [$contents, $filename] = $this->backupExporter->export();
+            $this->backupExporter->assertPostgres();
         } catch (RuntimeException $exception) {
-            $this->auditLogger->record('settings.backup_download', 'failed', [
+            $this->auditLogger->record('settings.backup_download', 'failure', [
                 'reason' => 'exporter_failed',
             ], user: $request->user(), request: $request);
 
@@ -85,16 +87,34 @@ class SettingsController extends Controller
                 ->withErrors(['backup' => $exception->getMessage()]);
         }
 
-        $this->auditLogger->record(
-            'settings.backup_download',
-            'success',
-            [],
-            user: $request->user(),
-            request: $request,
-        );
+        $filename = 'pusat-data-'.now()->format('Ymd-His').'.sql';
 
-        return response()->streamDownload(function () use ($contents): void {
-            echo $contents;
+        return response()->streamDownload(function () use ($request): void {
+            try {
+                $this->backupExporter->streamTo(function (string $chunk): void {
+                    echo $chunk;
+
+                    if (ob_get_level() > 0) {
+                        ob_flush();
+                    }
+
+                    flush();
+                });
+
+                $this->auditLogger->record(
+                    'settings.backup_download',
+                    'success',
+                    [],
+                    user: $request->user(),
+                    request: $request,
+                );
+            } catch (RuntimeException $exception) {
+                $this->auditLogger->record('settings.backup_download', 'failure', [
+                    'reason' => 'exporter_failed',
+                ], user: $request->user(), request: $request);
+
+                throw $exception;
+            }
         }, $filename, [
             'Content-Type' => 'application/sql',
         ]);

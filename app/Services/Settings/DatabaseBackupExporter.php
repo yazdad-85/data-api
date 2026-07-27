@@ -7,29 +7,34 @@ use Symfony\Component\Process\Process;
 
 class DatabaseBackupExporter
 {
-    /**
-     * @return array{0: string, 1: string} [contents, suggestedFilename]
-     */
-    public function export(): array
+    public function assertPostgres(): void
     {
         if (config('database.default') !== 'pgsql') {
             throw new RuntimeException('Backup database hanya tersedia untuk PostgreSQL.');
         }
+    }
+
+    /**
+     * @param callable(string): void $writeChunk
+     */
+    public function streamTo(callable $writeChunk): void
+    {
+        $this->assertPostgres();
 
         $process = new Process($this->buildCommand(), null, [
             'PGPASSWORD' => (string) config('database.connections.pgsql.password', ''),
         ]);
         $process->setTimeout(120);
-        $process->run();
+        $process->disableOutput();
+        $process->run(function (string $type, string $chunk) use ($writeChunk): void {
+            if ($type === Process::OUT) {
+                $writeChunk($chunk);
+            }
+        });
 
         if (! $process->isSuccessful()) {
             throw new RuntimeException('Backup gagal dijalankan. Hubungi operator server.');
         }
-
-        return [
-            $process->getOutput(),
-            'pusat-data-'.now()->format('Ymd-His').'.sql',
-        ];
     }
 
     /**

@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\AuditLog;
 use App\Models\Lembaga;
 use App\Models\User;
+use App\Services\Settings\AppSettingsService;
 use App\Services\Settings\DatabaseBackupExporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -80,6 +81,16 @@ class AdminSettingsTest extends TestCase
         ]);
     }
 
+    public function test_login_escapes_branding_name_in_document_title(): void
+    {
+        app(AppSettingsService::class)->updateBranding(appName: '<script>alert(1)</script>');
+
+        $this->get(route('login'))
+            ->assertOk()
+            ->assertSee(e('<script>alert(1)</script>'), false)
+            ->assertDontSee('<script>alert(1)</script>', false);
+    }
+
     public function test_upload_logo_stores_files_and_rejects_svg(): void
     {
         Storage::fake('public');
@@ -96,8 +107,9 @@ class AdminSettingsTest extends TestCase
             ])
             ->assertRedirect(route('admin.settings.show'));
 
-        Storage::disk('public')->assertExists('branding/logo.png');
-        Storage::disk('public')->assertExists('branding/favicon.png');
+        $settings = app(AppSettingsService::class)->current();
+        Storage::disk('public')->assertExists($settings->logo_path);
+        Storage::disk('public')->assertExists($settings->favicon_path);
 
         $this->actingAs($user)
             ->put(route('admin.settings.branding'), [
@@ -132,6 +144,11 @@ class AdminSettingsTest extends TestCase
             ])
             ->assertRedirect(route('admin.settings.show'))
             ->assertSessionHasErrors('backup');
+
+        $this->assertDatabaseHas('audit_logs', [
+            'event' => 'settings.backup_download',
+            'result' => 'failure',
+        ]);
     }
 
     public function test_backup_streams_download_when_exporter_succeeds(): void
@@ -139,9 +156,13 @@ class AdminSettingsTest extends TestCase
         $user = $this->superAdmin();
 
         $this->mock(DatabaseBackupExporter::class, function ($mock) {
-            $mock->shouldReceive('export')
+            $mock->shouldReceive('assertPostgres')
+                ->once();
+            $mock->shouldReceive('streamTo')
                 ->once()
-                ->andReturn(["-- SQL DUMP\n", 'pusat-data-test.sql']);
+                ->andReturnUsing(function (callable $writeChunk): void {
+                    $writeChunk("-- SQL DUMP\n");
+                });
         });
 
         $response = $this->actingAs($user)
@@ -151,7 +172,7 @@ class AdminSettingsTest extends TestCase
 
         $response->assertOk();
         $response->assertHeader('content-disposition');
-        $this->assertStringContainsString('pusat-data-test.sql', $response->headers->get('content-disposition'));
+        $this->assertStringContainsString('pusat-data-', $response->headers->get('content-disposition'));
         $this->assertSame("-- SQL DUMP\n", $response->streamedContent());
 
         $this->assertDatabaseHas('audit_logs', [

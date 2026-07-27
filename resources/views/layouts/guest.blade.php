@@ -5,8 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     @php
         $branding = app_branding();
+        $pageTitle = trim($__env->yieldContent('title'));
+        $documentTitle = $pageTitle !== '' ? $pageTitle : $branding['name'];
     @endphp
-    <title>@yield('title', $branding['name'])</title>
+    <title>{{ $documentTitle }}</title>
     @if ($branding['favicon_url'])
         <link rel="icon" href="{{ $branding['favicon_url'] }}">
     @endif

@@ -24,8 +24,8 @@ class BrandingLogoProcessorTest extends TestCase
 
         Storage::disk('public')->assertExists($result['logo_path']);
         Storage::disk('public')->assertExists($result['favicon_path']);
-        $this->assertStringStartsWith('branding/', $result['logo_path']);
-        $this->assertSame('branding/favicon.png', $result['favicon_path']);
+        $this->assertMatchesRegularExpression('#^branding/logo-[a-f0-9]{16}\.png$#', $result['logo_path']);
+        $this->assertMatchesRegularExpression('#^branding/favicon-[a-f0-9]{16}\.png$#', (string) $result['favicon_path']);
     }
 
     public function test_delete_removes_existing_files(): void
@@ -71,7 +71,7 @@ class BrandingLogoProcessorTest extends TestCase
         $result = $processor->store($file);
 
         Storage::disk('public')->assertExists($result['logo_path']);
-        Storage::disk('public')->assertMissing('branding/favicon.png');
+        $this->assertMatchesRegularExpression('#^branding/logo-[a-f0-9]{16}\.png$#', $result['logo_path']);
         $this->assertNull($result['favicon_path']);
     }
 }

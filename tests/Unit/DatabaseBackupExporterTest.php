@@ -15,7 +15,7 @@ class DatabaseBackupExporterTest extends TestCase
         $this->expectException(RuntimeException::class);
         $this->expectExceptionMessage('PostgreSQL');
 
-        app(DatabaseBackupExporter::class)->export();
+        app(DatabaseBackupExporter::class)->assertPostgres();
     }
 
     public function test_builds_pg_dump_command_from_config(): void

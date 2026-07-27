@@ -5,6 +5,7 @@ namespace App\Services\Settings;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use RuntimeException;
+use Throwable;
 
 class BrandingLogoProcessor
 {
@@ -29,13 +30,21 @@ class BrandingLogoProcessor
         $disk = Storage::disk('public');
         $disk->makeDirectory('branding');
 
-        $logoPath = 'branding/logo.'.$extension;
-        $disk->put($logoPath, file_get_contents($sourcePath));
-
+        $suffix = bin2hex(random_bytes(8));
+        $logoPath = 'branding/logo-'.$suffix.'.'.$extension;
         $faviconPath = null;
-        if ($this->gdAvailable()) {
-            $faviconPath = 'branding/favicon.png';
-            $this->writeFaviconPng($sourcePath, $disk->path($faviconPath));
+
+        try {
+            $disk->put($logoPath, file_get_contents($sourcePath));
+
+            if ($this->gdAvailable()) {
+                $faviconPath = 'branding/favicon-'.$suffix.'.png';
+                $this->writeFaviconPng($sourcePath, $disk->path($faviconPath));
+            }
+        } catch (Throwable $exception) {
+            $disk->delete([$logoPath, $faviconPath]);
+
+            throw $exception;
         }
 
         return [
