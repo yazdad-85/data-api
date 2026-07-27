@@ -285,6 +285,44 @@ class AdminAuthTest extends TestCase
         $this->assertStringNotContainsString($secret, $payload);
     }
 
+    public function test_login_page_renders_modern_guest_shell_with_branding(): void
+    {
+        $response = $this->get(route('login'));
+
+        $response->assertOk()
+            ->assertSee('Pusat Data')
+            ->assertSee('Masuk ke panel administrasi.')
+            ->assertSee('data-auth-shell', false)
+            ->assertSee('data-auth-hero', false)
+            ->assertSee('email')
+            ->assertSee('password');
+    }
+
+    public function test_mfa_page_renders_shared_guest_shell(): void
+    {
+        config(['security.mfa.super_admin_required' => true]);
+
+        $secret = 'JBSWY3DPEHPK3PXP';
+        User::factory()->withMfa($secret)->create([
+            'email' => 'super@example.test',
+            'password' => 'StrongPassword123',
+            'role' => 'super_admin',
+            'lembaga_id' => null,
+        ]);
+
+        $this->post('/login', [
+            'email' => 'super@example.test',
+            'password' => 'StrongPassword123',
+        ])->assertRedirect(route('login.mfa'));
+
+        $this->get(route('login.mfa'))
+            ->assertOk()
+            ->assertSee('Verifikasi MFA')
+            ->assertSee('data-auth-shell', false)
+            ->assertSee('data-auth-hero', false)
+            ->assertSee('Kode autentikasi');
+    }
+
     private function clearAdminLoginRateLimiter(string $email, string $ip = '127.0.0.1'): void
     {
         $email = Str::lower($email);

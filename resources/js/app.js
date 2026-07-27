@@ -48,3 +48,10 @@ document.addEventListener('click', (event) => {
         }
     }
 });
+
+document.addEventListener('DOMContentLoaded', () => {
+    const authShell = document.querySelector('[data-auth-shell]');
+    if (authShell) {
+        authShell.classList.add('auth-shell--ready');
+    }
+});

@@ -15,13 +15,15 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>
-    <div class="guest-shell">
-        <main class="guest-main">
-            <div class="guest-card">
+    <div class="auth-shell" data-auth-shell>
+        @yield('hero')
+
+        <main class="auth-main">
+            <div class="auth-panel">
                 @yield('content')
             </div>
         </main>
-        @include('partials.footer')
     </div>
+    @include('partials.footer')
 </body>
 </html>
