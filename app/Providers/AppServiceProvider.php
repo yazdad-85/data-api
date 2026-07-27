@@ -59,6 +59,15 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('admin-profile-password', function (Request $request) {
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? 'guest');
+
+            return [
+                Limit::perMinute(5)->by('profile-password:'.$userId),
+                Limit::perMinute(20)->by('profile-password-ip:'.$request->ip()),
+            ];
+        });
+
         // Read limits from config at call time so tests can lower them per request.
         RateLimiter::for('api-client-key', function (Request $request) {
             $client = ApiClientContext::get($request);

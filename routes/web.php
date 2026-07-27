@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\GuruController;
 use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\KenaikanKelasController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
@@ -33,6 +34,12 @@ Route::post('/logout', LogoutController::class)
 
 Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function () {
     Route::get('/', [DashboardController::class, 'show'])->name('admin.dashboard');
+
+    Route::get('/profil', [ProfileController::class, 'show'])->name('admin.profile.show');
+    Route::put('/profil', [ProfileController::class, 'update'])->name('admin.profile.update');
+    Route::put('/profil/password', [ProfileController::class, 'updatePassword'])
+        ->middleware('throttle:admin-profile-password')
+        ->name('admin.profile.password');
 
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
 

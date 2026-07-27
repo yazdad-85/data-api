@@ -20,7 +20,7 @@
     </div>
     <div class="admin-header__user">
         @if ($authUser)
-            <span class="admin-header__name">{{ $authUser->name }}</span>
+            <a href="{{ route('admin.profile.show') }}" class="admin-header__name">{{ $authUser->name }}</a>
             <span class="admin-header__role">{{ $roleLabel }}</span>
             @if ($authUser->isAdminLembaga() && $authUser->lembaga)
                 <span class="admin-header__lembaga">{{ $authUser->lembaga->nama }}</span>

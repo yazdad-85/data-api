@@ -28,7 +28,7 @@
         id="{{ $id }}"
         type="{{ $type }}"
         name="{{ $name }}"
-        value="{{ old($name, $value) }}"
+        value="{{ $type === 'password' ? '' : old($name, $value) }}"
         @required($required)
         @if ($error) aria-invalid="true" @endif
         @if ($describedBy) aria-describedby="{{ $describedBy }}" @endif
