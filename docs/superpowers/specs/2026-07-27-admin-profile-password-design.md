@@ -1,6 +1,6 @@
 # Design: Profil admin & ganti password
 
-Status: **DRAFT — menunggu review pemilik**  
+Status: **DISETUJUI — 27 Jul 2026**  
 Tanggal: 27 Jul 2026  
 Basis: SPEC §5.0–5.2, RULES B4.2 (password min 12), B4.3 (audit tanpa secret)
 
