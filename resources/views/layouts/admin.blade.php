@@ -6,7 +6,8 @@
     @php
         $pageTitle = trim($__env->yieldContent('title'));
         $authUser = auth()->user();
-        $appName = 'Pusat Data';
+        $branding = app_branding();
+        $appName = $branding['name'];
 
         if ($authUser?->isSuperAdmin()) {
             // Super Admin: tab hanya nama aplikasi (bukan nama lembaga yang sedang dilihat).
@@ -23,6 +24,9 @@
         }
     @endphp
     <title>{{ $documentTitle }}</title>
+    @if ($branding['favicon_url'])
+        <link rel="icon" href="{{ $branding['favicon_url'] }}">
+    @endif
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 <body>

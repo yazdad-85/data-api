@@ -1,9 +1,16 @@
 @extends('layouts.guest')
 
-@section('title', 'Masuk — Pusat Data')
+@php
+    $branding = app_branding();
+@endphp
+
+@section('title', 'Masuk — '.$branding['name'])
 
 @section('content')
-    <h1>Pusat Data</h1>
+    @if ($branding['logo_url'])
+        <img src="{{ $branding['logo_url'] }}" alt="{{ $branding['name'] }}" style="max-height: 64px; max-width: 220px;">
+    @endif
+    <h1>{{ $branding['name'] }}</h1>
     <p>Masuk ke panel administrasi.</p>
 
     @if ($errors->any())

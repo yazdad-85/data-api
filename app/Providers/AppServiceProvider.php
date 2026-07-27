@@ -68,6 +68,15 @@ class AppServiceProvider extends ServiceProvider
             ];
         });
 
+        RateLimiter::for('admin-settings-backup', function (Request $request) {
+            $userId = (string) ($request->user()?->getAuthIdentifier() ?? 'guest');
+
+            return [
+                Limit::perMinute(3)->by('settings-backup:'.$userId),
+                Limit::perMinute(10)->by('settings-backup-ip:'.$request->ip()),
+            ];
+        });
+
         // Read limits from config at call time so tests can lower them per request.
         RateLimiter::for('api-client-key', function (Request $request) {
             $client = ApiClientContext::get($request);
@@ -95,6 +104,7 @@ class AppServiceProvider extends ServiceProvider
         Gate::define('access-admin', fn (User $user) => $user->isSuperAdmin() || $user->isAdminLembaga());
         Gate::define('manage-all-lembaga', fn (User $user) => $user->isSuperAdmin());
         Gate::define('manage-own-lembaga', fn (User $user) => $user->isAdminLembaga());
+        Gate::define('manage-app-settings', fn (User $user) => $user->isSuperAdmin());
 
         View::composer('layouts.admin', function ($view) {
             $user = auth()->user();

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\KenaikanKelasController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
@@ -40,6 +41,12 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::put('/profil/password', [ProfileController::class, 'updatePassword'])
         ->middleware('throttle:admin-profile-password')
         ->name('admin.profile.password');
+
+    Route::get('/pengaturan', [SettingsController::class, 'show'])->name('admin.settings.show');
+    Route::put('/pengaturan/branding', [SettingsController::class, 'updateBranding'])->name('admin.settings.branding');
+    Route::post('/pengaturan/backup', [SettingsController::class, 'downloadBackup'])
+        ->middleware('throttle:admin-settings-backup')
+        ->name('admin.settings.backup');
 
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
 
