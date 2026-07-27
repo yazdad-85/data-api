@@ -22,4 +22,16 @@ class SessionInvalidator
             Session::regenerateToken();
         }
     }
+
+    public function invalidateOtherSessions(string $userId, string $exceptSessionId): void
+    {
+        if (config('session.driver') !== 'database') {
+            return;
+        }
+
+        DB::table(config('session.table', 'sessions'))
+            ->where('user_id', $userId)
+            ->where('id', '!=', $exceptSessionId)
+            ->delete();
+    }
 }

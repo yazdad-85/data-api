@@ -71,4 +71,46 @@ class SessionInvalidatorTest extends TestCase
         $this->assertTrue(Auth::check());
         $this->assertSame((string) $current->id, (string) Auth::id());
     }
+
+    public function test_invalidate_other_sessions_keeps_excepted_session(): void
+    {
+        config(['session.driver' => 'database']);
+
+        $user = User::factory()->create();
+
+        DB::table('sessions')->insert([
+            [
+                'id' => 'session-keep',
+                'user_id' => $user->id,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'PHPUnit',
+                'payload' => base64_encode('keep'),
+                'last_activity' => time(),
+            ],
+            [
+                'id' => 'session-drop',
+                'user_id' => $user->id,
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'PHPUnit',
+                'payload' => base64_encode('drop'),
+                'last_activity' => time(),
+            ],
+        ]);
+
+        app(SessionInvalidator::class)->invalidateOtherSessions($user->id, 'session-keep');
+
+        $this->assertDatabaseHas('sessions', ['id' => 'session-keep']);
+        $this->assertDatabaseMissing('sessions', ['id' => 'session-drop']);
+    }
+
+    public function test_invalidate_other_sessions_does_not_logout_current_user(): void
+    {
+        $user = User::factory()->create();
+        Auth::login($user);
+
+        app(SessionInvalidator::class)->invalidateOtherSessions($user->id, 'any-session-id');
+
+        $this->assertTrue(Auth::check());
+        $this->assertSame((string) $user->id, (string) Auth::id());
+    }
 }
