@@ -483,6 +483,7 @@ Stack UI fase 1: **Blade + Livewire**. Bahasa: **Indonesia**.
 - Sidebar kiri: menu sesuai role.
 - Header: nama user, lembaga (Admin Lembaga), logout.
 - Header: nama user adalah tautan ke **Profil** (ubah nama + ganti password; email read-only). Ganti password mengakhiri sesi di perangkat lain.
+- Halaman login dan verifikasi MFA memakai layout split modern dengan branding dinamis dan hero visual ringan, tanpa mengubah alur autentikasi.
 - Area konten: breadcrumb + judul halaman + aksi utama (Tambah).
 - Pola list: tabel + search + pagination + badge status (aktif/nonaktif).
 - Pola form: validasi inline; field wajib ditandai `*`.
