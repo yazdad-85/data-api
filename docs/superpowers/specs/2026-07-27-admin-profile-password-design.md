@@ -88,8 +88,8 @@ Pola visual: layout admin Blade yang ada (`page-header`, field components, flash
   - Password baru tidak boleh sama dengan password lama (rule `different:current_password` atau cek Hash)
 - Setelah sukses:
   1. Update hash password
-  2. `SessionInvalidator::invalidateOtherSessions($userId, $currentSessionId)` — hapus baris di tabel `sessions` untuk `user_id` kecuali `id` sesi aktif
-  3. `$request->session()->regenerate()`
+  2. `$request->session()->regenerate(true)` agar sesi aktif mendapat ID baru dan ID lama dihancurkan
+  3. `SessionInvalidator::invalidateOtherSessions($userId, $request->session()->getId())` — hapus baris di tabel `sessions` untuk `user_id` kecuali ID sesi aktif yang baru
   4. Audit: `profile.password_change` / `success` — **tanpa** plain password
   5. Flash: memberitahu bahwa sesi perangkat lain telah diakhiri
 

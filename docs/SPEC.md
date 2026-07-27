@@ -482,6 +482,7 @@ Stack UI fase 1: **Blade + Livewire**. Bahasa: **Indonesia**.
 
 - Sidebar kiri: menu sesuai role.
 - Header: nama user, lembaga (Admin Lembaga), logout.
+- Header: nama user adalah tautan ke **Profil** (ubah nama + ganti password; email read-only). Ganti password mengakhiri sesi di perangkat lain.
 - Area konten: breadcrumb + judul halaman + aksi utama (Tambah).
 - Pola list: tabel + search + pagination + badge status (aktif/nonaktif).
 - Pola form: validasi inline; field wajib ditandai `*`.
@@ -498,6 +499,7 @@ Stack UI fase 1: **Blade + Livewire**. Bahasa: **Indonesia**.
   - **Buat client:** isi nama aplikasi, scope resource, dan profil field.
   - **Rotate key:** modal peringatan "app konsumen harus update key segera"; key lama dicabut.
   - **Generate key:** layar copy-once; teks "key tidak bisa dilihat lagi".
+- Profil akun sendiri (nama, ganti password).
 - (Opsional) pantau jumlah master per lembaga
 
 ### 5.2 Admin Lembaga
@@ -508,6 +510,7 @@ Stack UI fase 1: **Blade + Livewire**. Bahasa: **Indonesia**.
 - Form create/edit + soft delete (konfirmasi)
 - Siswa tanpa kelas: badge **"Belum ada kelas"**
 - Lihat daftar **API client + prefix + scope** saja (read-only); tidak bisa rotate/revoke
+- Profil akun sendiri (nama, ganti password).
 
 ### 5.3 Integrasi di app lain (bukan UI Pusat Data)
 
