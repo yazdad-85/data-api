@@ -9,23 +9,34 @@ use RuntimeException;
 class BrandingLogoProcessor
 {
     /**
-     * @return array{logo_path: string, favicon_path: string}
+     * @return array{logo_path: string, favicon_path: string|null}
      */
     public function store(UploadedFile $file): array
     {
+        $sourcePath = $file->getRealPath();
+        $info = $sourcePath === false ? false : getimagesize($sourcePath);
+        $extension = $info === false ? null : match ($info[2]) {
+            IMAGETYPE_JPEG => 'jpg',
+            IMAGETYPE_PNG => 'png',
+            IMAGETYPE_WEBP => 'webp',
+            default => null,
+        };
+
+        if ($extension === null) {
+            throw new RuntimeException('Unsupported or malformed logo image.');
+        }
+
         $disk = Storage::disk('public');
         $disk->makeDirectory('branding');
 
-        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'png');
-        if (! in_array($extension, ['png', 'jpg', 'jpeg', 'webp'], true)) {
-            throw new RuntimeException('Unsupported logo format.');
-        }
-
         $logoPath = 'branding/logo.'.$extension;
-        $disk->put($logoPath, file_get_contents($file->getRealPath()));
+        $disk->put($logoPath, file_get_contents($sourcePath));
 
-        $faviconPath = 'branding/favicon.png';
-        $this->writeFaviconPng($file->getRealPath(), $disk->path($faviconPath));
+        $faviconPath = null;
+        if ($this->gdAvailable()) {
+            $faviconPath = 'branding/favicon.png';
+            $this->writeFaviconPng($sourcePath, $disk->path($faviconPath));
+        }
 
         return [
             'logo_path' => $logoPath,
@@ -44,14 +55,13 @@ class BrandingLogoProcessor
         }
     }
 
+    protected function gdAvailable(): bool
+    {
+        return extension_loaded('gd');
+    }
+
     private function writeFaviconPng(string $sourcePath, string $destPath): void
     {
-        if (! extension_loaded('gd')) {
-            copy($sourcePath, $destPath);
-
-            return;
-        }
-
         $info = getimagesize($sourcePath);
         if ($info === false) {
             throw new RuntimeException('Unable to read logo image.');
