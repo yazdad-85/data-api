@@ -127,6 +127,16 @@ class AdminShellTest extends TestCase
         $this->assertStringContainsString('position: fixed;', $css);
     }
 
+    public function test_table_button_links_keep_button_contrast(): void
+    {
+        $css = file_get_contents(resource_path('css/app.css'));
+
+        $this->assertIsString($css);
+        $this->assertStringContainsString('.data-table a.btn-primary', $css);
+        $this->assertStringContainsString('color: #fff;', $css);
+        $this->assertStringContainsString('.data-table a.btn-danger', $css);
+    }
+
     public function test_admin_lembaga_kelas_index_is_reachable_from_menu(): void
     {
         $lembaga = Lembaga::factory()->create();

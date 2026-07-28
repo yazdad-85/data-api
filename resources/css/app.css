@@ -659,6 +659,18 @@ body {
     text-decoration: underline;
 }
 
+.data-table a.btn-primary,
+.data-table a.btn-danger {
+    color: #fff;
+}
+
+.data-table a.btn-primary:hover,
+.data-table a.btn-danger:hover,
+.data-table a.btn-secondary:hover,
+.data-table a.btn-ghost:hover {
+    text-decoration: none;
+}
+
 .table-subtext,
 .text-muted {
     color: var(--muted);
