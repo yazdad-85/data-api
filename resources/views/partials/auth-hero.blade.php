@@ -12,6 +12,14 @@
     <div class="auth-hero__orb auth-hero__orb--two" aria-hidden="true"></div>
     <div class="auth-hero__orbit auth-hero__orbit--one" aria-hidden="true"></div>
     <div class="auth-hero__orbit auth-hero__orbit--two" aria-hidden="true"></div>
+    <div class="auth-hero__data-map" aria-hidden="true">
+        <span class="auth-hero__data-line auth-hero__data-line--one"></span>
+        <span class="auth-hero__data-line auth-hero__data-line--two"></span>
+        <span class="auth-hero__data-line auth-hero__data-line--three"></span>
+        <span class="auth-hero__data-node auth-hero__data-node--one"></span>
+        <span class="auth-hero__data-node auth-hero__data-node--two"></span>
+        <span class="auth-hero__data-node auth-hero__data-node--three"></span>
+    </div>
 
     {{-- Karakter penjaga: absolute di kanan bawah hero --}}
     <img

@@ -1085,24 +1085,64 @@ body:has([data-auth-shell]) {
     overflow: hidden;
     color: #f3fbf9;
     background:
+        linear-gradient(90deg, rgb(255 255 255 / 0.055) 1px, transparent 1px),
+        linear-gradient(0deg, rgb(255 255 255 / 0.04) 1px, transparent 1px),
+        radial-gradient(circle at 38% 22%, rgb(255 255 255 / 0.09), transparent 22%),
         radial-gradient(circle at 70% 90%, rgb(201 162 39 / 0.15), transparent 45%),
         radial-gradient(circle at 15% 15%, rgb(201 162 39 / 0.12), transparent 35%),
         linear-gradient(160deg, #042e2b 0%, #0a4f4a 55%, #0d6460 100%);
+    background-size: 76px 76px, 76px 76px, auto, auto, auto, auto;
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: center;
+}
+
+.auth-hero::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+    background:
+        linear-gradient(115deg, transparent 0 20%, rgb(255 255 255 / 0.08) 20.1% 20.25%, transparent 20.35% 100%),
+        linear-gradient(145deg, transparent 0 43%, rgb(212 175 55 / 0.18) 43.1% 43.25%, transparent 43.35% 100%),
+        radial-gradient(circle at 26% 34%, rgb(212 175 55 / 0.12), transparent 18%),
+        radial-gradient(circle at 58% 66%, rgb(255 255 255 / 0.08), transparent 24%);
+    opacity: 0.85;
+}
+
+.auth-hero::after {
+    content: "";
+    position: absolute;
+    top: 8%;
+    left: clamp(1.5rem, 5vw, 5rem);
+    z-index: 1;
+    width: min(42vw, 28rem);
+    aspect-ratio: 1.7;
+    border: 1px solid rgb(255 255 255 / 0.1);
+    border-radius: 0.6rem;
+    background:
+        radial-gradient(circle at 20% 28%, rgb(212 175 55 / 0.2) 0 4px, transparent 5px),
+        radial-gradient(circle at 74% 24%, rgb(255 255 255 / 0.16) 0 3px, transparent 4px),
+        radial-gradient(circle at 54% 70%, rgb(255 255 255 / 0.14) 0 3px, transparent 4px),
+        linear-gradient(90deg, transparent 0 18%, rgb(255 255 255 / 0.12) 18.1% 18.3%, transparent 18.4% 100%),
+        linear-gradient(0deg, transparent 0 54%, rgb(212 175 55 / 0.16) 54.1% 54.35%, transparent 54.45% 100%);
+    box-shadow: inset 0 0 32px rgb(255 255 255 / 0.035), 0 24px 80px rgb(0 0 0 / 0.14);
+    opacity: 0.5;
+    transform: perspective(800px) rotateX(0deg) rotateY(-8deg);
 }
 
 /* Teks kiri bawah, z-index di atas karakter */
 .auth-hero__content {
     position: relative;
-    z-index: 3;
-    padding: clamp(1.5rem, 3vh, 2.25rem) clamp(1.5rem, 4vw, 3.5rem) clamp(2rem, 5vh, 3rem);
+    z-index: 4;
+    padding: clamp(1.5rem, 3vh, 2.25rem) clamp(1.5rem, 4vw, 3.5rem);
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
     /* Beri ruang agar karakter tidak menindih teks sepenuhnya */
     max-width: 55%;
+    transform: translateY(-6vh);
 }
 
 .auth-hero__eyebrow {
@@ -1173,6 +1213,73 @@ body:has([data-auth-shell]) {
     filter: drop-shadow(-30px 0 50px rgb(0 0 0 / 0.35));
     animation: auth-float 6s ease-in-out infinite;
     transform-origin: bottom center;
+}
+
+.auth-hero__data-map {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.auth-hero__data-line {
+    position: absolute;
+    height: 1px;
+    transform-origin: left center;
+    background: linear-gradient(90deg, transparent, rgb(212 175 55 / 0.55), rgb(255 255 255 / 0.12), transparent);
+    opacity: 0.75;
+    animation: auth-data-scan 5.4s ease-in-out infinite;
+}
+
+.auth-hero__data-line--one {
+    top: 21%;
+    left: 9%;
+    width: 30%;
+    transform: rotate(10deg);
+}
+
+.auth-hero__data-line--two {
+    top: 34%;
+    left: 16%;
+    width: 39%;
+    transform: rotate(-14deg);
+    animation-delay: 1.2s;
+}
+
+.auth-hero__data-line--three {
+    top: 48%;
+    left: 6%;
+    width: 47%;
+    transform: rotate(5deg);
+    animation-delay: 2.4s;
+}
+
+.auth-hero__data-node {
+    position: absolute;
+    width: 0.55rem;
+    height: 0.55rem;
+    border: 1px solid rgb(255 247 218 / 0.75);
+    border-radius: 999px;
+    background: rgb(212 175 55 / 0.42);
+    box-shadow: 0 0 28px rgb(212 175 55 / 0.45);
+    animation: auth-node-pulse 3.6s ease-in-out infinite;
+}
+
+.auth-hero__data-node--one {
+    top: 19%;
+    left: 38%;
+}
+
+.auth-hero__data-node--two {
+    top: 35%;
+    left: 18%;
+    animation-delay: 0.8s;
+}
+
+.auth-hero__data-node--three {
+    top: 49%;
+    left: 51%;
+    animation-delay: 1.5s;
 }
 
 .auth-hero__orb,
@@ -1333,6 +1440,23 @@ body:has([data-auth-shell]) {
     50% { transform: scale(1.08); opacity: 1; }
 }
 
+@keyframes auth-data-scan {
+    0%, 100% { opacity: 0.22; filter: blur(0); }
+    45% { opacity: 0.82; filter: blur(0); }
+    60% { opacity: 0.48; filter: blur(1px); }
+}
+
+@keyframes auth-node-pulse {
+    0%, 100% {
+        opacity: 0.42;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 1;
+        transform: scale(1.35);
+    }
+}
+
 @media (max-width: 959px) {
     body:has([data-auth-shell]) {
         display: block;
@@ -1349,9 +1473,15 @@ body:has([data-auth-shell]) {
         justify-content: flex-start;
     }
 
+    .auth-hero::after,
+    .auth-hero__data-map {
+        opacity: 0.36;
+    }
+
     .auth-hero__content {
         padding: 2rem 1.5rem 2rem;
         max-width: 60%;
+        transform: none;
     }
 
     .auth-hero__title {
@@ -1374,6 +1504,8 @@ body:has([data-auth-shell]) {
     .auth-hero__guardian,
     .auth-hero__orb,
     .auth-hero__orbit,
+    .auth-hero__data-line,
+    .auth-hero__data-node,
     .auth-shell--ready .auth-hero__content,
     .auth-shell--ready .auth-panel {
         animation: none !important;
