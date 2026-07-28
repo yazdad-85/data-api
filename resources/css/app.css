@@ -93,6 +93,17 @@ body {
     min-height: 100vh;
 }
 
+@media (min-width: 961px) {
+    .admin-sidebar {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+    }
+}
+
 .admin-sidebar__brand {
     display: flex;
     align-items: center;

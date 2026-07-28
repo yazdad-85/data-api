@@ -115,6 +115,18 @@ class AdminShellTest extends TestCase
             ->assertSee('&copy; '.now()->year, false);
     }
 
+    public function test_admin_sidebar_is_sticky_on_desktop_and_fixed_as_mobile_drawer(): void
+    {
+        $css = file_get_contents(resource_path('css/app.css'));
+
+        $this->assertIsString($css);
+        $this->assertStringContainsString('@media (min-width: 961px)', $css);
+        $this->assertStringContainsString('position: sticky;', $css);
+        $this->assertStringContainsString('height: 100vh;', $css);
+        $this->assertStringContainsString('@media (max-width: 960px)', $css);
+        $this->assertStringContainsString('position: fixed;', $css);
+    }
+
     public function test_admin_lembaga_kelas_index_is_reachable_from_menu(): void
     {
         $lembaga = Lembaga::factory()->create();
