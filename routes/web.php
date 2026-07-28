@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\KenaikanKelasController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SiswaController;
+use App\Http\Controllers\Admin\SuperAdminMonitoringController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
 use App\Http\Controllers\Admin\LembagaController;
@@ -49,6 +50,10 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
         ->name('admin.settings.backup');
 
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
+
+    Route::get('/monitoring/guru', [SuperAdminMonitoringController::class, 'guru'])->name('admin.monitoring.guru');
+    Route::get('/monitoring/siswa', [SuperAdminMonitoringController::class, 'siswa'])->name('admin.monitoring.siswa');
+    Route::get('/monitoring/karyawan', [SuperAdminMonitoringController::class, 'karyawan'])->name('admin.monitoring.karyawan');
 
     Route::get('/tahun-ajaran', [TahunAjaranController::class, 'index'])->name('admin.tahun-ajaran.index');
     Route::get('/tahun-ajaran/create', [TahunAjaranController::class, 'create'])->name('admin.tahun-ajaran.create');

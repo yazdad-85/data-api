@@ -25,6 +25,7 @@ class AdminShellTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('Pusat Data');
+        $response->assertSee('Monitoring');
         $response->assertSee('Lembaga');
         $response->assertDontSee('Admin lembaga');
         $response->assertDontSee('Tahun ajaran');
@@ -34,7 +35,7 @@ class AdminShellTest extends TestCase
         $response->assertSee('<title>Pusat Data</title>', false);
 
         $menu = app(AdminMenu::class)->forUser($user);
-        $this->assertSame(['Dashboard', 'Lembaga', 'Pengaturan'], $menu->pluck('label')->all());
+        $this->assertSame(['Dashboard', 'Monitoring', 'Lembaga', 'Pengaturan'], $menu->pluck('label')->all());
     }
 
     public function test_super_admin_lembaga_show_tab_title_is_app_name_not_lembaga_nama(): void

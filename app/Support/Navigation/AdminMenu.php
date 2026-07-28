@@ -15,6 +15,7 @@ final class AdminMenu
         if ($user->isSuperAdmin()) {
             return collect([
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'available' => true],
+                ['label' => 'Monitoring', 'route' => 'admin.monitoring.siswa', 'available' => true],
                 ['label' => 'Lembaga', 'route' => 'admin.lembaga.index', 'available' => true],
                 ['label' => 'Pengaturan', 'route' => 'admin.settings.show', 'available' => true],
             ]);

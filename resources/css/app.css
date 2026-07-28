@@ -262,10 +262,58 @@ body {
     max-width: 40rem;
 }
 
+.dashboard-command {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    padding: 1.1rem 1.2rem;
+    border: 1px solid color-mix(in srgb, var(--brand) 22%, white);
+    border-radius: 0.45rem;
+    background:
+        linear-gradient(120deg, color-mix(in srgb, var(--brand-soft) 70%, white), var(--surface-elevated) 58%),
+        var(--surface-elevated);
+}
+
+.dashboard-command__eyebrow {
+    margin: 0 0 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.11em;
+    color: var(--brand);
+    font-size: 0.72rem;
+    font-weight: 700;
+}
+
+.dashboard-command__title {
+    margin: 0;
+    color: var(--brand-deep);
+    font-size: clamp(1.45rem, 2.2vw, 2.2rem);
+    line-height: 1.1;
+}
+
+.dashboard-command__body {
+    margin: 0.45rem 0 0;
+    max-width: 44rem;
+    color: var(--muted);
+}
+
+.dashboard-command__actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.45rem;
+    flex-shrink: 0;
+}
+
 .dashboard-metrics {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(11.5rem, 1fr));
     gap: 0.85rem;
+}
+
+.dashboard-metrics--super {
+    grid-template-columns: repeat(auto-fit, minmax(10.75rem, 1fr));
 }
 
 .dashboard-metric {
@@ -276,6 +324,13 @@ body {
     border-top: 3px solid var(--brand);
     background:
         linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 55%, white), var(--surface-elevated) 42%),
+        var(--surface-elevated);
+}
+
+.dashboard-metric--attention {
+    border-top-color: var(--warn);
+    background:
+        linear-gradient(180deg, color-mix(in srgb, var(--warn) 10%, white), var(--surface-elevated) 42%),
         var(--surface-elevated);
 }
 
@@ -290,6 +345,34 @@ body {
     font-weight: 600;
     line-height: 1.1;
     color: var(--brand-deep);
+}
+
+.dashboard-metric__hint {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.dashboard-section {
+    margin-top: 1.25rem;
+}
+
+.dashboard-section__header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.dashboard-section__title {
+    margin: 0;
+    color: var(--brand-deep);
+    font-size: 1.45rem;
+}
+
+.dashboard-section__description {
+    margin: 0.25rem 0 0;
+    color: var(--muted);
 }
 
 .dashboard-checklist {
@@ -555,12 +638,95 @@ body {
     border-bottom: 0;
 }
 
+.data-table a {
+    color: var(--brand-deep);
+    font-weight: 600;
+    text-decoration: none;
+}
+
+.data-table a:hover {
+    text-decoration: underline;
+}
+
+.table-subtext,
+.text-muted {
+    color: var(--muted);
+    font-size: 0.82rem;
+}
+
 .table-empty {
     padding: 1.25rem 1rem;
 }
 
 .pagination {
     margin-top: 1rem;
+}
+
+.monitoring-filter {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(10rem, 1fr)) minmax(13rem, 1.25fr) auto auto;
+    gap: 0.65rem;
+    align-items: center;
+    margin-bottom: 0.9rem;
+}
+
+.monitoring-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 0.9rem;
+    padding: 0.8rem 0.95rem;
+    border: 1px solid var(--border);
+    border-radius: 0.4rem;
+    background: var(--surface-elevated);
+}
+
+.monitoring-summary > div {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.monitoring-summary p {
+    margin: 0;
+    color: var(--muted);
+    font-size: 0.9rem;
+}
+
+.monitoring-summary__label {
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.monitoring-summary__value {
+    color: var(--brand-deep);
+    font-size: 1.65rem;
+    line-height: 1;
+}
+
+@media (max-width: 1100px) {
+    .monitoring-filter {
+        grid-template-columns: repeat(2, minmax(12rem, 1fr));
+    }
+}
+
+@media (max-width: 720px) {
+    .dashboard-command,
+    .dashboard-section__header,
+    .monitoring-summary {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .dashboard-command__actions {
+        justify-content: flex-start;
+    }
+
+    .monitoring-filter {
+        grid-template-columns: 1fr;
+    }
 }
 
 .pagination nav,
