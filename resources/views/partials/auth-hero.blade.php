@@ -15,7 +15,7 @@
 
     {{-- Karakter penjaga: absolute di kanan bawah hero --}}
     <img
-        src="{{ asset('images/auth/guardian.webp') }}"
+        src="{{ asset('images/auth/guardian-cutout.png') }}"
         alt=""
         class="auth-hero__guardian"
         aria-hidden="true"

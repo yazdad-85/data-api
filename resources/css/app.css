@@ -1055,17 +1055,22 @@ body {
 body:has([data-auth-shell]) {
     margin: 0;
     padding: 0;
+    min-height: 100dvh;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    overflow: hidden;
 }
 
 .auth-shell {
     display: grid;
     grid-template-columns: minmax(0, 1.2fr) minmax(340px, 0.8fr);
-    height: 100vh;
+    min-height: 0;
     overflow: hidden;
 }
 
 .auth-footer {
-    padding: 0.65rem clamp(1.5rem, 4vw, 4rem);
+    min-height: 2.5rem;
+    padding: 0.45rem clamp(1.5rem, 4vw, 4rem);
     background: #021a18;
     color: rgb(255 255 255 / 0.55);
     font-size: 0.82rem;
@@ -1092,7 +1097,7 @@ body:has([data-auth-shell]) {
 .auth-hero__content {
     position: relative;
     z-index: 3;
-    padding: 2.5rem clamp(1.5rem, 4vw, 3.5rem) 3rem;
+    padding: clamp(1.5rem, 3vh, 2.25rem) clamp(1.5rem, 4vw, 3.5rem) clamp(2rem, 5vh, 3rem);
     display: flex;
     flex-direction: column;
     gap: 0.9rem;
@@ -1127,9 +1132,8 @@ body:has([data-auth-shell]) {
 
 .auth-hero__title {
     margin: 0;
-    font-size: clamp(2rem, 3.8vw, 3.6rem);
+    font-size: clamp(2rem, 3.4vw, 3.25rem);
     line-height: 1;
-    letter-spacing: -0.02em;
 }
 
 .auth-hero__body {
@@ -1159,13 +1163,13 @@ body:has([data-auth-shell]) {
 /* Karakter: absolute kanan bawah, penuh tinggi hero, TIDAK ada background */
 .auth-hero__guardian {
     position: absolute;
-    bottom: 0;
-    right: -2%;
+    bottom: -1.25rem;
+    right: -1%;
     z-index: 2;
-    height: 95%;
-    max-height: 800px;
+    height: 96%;
+    max-height: 920px;
     width: auto;
-    /* drop-shadow pakai kanal alpha WebP — tidak ada kotak putih */
+    /* Drop-shadow mengikuti kanal alpha PNG, jadi tidak muncul kotak latar. */
     filter: drop-shadow(-30px 0 50px rgb(0 0 0 / 0.35));
     animation: auth-float 6s ease-in-out infinite;
     transform-origin: bottom center;
@@ -1220,15 +1224,15 @@ body:has([data-auth-shell]) {
     align-items: center;
     justify-content: center;
     background: #f2f5f4;
-    padding: clamp(1.5rem, 4vw, 3rem);
+    padding: clamp(1.25rem, 3vw, 2.5rem);
     /* kolom kanan full tinggi = fill grid cell */
     align-self: stretch;
-    overflow-y: auto;
+    overflow: hidden;
 }
 
 .auth-panel {
     width: min(100%, 28rem);
-    padding: clamp(1.5rem, 3vw, 2.5rem);
+    padding: clamp(1.5rem, 2.4vw, 2.25rem);
     border-radius: 1.4rem;
     background: rgb(255 255 255 / 0.94);
     border: 1px solid rgb(255 255 255 / 0.7);
@@ -1330,9 +1334,13 @@ body:has([data-auth-shell]) {
 }
 
 @media (max-width: 959px) {
+    body:has([data-auth-shell]) {
+        display: block;
+        overflow: auto;
+    }
+
     .auth-shell {
         grid-template-columns: 1fr;
-        height: auto;
         min-height: 100vh;
     }
 
