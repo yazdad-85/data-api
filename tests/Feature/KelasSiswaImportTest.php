@@ -165,6 +165,48 @@ class KelasSiswaImportTest extends TestCase
         $this->assertSame($kelas->id, $siswa->kelas_id);
     }
 
+    public function test_import_restores_soft_deleted_siswa_in_same_kelas(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelas = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        $existing = Siswa::factory()->for($lembaga)->inKelas($kelas)->create([
+            'nis' => 'NIS-RESTORE',
+            'nisn' => null,
+            'nama' => 'Siswa Terhapus',
+        ]);
+        $existing->delete();
+
+        $file = $this->makeImportFile([
+            [
+                'nis' => 'NIS-RESTORE',
+                'nama' => 'Siswa Dipulihkan',
+                'nisn' => 'NISN-RESTORE',
+            ],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelas), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect(route('admin.kelas.show', $kelas));
+        $response->assertSessionHas('import_errors', []);
+
+        $this->assertSame(1, Siswa::query()->count());
+        $this->assertSame(1, Siswa::withTrashed()->count());
+
+        $siswa = Siswa::query()->where('nis', 'NIS-RESTORE')->firstOrFail();
+        $this->assertSame($existing->id, $siswa->id);
+        $this->assertSame('Siswa Dipulihkan', $siswa->nama);
+        $this->assertSame('NISN-RESTORE', $siswa->nisn);
+        $this->assertNull($siswa->deleted_at);
+        $this->assertSame($kelas->id, $siswa->kelas_id);
+    }
+
     public function test_duplicate_nis_fails_row(): void
     {
         $lembaga = Lembaga::factory()->create();

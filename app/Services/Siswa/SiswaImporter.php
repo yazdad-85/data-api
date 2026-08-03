@@ -114,16 +114,6 @@ final class SiswaImporter
             $seenNis[$validated['nis']] = true;
             $existing = $this->findExistingSiswa($lembagaId, $validated['nis']);
 
-            if ($existing?->trashed()) {
-                $failed++;
-                $errors[] = [
-                    'row' => $excelRow,
-                    'message' => "NIS {$validated['nis']} sudah digunakan di lembaga ini.",
-                ];
-
-                continue;
-            }
-
             if ($existing !== null && ! hash_equals((string) $existing->kelas_id, (string) $kelas->id)) {
                 $failed++;
                 $errors[] = [
@@ -145,8 +135,7 @@ final class SiswaImporter
 
             DB::transaction(function () use ($kelas, $lembagaId, $validated, $existing) {
                 if ($existing !== null) {
-                    $existing->fill($this->updatePayload($validated));
-                    $existing->save();
+                    $this->updateExisting($existing, $validated);
 
                     return;
                 }
@@ -319,6 +308,20 @@ final class SiswaImporter
         if ($exists) {
             throw new InvalidArgumentException("NISN {$nisn} sudah digunakan di lembaga ini.");
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function updateExisting(Siswa $siswa, array $validated): void
+    {
+        if ($siswa->trashed()) {
+            $siswa->restore();
+            $siswa->refresh();
+        }
+
+        $siswa->fill($this->updatePayload($validated));
+        $siswa->save();
     }
 
     /**
