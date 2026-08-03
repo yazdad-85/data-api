@@ -9,6 +9,7 @@ use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class SuperAdminMonitoringTest extends TestCase
@@ -69,9 +70,55 @@ class SuperAdminMonitoringTest extends TestCase
                 'tahun_ajaran_id' => $tahunA->id,
             ]))
             ->assertOk()
+            ->assertSee('Export Excel')
             ->assertSee('Siswa Terpilih')
             ->assertSee('2026/2027')
             ->assertDontSee('Siswa Tidak Tampil');
+    }
+
+    public function test_super_admin_can_export_filtered_siswa_monitoring_to_excel(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin', 'lembaga_id' => null]);
+        $lembagaA = Lembaga::factory()->create(['nama' => 'SMP Export A']);
+        $lembagaB = Lembaga::factory()->create(['nama' => 'SMP Export B']);
+        $tahunA = TahunAjaran::factory()->create(['lembaga_id' => $lembagaA->id, 'nama' => '2026/2027']);
+        $tahunB = TahunAjaran::factory()->create(['lembaga_id' => $lembagaB->id, 'nama' => '2027/2028']);
+
+        Siswa::factory()->create([
+            'lembaga_id' => $lembagaA->id,
+            'tahun_ajaran_id' => $tahunA->id,
+            'nama' => 'Siswa Export',
+            'nis' => 'NIS-EXPORT',
+            'status_asal' => 'SMP Asal',
+        ]);
+        Siswa::factory()->create([
+            'lembaga_id' => $lembagaB->id,
+            'tahun_ajaran_id' => $tahunB->id,
+            'nama' => 'Siswa Tidak Diexport',
+            'nis' => 'NIS-NO',
+        ]);
+
+        $response = $this->actingAs($superAdmin)
+            ->get(route('admin.monitoring.siswa.export', [
+                'lembaga_id' => $lembagaA->id,
+                'tahun_ajaran_id' => $tahunA->id,
+            ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        $this->assertStringContainsString(
+            'monitoring-siswa-',
+            (string) $response->headers->get('content-disposition')
+        );
+
+        $rows = $this->xlsxRows($response->streamedContent());
+        $this->assertSame('Nama', $rows[0][0]);
+        $this->assertSame('Asal', $rows[0][16]);
+        $this->assertSame('Siswa Export', $rows[1][0]);
+        $this->assertSame('SMP Export A', $rows[1][1]);
+        $this->assertSame('NIS-EXPORT', $rows[1][2]);
+        $this->assertSame('SMP Asal', $rows[1][16]);
+        $this->assertCount(2, $rows);
     }
 
     public function test_super_admin_can_filter_guru_and_karyawan_monitoring(): void
@@ -98,6 +145,41 @@ class SuperAdminMonitoringTest extends TestCase
             ->assertDontSee('Karyawan Lain');
     }
 
+    public function test_super_admin_can_export_guru_and_karyawan_monitoring_to_excel(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin', 'lembaga_id' => null]);
+        $lembaga = Lembaga::factory()->create(['nama' => 'Lembaga Export']);
+
+        Guru::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'nama' => 'Guru Export',
+            'niy' => 'NIY-EXPORT',
+            'tahun_masuk' => 2026,
+        ]);
+        Karyawan::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'nama' => 'Karyawan Export',
+            'nik_pegawai' => 'NIK-EXPORT',
+            'tahun_masuk' => 2026,
+        ]);
+
+        $guru = $this->actingAs($superAdmin)
+            ->get(route('admin.monitoring.guru.export', ['lembaga_id' => $lembaga->id]));
+        $guru->assertOk();
+        $guruRows = $this->xlsxRows($guru->streamedContent());
+        $this->assertSame('Nama', $guruRows[0][0]);
+        $this->assertSame('Guru Export', $guruRows[1][0]);
+        $this->assertSame('NIY-EXPORT', $guruRows[1][2]);
+
+        $karyawan = $this->actingAs($superAdmin)
+            ->get(route('admin.monitoring.karyawan.export', ['lembaga_id' => $lembaga->id]));
+        $karyawan->assertOk();
+        $karyawanRows = $this->xlsxRows($karyawan->streamedContent());
+        $this->assertSame('Nama', $karyawanRows[0][0]);
+        $this->assertSame('Karyawan Export', $karyawanRows[1][0]);
+        $this->assertSame('NIK-EXPORT', $karyawanRows[1][2]);
+    }
+
     public function test_admin_lembaga_is_forbidden_from_super_admin_monitoring(): void
     {
         $lembaga = Lembaga::factory()->create();
@@ -106,5 +188,25 @@ class SuperAdminMonitoringTest extends TestCase
         $this->actingAs($admin)->get(route('admin.monitoring.guru'))->assertForbidden();
         $this->actingAs($admin)->get(route('admin.monitoring.siswa'))->assertForbidden();
         $this->actingAs($admin)->get(route('admin.monitoring.karyawan'))->assertForbidden();
+        $this->actingAs($admin)->get(route('admin.monitoring.guru.export'))->assertForbidden();
+        $this->actingAs($admin)->get(route('admin.monitoring.siswa.export'))->assertForbidden();
+        $this->actingAs($admin)->get(route('admin.monitoring.karyawan.export'))->assertForbidden();
+    }
+
+    /**
+     * @return list<list<mixed>>
+     */
+    private function xlsxRows(string $content): array
+    {
+        $path = tempnam(sys_get_temp_dir(), 'monitoring-export-').'.xlsx';
+        file_put_contents($path, $content);
+
+        try {
+            $spreadsheet = IOFactory::load($path);
+
+            return $spreadsheet->getActiveSheet()->toArray();
+        } finally {
+            @unlink($path);
+        }
     }
 }

@@ -26,6 +26,7 @@
             <p class="page-header__description">{{ $description }}</p>
         </div>
         <div class="page-header__actions">
+            <x-ui.button href="{{ route('admin.monitoring.'.$resource.'.export', request()->except('page')) }}" variant="secondary">Export Excel</x-ui.button>
             <x-ui.button href="{{ route('admin.monitoring.guru') }}" variant="{{ $resource === 'guru' ? 'primary' : 'secondary' }}">Guru</x-ui.button>
             <x-ui.button href="{{ route('admin.monitoring.siswa') }}" variant="{{ $resource === 'siswa' ? 'primary' : 'secondary' }}">Siswa</x-ui.button>
             <x-ui.button href="{{ route('admin.monitoring.karyawan') }}" variant="{{ $resource === 'karyawan' ? 'primary' : 'secondary' }}">Karyawan</x-ui.button>

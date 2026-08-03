@@ -52,8 +52,11 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
 
     Route::get('/monitoring/guru', [SuperAdminMonitoringController::class, 'guru'])->name('admin.monitoring.guru');
+    Route::get('/monitoring/guru/export', [SuperAdminMonitoringController::class, 'guruExport'])->name('admin.monitoring.guru.export');
     Route::get('/monitoring/siswa', [SuperAdminMonitoringController::class, 'siswa'])->name('admin.monitoring.siswa');
+    Route::get('/monitoring/siswa/export', [SuperAdminMonitoringController::class, 'siswaExport'])->name('admin.monitoring.siswa.export');
     Route::get('/monitoring/karyawan', [SuperAdminMonitoringController::class, 'karyawan'])->name('admin.monitoring.karyawan');
+    Route::get('/monitoring/karyawan/export', [SuperAdminMonitoringController::class, 'karyawanExport'])->name('admin.monitoring.karyawan.export');
 
     Route::get('/tahun-ajaran', [TahunAjaranController::class, 'index'])->name('admin.tahun-ajaran.index');
     Route::get('/tahun-ajaran/create', [TahunAjaranController::class, 'create'])->name('admin.tahun-ajaran.create');
