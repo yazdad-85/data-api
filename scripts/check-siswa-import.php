@@ -39,7 +39,13 @@ $nisList = array_values(array_filter(array_map(
     [...$args, ...$stdinNis],
 ), static fn (string $nis): bool => $nis !== ''));
 
-$kelas = Kelas::withTrashed()->with(['lembaga', 'tahunAjaran'])->find($kelasId);
+$kelas = Kelas::withoutGlobalScopes()
+    ->withTrashed()
+    ->with([
+        'lembaga',
+        'tahunAjaran' => fn ($query) => $query->withoutGlobalScopes(),
+    ])
+    ->find($kelasId);
 if ($kelas === null) {
     fwrite(STDERR, "Kelas tidak ditemukan: {$kelasId}\n");
     exit(1);
@@ -61,6 +67,7 @@ if ($nisList === []) {
 
 foreach ($nisList as $nis) {
     $matches = Siswa::withTrashed()
+        ->withoutGlobalScopes()
         ->where('lembaga_id', $kelas->lembaga_id)
         ->where('nis', $nis)
         ->orderBy('deleted_at')
