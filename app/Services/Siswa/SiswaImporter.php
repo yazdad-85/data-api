@@ -82,6 +82,7 @@ final class SiswaImporter
         $failed = 0;
         $errors = [];
         $lembagaId = (string) $kelas->lembaga_id;
+        $seenNis = [];
 
         foreach ($rows as $rowNumber => $row) {
             $excelRow = (int) $rowNumber;
@@ -100,7 +101,20 @@ final class SiswaImporter
                 continue;
             }
 
-            if ($this->nisExists($lembagaId, $validated['nis'])) {
+            if (isset($seenNis[$validated['nis']])) {
+                $failed++;
+                $errors[] = [
+                    'row' => $excelRow,
+                    'message' => "NIS {$validated['nis']} muncul lebih dari sekali di file import.",
+                ];
+
+                continue;
+            }
+
+            $seenNis[$validated['nis']] = true;
+            $existing = $this->findExistingSiswa($lembagaId, $validated['nis']);
+
+            if ($existing?->trashed()) {
                 $failed++;
                 $errors[] = [
                     'row' => $excelRow,
@@ -110,19 +124,34 @@ final class SiswaImporter
                 continue;
             }
 
-            DB::transaction(function () use ($kelas, $lembagaId, $validated) {
-                // Buat sebagai calon lalu tempatkan via service agar siswa berakhir
-                // "aktif" dengan tepat satu penempatan terbuka jenis "awal".
-                $siswa = Siswa::query()->create([
-                    ...$validated,
-                    'lembaga_id' => $lembagaId,
-                    'kelas_id' => null,
-                    'tahun_ajaran_id' => null,
-                    'status_siswa' => SiswaStatus::CALON,
-                    'is_active' => false,
-                ]);
+            if ($existing !== null && ! hash_equals((string) $existing->kelas_id, (string) $kelas->id)) {
+                $failed++;
+                $errors[] = [
+                    'row' => $excelRow,
+                    'message' => "NIS {$validated['nis']} sudah terdaftar di kelas lain. Update lewat import hanya untuk siswa di kelas ini.",
+                ];
 
-                $this->lifecycle->tempatkan($siswa, $kelas);
+                continue;
+            }
+
+            try {
+                $this->assertNisnAvailable($lembagaId, $validated['nisn'], $existing?->id);
+            } catch (InvalidArgumentException $exception) {
+                $failed++;
+                $errors[] = ['row' => $excelRow, 'message' => $exception->getMessage()];
+
+                continue;
+            }
+
+            DB::transaction(function () use ($kelas, $lembagaId, $validated, $existing) {
+                if ($existing !== null) {
+                    $existing->fill($this->updatePayload($validated));
+                    $existing->save();
+
+                    return;
+                }
+
+                $this->createAndPlace($kelas, $lembagaId, $validated);
             });
 
             $success++;
@@ -267,11 +296,64 @@ final class SiswaImporter
         return date('Y-m-d', $timestamp);
     }
 
-    private function nisExists(string $lembagaId, string $nis): bool
+    private function findExistingSiswa(string $lembagaId, string $nis): ?Siswa
     {
         return Siswa::withTrashed()
             ->where('lembaga_id', $lembagaId)
             ->where('nis', $nis)
+            ->first();
+    }
+
+    private function assertNisnAvailable(string $lembagaId, ?string $nisn, ?string $exceptSiswaId = null): void
+    {
+        if ($nisn === null) {
+            return;
+        }
+
+        $exists = Siswa::withTrashed()
+            ->where('lembaga_id', $lembagaId)
+            ->where('nisn', $nisn)
+            ->when($exceptSiswaId !== null, fn ($query) => $query->whereKeyNot($exceptSiswaId))
             ->exists();
+
+        if ($exists) {
+            throw new InvalidArgumentException("NISN {$nisn} sudah digunakan di lembaga ini.");
+        }
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function updatePayload(array $validated): array
+    {
+        $payload = ['nama' => $validated['nama']];
+
+        foreach (['nisn', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'email', 'telepon', 'alamat', 'nama_wali', 'telepon_wali'] as $field) {
+            if ($validated[$field] !== null) {
+                $payload[$field] = $validated[$field];
+            }
+        }
+
+        return $payload;
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function createAndPlace(Kelas $kelas, string $lembagaId, array $validated): void
+    {
+        // Buat sebagai calon lalu tempatkan via service agar siswa berakhir
+        // "aktif" dengan tepat satu penempatan terbuka jenis "awal".
+        $siswa = Siswa::query()->create([
+            ...$validated,
+            'lembaga_id' => $lembagaId,
+            'kelas_id' => null,
+            'tahun_ajaran_id' => null,
+            'status_siswa' => SiswaStatus::CALON,
+            'is_active' => false,
+        ]);
+
+        $this->lifecycle->tempatkan($siswa, $kelas);
     }
 }

@@ -118,6 +118,53 @@ class KelasSiswaImportTest extends TestCase
         $index->assertOk()->assertSee('Budi Santoso')->assertSee('NIS-201');
     }
 
+    public function test_import_updates_existing_siswa_in_same_kelas_to_fill_missing_columns(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelas = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        Siswa::factory()->for($lembaga)->inKelas($kelas)->create([
+            'nis' => 'NIS-301',
+            'nisn' => null,
+            'nama' => 'Siswa Lama',
+            'jenis_kelamin' => null,
+            'tanggal_lahir' => null,
+            'telepon' => '0811',
+        ]);
+
+        $file = $this->makeImportFile([
+            [
+                'nis' => 'NIS-301',
+                'nama' => 'Siswa Lama Revisi',
+                'nisn' => 'NISN-301',
+                'jenis_kelamin' => 'P',
+                'tanggal_lahir' => '2014-02-03',
+                'telepon' => '',
+            ],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelas), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect(route('admin.kelas.show', $kelas));
+        $response->assertSessionHas('import_errors', []);
+
+        $this->assertSame(1, Siswa::query()->count());
+
+        $siswa = Siswa::query()->where('nis', 'NIS-301')->firstOrFail();
+        $this->assertSame('Siswa Lama Revisi', $siswa->nama);
+        $this->assertSame('NISN-301', $siswa->nisn);
+        $this->assertSame('P', $siswa->jenis_kelamin);
+        $this->assertSame('2014-02-03', $siswa->tanggal_lahir?->toDateString());
+        $this->assertSame('0811', $siswa->telepon);
+        $this->assertSame($kelas->id, $siswa->kelas_id);
+    }
+
     public function test_duplicate_nis_fails_row(): void
     {
         $lembaga = Lembaga::factory()->create();
@@ -146,6 +193,38 @@ class KelasSiswaImportTest extends TestCase
         $response->assertSessionHas('import_errors');
         $this->assertSame(1, Siswa::query()->count());
         $this->assertSame('NIS-OK', Siswa::query()->value('nis'));
+    }
+
+    public function test_import_rejects_existing_nis_from_different_kelas(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelasTarget = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+        $kelasLain = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        Siswa::factory()->for($lembaga)->inKelas($kelasLain)->create([
+            'nis' => 'NIS-KELAS-LAIN',
+            'nama' => 'Siswa Kelas Lain',
+        ]);
+
+        $file = $this->makeImportFile([
+            ['nis' => 'NIS-KELAS-LAIN', 'nama' => 'Siswa Kelas Lain'],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelasTarget), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect(route('admin.kelas.show', $kelasTarget));
+        $response->assertSessionHas('import_errors');
+
+        $errors = session('import_errors');
+        $this->assertSame('NIS NIS-KELAS-LAIN sudah terdaftar di kelas lain. Update lewat import hanya untuk siswa di kelas ini.', $errors[0]['message']);
     }
 
     public function test_other_lembaga_cannot_import_to_kelas(): void
