@@ -162,13 +162,24 @@ final class SiswaImporter
                 continue;
             }
 
-            $normalized = strtolower(trim((string) $label));
+            $normalized = $this->normalizeHeader((string) $label);
             if ($normalized !== '') {
                 $map[$column] = $normalized;
             }
         }
 
         return $map;
+    }
+
+    private function normalizeHeader(string $label): string
+    {
+        $normalized = strtolower(trim($label));
+        $normalized = str_replace([' ', '-'], '_', $normalized);
+
+        return match ($normalized) {
+            'asal', 'status_asal' => 'asal_lembaga',
+            default => $normalized,
+        };
     }
 
     /**
@@ -247,6 +258,7 @@ final class SiswaImporter
             'alamat' => $this->nullableString($payload['alamat'] ?? null),
             'nama_wali' => $this->nullableString($payload['nama_wali'] ?? null, 150),
             'telepon_wali' => $this->nullableString($payload['telepon_wali'] ?? null, 30),
+            'status_asal' => $this->nullableString($payload['asal_lembaga'] ?? null, 150),
         ];
     }
 
@@ -332,7 +344,7 @@ final class SiswaImporter
     {
         $payload = ['nama' => $validated['nama']];
 
-        foreach (['nisn', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'email', 'telepon', 'alamat', 'nama_wali', 'telepon_wali'] as $field) {
+        foreach (['nisn', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'email', 'telepon', 'alamat', 'nama_wali', 'telepon_wali', 'status_asal'] as $field) {
             if ($validated[$field] !== null) {
                 $payload[$field] = $validated[$field];
             }
