@@ -70,7 +70,9 @@ class KelasSiswaImportTest extends TestCase
                 'pekerjaan_ayah' => 'Nelayan',
                 'nama_ibu' => 'Ibu Import',
                 'pekerjaan_ibu' => 'Pedagang',
+                'jenis_masuk' => 'Mutasi Masuk',
                 'asal_lembaga' => 'SMP Asal',
+                'diterima_tanggal' => '2026-07-15',
             ],
             ['nis' => 'NIS-102', 'nama' => 'Siti Rahma'],
         ]);
@@ -92,6 +94,7 @@ class KelasSiswaImportTest extends TestCase
         $this->assertSame('Ibu Import', $siswaA->nama_ibu);
         $this->assertSame('Pedagang', $siswaA->pekerjaan_ibu);
         $this->assertSame('SMP Asal', $siswaA->status_asal);
+        $this->assertSame('2026-07-15', $siswaA->status_at?->toDateString());
         $this->assertSame($kelas->id, $siswaA->kelas_id);
         $this->assertSame($tahunAjaran->id, $siswaA->tahun_ajaran_id);
         $this->assertSame($lembaga->id, $siswaA->lembaga_id);
@@ -103,7 +106,8 @@ class KelasSiswaImportTest extends TestCase
             ->whereNull('selesai_at')
             ->first();
         $this->assertNotNull($penempatan);
-        $this->assertSame(PenempatanJenis::AWAL, $penempatan->jenis);
+        $this->assertSame(PenempatanJenis::MUTASI_MASUK, $penempatan->jenis);
+        $this->assertSame('2026-07-15', $penempatan->mulai_at?->toDateString());
         $this->assertSame($kelas->id, $penempatan->kelas_id);
 
         $siswaB = Siswa::query()->where('nis', 'NIS-102')->firstOrFail();
@@ -142,13 +146,18 @@ class KelasSiswaImportTest extends TestCase
             'tahun_ajaran_id' => $tahunAjaran->id,
         ]);
 
-        Siswa::factory()->for($lembaga)->inKelas($kelas)->create([
+        $existing = Siswa::factory()->for($lembaga)->inKelas($kelas)->create([
             'nis' => 'NIS-301',
             'nisn' => null,
             'nama' => 'Siswa Lama',
             'jenis_kelamin' => null,
             'tanggal_lahir' => null,
             'telepon' => '0811',
+        ]);
+        SiswaPenempatan::factory()->for($lembaga)->for($existing)->open()->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'kelas_id' => $kelas->id,
+            'jenis' => PenempatanJenis::AWAL,
         ]);
 
         $file = $this->makeImportFile([
@@ -164,7 +173,9 @@ class KelasSiswaImportTest extends TestCase
                 'pekerjaan_ayah' => 'Buruh',
                 'nama_ibu' => 'Ibu Lama',
                 'pekerjaan_ibu' => 'Ibu Rumah Tangga',
+                'jenis_masuk' => 'Mutasi Masuk',
                 'asal_lembaga' => 'SMP Lama',
+                'diterima_tanggal' => '2026-07-16',
             ],
         ]);
 
@@ -189,7 +200,15 @@ class KelasSiswaImportTest extends TestCase
         $this->assertSame('Ibu Lama', $siswa->nama_ibu);
         $this->assertSame('Ibu Rumah Tangga', $siswa->pekerjaan_ibu);
         $this->assertSame('SMP Lama', $siswa->status_asal);
+        $this->assertSame('2026-07-16', $siswa->status_at?->toDateString());
         $this->assertSame($kelas->id, $siswa->kelas_id);
+
+        $penempatan = SiswaPenempatan::withoutGlobalScopes()
+            ->where('siswa_id', $siswa->id)
+            ->whereNull('selesai_at')
+            ->firstOrFail();
+        $this->assertSame(PenempatanJenis::MUTASI_MASUK, $penempatan->jenis);
+        $this->assertSame('2026-07-16', $penempatan->mulai_at?->toDateString());
     }
 
     public function test_import_from_old_template_can_be_updated_with_new_family_fields(): void

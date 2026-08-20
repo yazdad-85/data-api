@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\KenaikanKelasController;
 use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SiswaController;
+use App\Http\Controllers\Admin\SiswaReportController;
 use App\Http\Controllers\Admin\SuperAdminMonitoringController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
@@ -57,6 +58,8 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::get('/monitoring/siswa/export', [SuperAdminMonitoringController::class, 'siswaExport'])->name('admin.monitoring.siswa.export');
     Route::get('/monitoring/karyawan', [SuperAdminMonitoringController::class, 'karyawan'])->name('admin.monitoring.karyawan');
     Route::get('/monitoring/karyawan/export', [SuperAdminMonitoringController::class, 'karyawanExport'])->name('admin.monitoring.karyawan.export');
+
+    Route::get('/laporan/siswa', [SiswaReportController::class, 'index'])->name('admin.laporan.siswa');
 
     Route::get('/tahun-ajaran', [TahunAjaranController::class, 'index'])->name('admin.tahun-ajaran.index');
     Route::get('/tahun-ajaran/create', [TahunAjaranController::class, 'create'])->name('admin.tahun-ajaran.create');

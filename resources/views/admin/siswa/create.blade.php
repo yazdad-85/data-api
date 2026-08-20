@@ -12,8 +12,8 @@
         <div>
             <h1 class="page-header__title font-display">Tambah siswa</h1>
             <p class="page-header__description">
-                NIS wajib diisi. Jika kelas dipilih, siswa langsung berstatus <strong>aktif</strong> dengan penempatan awal;
-                tanpa kelas, siswa disimpan sebagai <strong>calon</strong> dan dapat ditempatkan nanti dari halaman detail.
+                NIS wajib diisi. Pilih mutasi masuk untuk siswa pindahan; jika kelas dipilih, siswa langsung berstatus
+                <strong>aktif</strong> dengan riwayat penempatan yang sesuai.
             </p>
         </div>
     </div>
@@ -149,6 +149,32 @@
                     label="Telepon wali"
                     :value="old('telepon_wali')"
                     :error="$errors->first('telepon_wali')"
+                />
+                <x-ui.select
+                    name="jenis_masuk"
+                    label="Jenis masuk"
+                    :error="$errors->first('jenis_masuk')"
+                    data-mutasi-source
+                >
+                    <option value="siswa_baru" @selected(old('jenis_masuk', request('jenis_masuk', 'siswa_baru')) === 'siswa_baru')>Siswa baru</option>
+                    <option value="mutasi_masuk" @selected(old('jenis_masuk', request('jenis_masuk')) === 'mutasi_masuk')>Mutasi masuk</option>
+                </x-ui.select>
+                <x-ui.input
+                    name="asal_lembaga"
+                    label="Asal lembaga"
+                    :value="old('asal_lembaga')"
+                    :error="$errors->first('asal_lembaga')"
+                    hint="Wajib untuk mutasi masuk."
+                    data-mutasi-field
+                />
+                <x-ui.input
+                    name="diterima_tanggal"
+                    type="date"
+                    label="Diterima tanggal"
+                    :value="old('diterima_tanggal')"
+                    :error="$errors->first('diterima_tanggal')"
+                    hint="Wajib untuk mutasi masuk."
+                    data-mutasi-field
                 />
             </div>
 

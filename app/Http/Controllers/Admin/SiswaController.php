@@ -12,6 +12,7 @@ use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Services\AuditLogger;
 use App\Services\Siswa\SiswaLifecycleService;
+use App\Support\Master\PenempatanJenis;
 use App\Support\Master\SiswaStatus;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -101,14 +102,19 @@ class SiswaController extends Controller
 
         $validated = $request->validated();
         $kelasId = $validated['kelas_id'] ?? null;
-        unset($validated['kelas_id'], $validated['tahun_ajaran_id']);
+        $jenisMasuk = $validated['jenis_masuk'] ?? 'siswa_baru';
+        $asalLembaga = $validated['asal_lembaga'] ?? null;
+        $diterimaTanggal = $validated['diterima_tanggal'] ?? null;
+        unset($validated['kelas_id'], $validated['tahun_ajaran_id'], $validated['jenis_masuk'], $validated['asal_lembaga'], $validated['diterima_tanggal']);
 
-        // Buat sebagai calon lebih dulu; penempatan + status aktif ditangani
-        // SiswaLifecycleService agar tidak ada baris penempatan terbuka ganda.
+        // Penempatan + status aktif ditangani SiswaLifecycleService agar tidak
+        // ada baris penempatan terbuka ganda.
         $siswa = Siswa::query()->create([
             ...$validated,
             'lembaga_id' => $user->lembaga_id,
-            'status_siswa' => SiswaStatus::CALON,
+            'status_siswa' => $jenisMasuk === 'mutasi_masuk' ? SiswaStatus::MUTASI_MASUK : SiswaStatus::CALON,
+            'status_at' => $jenisMasuk === 'mutasi_masuk' ? $diterimaTanggal : null,
+            'status_asal' => $jenisMasuk === 'mutasi_masuk' ? $asalLembaga : null,
             'is_active' => false,
         ]);
 
@@ -117,7 +123,12 @@ class SiswaController extends Controller
                 ->where('lembaga_id', $user->lembaga_id)
                 ->findOrFail($kelasId);
 
-            $siswa = $this->lifecycle->tempatkan($siswa, $kelas);
+            $siswa = $this->lifecycle->tempatkan(
+                $siswa,
+                $kelas,
+                $jenisMasuk === 'mutasi_masuk' && $diterimaTanggal !== null ? Carbon::parse((string) $diterimaTanggal) : null,
+                $jenisMasuk === 'mutasi_masuk' ? PenempatanJenis::MUTASI_MASUK : PenempatanJenis::AWAL,
+            );
         }
 
         $this->auditLogger->record('siswa.create', 'success', [

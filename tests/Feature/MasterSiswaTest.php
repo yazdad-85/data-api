@@ -104,6 +104,57 @@ class MasterSiswaTest extends TestCase
         $index->assertOk()->assertSee('Belum ada kelas');
     }
 
+    public function test_admin_lembaga_creates_mutasi_masuk_with_mutasi_placement(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelas = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'nama' => 'VIII-A',
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.siswa.store'), [
+            'nis' => 'NIS-MUTASI',
+            'nama' => 'Siswa Mutasi',
+            'jenis_masuk' => 'mutasi_masuk',
+            'asal_lembaga' => 'SMP Lama',
+            'diterima_tanggal' => '2026-07-20',
+            'kelas_id' => $kelas->id,
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        $response->assertRedirect(route('admin.siswa.index'));
+
+        $siswa = Siswa::query()->where('nis', 'NIS-MUTASI')->firstOrFail();
+        $this->assertSame(SiswaStatus::AKTIF, $siswa->status_siswa);
+        $this->assertTrue($siswa->is_active);
+        $this->assertSame('SMP Lama', $siswa->status_asal);
+        $this->assertSame('2026-07-20', $siswa->status_at?->toDateString());
+
+        $penempatan = SiswaPenempatan::withoutGlobalScopes()
+            ->where('siswa_id', $siswa->id)
+            ->whereNull('selesai_at')
+            ->firstOrFail();
+        $this->assertSame(PenempatanJenis::MUTASI_MASUK, $penempatan->jenis);
+        $this->assertSame('2026-07-20', $penempatan->mulai_at?->toDateString());
+    }
+
+    public function test_mutasi_masuk_requires_asal_and_tanggal_diterima(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.siswa.store'), [
+            'nis' => 'NIS-MUTASI-INVALID',
+            'nama' => 'Siswa Mutasi Invalid',
+            'jenis_masuk' => 'mutasi_masuk',
+        ]);
+
+        $response->assertSessionHasErrors(['asal_lembaga', 'diterima_tanggal']);
+        $this->assertSame(0, Siswa::query()->count());
+    }
+
     public function test_kelas_id_with_wrong_tahun_ajaran_id_is_rejected(): void
     {
         $lembaga = Lembaga::factory()->create();

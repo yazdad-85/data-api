@@ -19,7 +19,7 @@ class StoreSiswaRequest extends FormRequest
     {
         $merge = [];
 
-        foreach (['nisn', 'kelas_id', 'tahun_ajaran_id', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'status_keluarga', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali'] as $field) {
+        foreach (['nisn', 'kelas_id', 'tahun_ajaran_id', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'status_keluarga', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali', 'asal_lembaga', 'diterima_tanggal'] as $field) {
             if ($this->input($field) === '') {
                 $merge[$field] = null;
             }
@@ -59,6 +59,9 @@ class StoreSiswaRequest extends FormRequest
             'pekerjaan_ibu' => ['nullable', 'string', 'max:100'],
             'nama_wali' => ['nullable', 'string', 'max:150'],
             'telepon_wali' => ['nullable', 'string', 'max:30'],
+            'jenis_masuk' => ['nullable', Rule::in(['siswa_baru', 'mutasi_masuk'])],
+            'asal_lembaga' => ['nullable', 'string', 'max:150'],
+            'diterima_tanggal' => ['nullable', 'date'],
             'kelas_id' => [
                 'nullable',
                 'uuid',
@@ -80,6 +83,7 @@ class StoreSiswaRequest extends FormRequest
             $nis = $this->input('nis');
             $nisn = $this->input('nisn');
             $kelasId = $this->input('kelas_id');
+            $jenisMasuk = $this->input('jenis_masuk') ?: 'siswa_baru';
 
             if (! $lembagaId) {
                 return;
@@ -104,6 +108,16 @@ class StoreSiswaRequest extends FormRequest
 
                 if ($exists) {
                     $validator->errors()->add('nisn', "NISN {$nisn} sudah digunakan di lembaga ini.");
+                }
+            }
+
+            if ($jenisMasuk === 'mutasi_masuk') {
+                if (! $this->filled('asal_lembaga')) {
+                    $validator->errors()->add('asal_lembaga', 'Asal lembaga wajib diisi untuk mutasi masuk.');
+                }
+
+                if (! $this->filled('diterima_tanggal')) {
+                    $validator->errors()->add('diterima_tanggal', 'Tanggal diterima wajib diisi untuk mutasi masuk.');
                 }
             }
 

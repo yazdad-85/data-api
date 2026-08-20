@@ -333,6 +333,8 @@ body {
     gap: 0.45rem;
     padding: 1rem 1.05rem;
     border-top: 3px solid var(--brand);
+    color: inherit;
+    text-decoration: none;
     background:
         linear-gradient(180deg, color-mix(in srgb, var(--brand-soft) 55%, white), var(--surface-elevated) 42%),
         var(--surface-elevated);

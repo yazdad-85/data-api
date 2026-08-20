@@ -54,4 +54,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (authShell) {
         authShell.classList.add('auth-shell--ready');
     }
+
+    const mutasiSource = document.querySelector('[data-mutasi-source]');
+    const mutasiFields = Array.from(document.querySelectorAll('[data-mutasi-field]'));
+    if (mutasiSource && mutasiFields.length > 0) {
+        const syncMutasiFields = () => {
+            const isMutasi = mutasiSource.value === 'mutasi_masuk';
+            mutasiFields.forEach((field) => {
+                const wrapper = field.closest('.field');
+                if (wrapper) {
+                    wrapper.hidden = ! isMutasi;
+                }
+                field.toggleAttribute('required', isMutasi);
+            });
+        };
+
+        mutasiSource.addEventListener('change', syncMutasiFields);
+        syncMutasiFields();
+    }
 });

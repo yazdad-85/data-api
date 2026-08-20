@@ -36,10 +36,11 @@ class SuperAdminMonitoringTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Pantau kesiapan data semua lembaga')
+            ->assertSee('Laporan siswa')
             ->assertSee('Monitoring siswa')
             ->assertSee('MA YASMU')
             ->assertSee(route('admin.monitoring.guru', ['lembaga_id' => $lembaga->id]), false)
-            ->assertSee(route('admin.monitoring.siswa', ['lembaga_id' => $lembaga->id]), false)
+            ->assertSee(str_replace('&', '&amp;', route('admin.laporan.siswa', ['lembaga_id' => $lembaga->id, 'status_siswa' => 'aktif'])), false)
             ->assertSee(route('admin.monitoring.karyawan', ['lembaga_id' => $lembaga->id]), false);
     }
 

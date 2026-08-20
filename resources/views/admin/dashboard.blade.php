@@ -34,7 +34,8 @@
                     </p>
                 </div>
                 <div class="dashboard-command__actions">
-                    <x-ui.button href="{{ route('admin.monitoring.siswa') }}">Monitoring siswa</x-ui.button>
+                    <x-ui.button href="{{ route('admin.laporan.siswa') }}">Laporan siswa</x-ui.button>
+                    <x-ui.button href="{{ route('admin.monitoring.siswa') }}" variant="secondary">Monitoring siswa</x-ui.button>
                     <x-ui.button href="{{ route('admin.monitoring.guru') }}" variant="secondary">Guru</x-ui.button>
                     <x-ui.button href="{{ route('admin.monitoring.karyawan') }}" variant="secondary">Karyawan</x-ui.button>
                 </div>
@@ -62,9 +63,9 @@
                     <span class="dashboard-metric__hint">{{ $stats['guru_aktif'] }} aktif</span>
                 </div>
                 <div class="dashboard-metric" role="listitem">
-                    <span class="dashboard-metric__label">Siswa</span>
+                    <span class="dashboard-metric__label">Siswa aktif</span>
                     <span class="dashboard-metric__value font-display">{{ $stats['siswa'] }}</span>
-                    <span class="dashboard-metric__hint">{{ $stats['siswa_aktif'] }} aktif</span>
+                    <span class="dashboard-metric__hint">{{ $stats['total_siswa'] }} total data</span>
                 </div>
                 <div class="dashboard-metric" role="listitem">
                     <span class="dashboard-metric__label">Karyawan</span>
@@ -106,7 +107,7 @@
                         </x-slot:thead>
                         @foreach ($stats['lembaga_rows'] as $lembaga)
                             @php
-                                $isIncomplete = $lembaga->guru_count === 0 || $lembaga->siswa_count === 0 || $lembaga->karyawan_count === 0;
+                                $isIncomplete = $lembaga->guru_count === 0 || $lembaga->siswa_aktif_count === 0 || $lembaga->karyawan_count === 0;
                             @endphp
                             <tr>
                                 <td>
@@ -122,8 +123,8 @@
                                     <div class="table-subtext">{{ $lembaga->guru_aktif_count }} aktif</div>
                                 </td>
                                 <td>
-                                    <a href="{{ route('admin.monitoring.siswa', ['lembaga_id' => $lembaga->id]) }}">{{ $lembaga->siswa_count }}</a>
-                                    <div class="table-subtext">{{ $lembaga->siswa_aktif_count }} aktif</div>
+                                    <a href="{{ route('admin.laporan.siswa', ['lembaga_id' => $lembaga->id, 'status_siswa' => 'aktif']) }}">{{ $lembaga->siswa_aktif_count }}</a>
+                                    <div class="table-subtext">{{ $lembaga->siswa_count }} total data</div>
                                 </td>
                                 <td>
                                     <a href="{{ route('admin.monitoring.karyawan', ['lembaga_id' => $lembaga->id]) }}">{{ $lembaga->karyawan_count }}</a>
@@ -170,7 +171,11 @@
                                     @if ($count === 0)
                                         Belum ada data — mulai dari menu {{ $item['label'] }}.
                                     @else
-                                        {{ $count }} data tercatat.
+                                        @if ($item['count_key'] === 'siswa')
+                                            {{ $count }} siswa aktif dari {{ $stats['total_siswa'] }} total data.
+                                        @else
+                                            {{ $count }} data tercatat.
+                                        @endif
                                     @endif
                                 </p>
                             </div>

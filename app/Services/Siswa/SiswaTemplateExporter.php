@@ -30,7 +30,9 @@ final class SiswaTemplateExporter
             'pekerjaan_ibu',
             'nama_wali',
             'telepon_wali',
+            'jenis_masuk',
             'asal_lembaga',
+            'diterima_tanggal',
         ];
     }
 
@@ -43,12 +45,14 @@ final class SiswaTemplateExporter
         $petunjuk->setCellValue('A1', 'Petunjuk Import Data Siswa');
         $petunjuk->setCellValue('A3', '1. Isi data pada sheet "Data Siswa". Baris pertama adalah header — jangan diubah.');
         $petunjuk->setCellValue('A4', '2. Kolom wajib: nis, nama.');
-        $petunjuk->setCellValue('A5', '3. Kolom opsional: nisn, jenis_kelamin (L atau P), tempat_lahir, tanggal_lahir, email, telepon, alamat, status_keluarga, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, nama_wali, telepon_wali, asal_lembaga.');
+        $petunjuk->setCellValue('A5', '3. Kolom opsional: nisn, jenis_kelamin (L atau P), tempat_lahir, tanggal_lahir, email, telepon, alamat, status_keluarga, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, nama_wali, telepon_wali, jenis_masuk, asal_lembaga, diterima_tanggal.');
         $petunjuk->setCellValue('A6', '4. status_keluarga: Yatim, Piatu, atau Yatim Piatu.');
-        $petunjuk->setCellValue('A7', '5. Kelas dan tahun ajaran diisi otomatis dari halaman kelas saat import.');
-        $petunjuk->setCellValue('A8', '6. Format tanggal_lahir: YYYY-MM-DD (mis. 2010-05-17).');
-        $petunjuk->setCellValue('A9', '7. Baris kosong akan dilewati.');
-        $petunjuk->setCellValue('A10', '8. NIS harus unik di lembaga (termasuk siswa yang pernah dihapus).');
+        $petunjuk->setCellValue('A7', '5. jenis_masuk: Siswa Baru atau Mutasi Masuk. Jika asal_lembaga terisi dan jenis_masuk kosong, baris dianggap Mutasi Masuk.');
+        $petunjuk->setCellValue('A8', '6. Untuk Mutasi Masuk, isi asal_lembaga dan diterima_tanggal.');
+        $petunjuk->setCellValue('A9', '7. Kelas dan tahun ajaran diisi otomatis dari halaman kelas saat import.');
+        $petunjuk->setCellValue('A10', '8. Format tanggal_lahir dan diterima_tanggal: YYYY-MM-DD (mis. 2010-05-17).');
+        $petunjuk->setCellValue('A11', '9. Baris kosong akan dilewati.');
+        $petunjuk->setCellValue('A12', '10. NIS harus unik di lembaga (termasuk siswa yang pernah dihapus).');
         $petunjuk->getColumnDimension('A')->setWidth(90);
 
         $data = $spreadsheet->createSheet();
@@ -75,7 +79,9 @@ final class SiswaTemplateExporter
         $data->setCellValue('N2', 'Guru');
         $data->setCellValue('O2', 'Wali Contoh');
         $data->setCellValue('P2', '08198765432');
-        $data->setCellValue('Q2', 'SMP Contoh');
+        $data->setCellValue('Q2', 'Mutasi Masuk');
+        $data->setCellValue('R2', 'SMP Contoh');
+        $data->setCellValue('S2', '2026-07-15');
 
         $spreadsheet->setActiveSheetIndex(1);
 

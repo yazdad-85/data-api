@@ -4,8 +4,11 @@ namespace App\Services\Siswa;
 
 use App\Models\Kelas;
 use App\Models\Siswa;
+use App\Models\SiswaPenempatan;
+use App\Support\Master\PenempatanJenis;
 use App\Support\Master\SiswaStatus;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
@@ -177,6 +180,8 @@ final class SiswaImporter
         $normalized = str_replace([' ', '-'], '_', $normalized);
 
         return match ($normalized) {
+            'jenis_penerimaan' => 'jenis_masuk',
+            'diterima_di_lembaga_tanggal', 'tanggal_diterima', 'status_at' => 'diterima_tanggal',
             'asal', 'status_asal' => 'asal_lembaga',
             default => $normalized,
         };
@@ -240,6 +245,9 @@ final class SiswaImporter
         }
 
         $tanggalLahir = $this->parseDate($payload['tanggal_lahir'] ?? null);
+        $asalLembaga = $this->nullableString($payload['asal_lembaga'] ?? null, 150);
+        $jenisMasuk = $this->normalizeJenisMasuk($payload['jenis_masuk'] ?? null, $asalLembaga);
+        $diterimaTanggal = $this->parseDiterimaTanggal($payload, $jenisMasuk);
 
         $email = trim((string) ($payload['email'] ?? ''));
         if ($email !== '' && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -263,8 +271,49 @@ final class SiswaImporter
             'pekerjaan_ibu' => $this->nullableString($payload['pekerjaan_ibu'] ?? null, 100),
             'nama_wali' => $this->nullableString($payload['nama_wali'] ?? null, 150),
             'telepon_wali' => $this->nullableString($payload['telepon_wali'] ?? null, 30),
-            'status_asal' => $this->nullableString($payload['asal_lembaga'] ?? null, 150),
+            'status_asal' => $asalLembaga,
+            'jenis_masuk' => $jenisMasuk,
+            'diterima_tanggal' => $diterimaTanggal,
         ];
+    }
+
+    private function normalizeJenisMasuk(mixed $value, ?string $asalLembaga): string
+    {
+        $string = strtolower(trim((string) ($value ?? '')));
+        $string = str_replace([' ', '-'], '_', $string);
+
+        if ($string === '') {
+            return $asalLembaga !== null ? 'mutasi_masuk' : 'siswa_baru';
+        }
+
+        return match ($string) {
+            'siswa_baru', 'baru' => 'siswa_baru',
+            'mutasi_masuk', 'mutasi' => 'mutasi_masuk',
+            default => throw new InvalidArgumentException('Jenis masuk harus Siswa Baru atau Mutasi Masuk.'),
+        };
+    }
+
+    /**
+     * @param  array<string, mixed>  $payload
+     */
+    private function parseDiterimaTanggal(array $payload, string $jenisMasuk): ?string
+    {
+        $hasColumn = array_key_exists('diterima_tanggal', $payload);
+        $value = $payload['diterima_tanggal'] ?? null;
+
+        if ($jenisMasuk !== 'mutasi_masuk' && ($value === null || $value === '')) {
+            return null;
+        }
+
+        if ($value === null || $value === '') {
+            if ($hasColumn) {
+                throw new InvalidArgumentException('diterima_tanggal wajib diisi untuk mutasi masuk.');
+            }
+
+            return null;
+        }
+
+        return $this->parseDate($value);
     }
 
     private function nullableString(mixed $value, ?int $max = null): ?string
@@ -357,6 +406,10 @@ final class SiswaImporter
 
         $siswa->fill($this->updatePayload($validated));
         $siswa->save();
+
+        if ($validated['jenis_masuk'] === 'mutasi_masuk') {
+            $this->markOpenPlacementAsMutasiMasuk($siswa, $validated['diterima_tanggal']);
+        }
     }
 
     /**
@@ -373,6 +426,10 @@ final class SiswaImporter
             }
         }
 
+        if ($validated['jenis_masuk'] === 'mutasi_masuk' && $validated['diterima_tanggal'] !== null) {
+            $payload['status_at'] = $validated['diterima_tanggal'];
+        }
+
         return $payload;
     }
 
@@ -382,16 +439,53 @@ final class SiswaImporter
     private function createAndPlace(Kelas $kelas, string $lembagaId, array $validated): void
     {
         // Buat sebagai calon lalu tempatkan via service agar siswa berakhir
-        // "aktif" dengan tepat satu penempatan terbuka jenis "awal".
+        // "aktif" dengan tepat satu penempatan terbuka.
         $siswa = Siswa::query()->create([
-            ...$validated,
+            ...$this->studentPayload($validated),
             'lembaga_id' => $lembagaId,
             'kelas_id' => null,
             'tahun_ajaran_id' => null,
-            'status_siswa' => SiswaStatus::CALON,
+            'status_siswa' => $validated['jenis_masuk'] === 'mutasi_masuk' ? SiswaStatus::MUTASI_MASUK : SiswaStatus::CALON,
+            'status_at' => $validated['diterima_tanggal'],
             'is_active' => false,
         ]);
 
-        $this->lifecycle->tempatkan($siswa, $kelas);
+        $this->lifecycle->tempatkan(
+            $siswa,
+            $kelas,
+            $validated['diterima_tanggal'] !== null ? Carbon::parse($validated['diterima_tanggal']) : null,
+            $validated['jenis_masuk'] === 'mutasi_masuk' ? PenempatanJenis::MUTASI_MASUK : PenempatanJenis::AWAL,
+        );
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     * @return array<string, mixed>
+     */
+    private function studentPayload(array $validated): array
+    {
+        $payload = $validated;
+        unset($payload['jenis_masuk'], $payload['diterima_tanggal']);
+
+        return $payload;
+    }
+
+    private function markOpenPlacementAsMutasiMasuk(Siswa $siswa, ?string $diterimaTanggal): void
+    {
+        $placement = SiswaPenempatan::withoutGlobalScopes()
+            ->where('lembaga_id', $siswa->lembaga_id)
+            ->where('siswa_id', $siswa->id)
+            ->whereNull('selesai_at')
+            ->first();
+
+        if ($placement === null) {
+            return;
+        }
+
+        $placement->jenis = PenempatanJenis::MUTASI_MASUK;
+        if ($diterimaTanggal !== null) {
+            $placement->mulai_at = $diterimaTanggal;
+        }
+        $placement->save();
     }
 }
