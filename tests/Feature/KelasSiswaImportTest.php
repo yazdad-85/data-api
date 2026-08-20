@@ -192,6 +192,61 @@ class KelasSiswaImportTest extends TestCase
         $this->assertSame($kelas->id, $siswa->kelas_id);
     }
 
+    public function test_import_from_old_template_can_be_updated_with_new_family_fields(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelas = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        $oldTemplateFile = $this->makeLegacyImportFile([
+            [
+                'nis' => 'NIS-LEGACY',
+                'nama' => 'Siswa Legacy',
+                'telepon' => '0811',
+            ],
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelas), [
+            'file' => $oldTemplateFile,
+        ])->assertRedirect(route('admin.kelas.show', $kelas))
+            ->assertSessionHas('import_errors', []);
+
+        $newTemplateFile = $this->makeImportFile([
+            [
+                'nis' => 'NIS-LEGACY',
+                'nama' => 'Siswa Legacy Update',
+                'telepon' => '',
+                'status_keluarga' => 'Yatim',
+                'nama_ayah' => 'Ayah Legacy',
+                'pekerjaan_ayah' => 'Petani',
+                'nama_ibu' => 'Ibu Legacy',
+                'pekerjaan_ibu' => 'Pedagang',
+            ],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelas), [
+            'file' => $newTemplateFile,
+        ]);
+
+        $response->assertRedirect(route('admin.kelas.show', $kelas));
+        $response->assertSessionHas('import_errors', []);
+
+        $this->assertSame(1, Siswa::query()->count());
+
+        $siswa = Siswa::query()->where('nis', 'NIS-LEGACY')->firstOrFail();
+        $this->assertSame('Siswa Legacy Update', $siswa->nama);
+        $this->assertSame('0811', $siswa->telepon);
+        $this->assertSame('Yatim', $siswa->status_keluarga);
+        $this->assertSame('Ayah Legacy', $siswa->nama_ayah);
+        $this->assertSame('Petani', $siswa->pekerjaan_ayah);
+        $this->assertSame('Ibu Legacy', $siswa->nama_ibu);
+        $this->assertSame('Pedagang', $siswa->pekerjaan_ibu);
+        $this->assertSame($kelas->id, $siswa->kelas_id);
+    }
+
     public function test_import_restores_soft_deleted_siswa_in_same_kelas(): void
     {
         $lembaga = Lembaga::factory()->create();
@@ -325,16 +380,44 @@ class KelasSiswaImportTest extends TestCase
      */
     private function makeImportFile(array $rows): UploadedFile
     {
+        return $this->makeImportFileWithHeaders(SiswaTemplateExporter::dataHeaders(), $rows);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function makeLegacyImportFile(array $rows): UploadedFile
+    {
+        return $this->makeImportFileWithHeaders([
+            'nis',
+            'nama',
+            'nisn',
+            'jenis_kelamin',
+            'tempat_lahir',
+            'tanggal_lahir',
+            'email',
+            'telepon',
+            'alamat',
+            'nama_wali',
+            'telepon_wali',
+            'asal_lembaga',
+        ], $rows);
+    }
+
+    /**
+     * @param  list<string>  $headers
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function makeImportFileWithHeaders(array $headers, array $rows): UploadedFile
+    {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Data Siswa');
 
-        foreach (SiswaTemplateExporter::dataHeaders() as $index => $header) {
+        foreach ($headers as $index => $header) {
             $column = chr(ord('A') + $index);
             $sheet->setCellValue($column.'1', $header);
         }
-
-        $headers = SiswaTemplateExporter::dataHeaders();
 
         foreach ($rows as $rowIndex => $row) {
             $excelRow = $rowIndex + 2;
