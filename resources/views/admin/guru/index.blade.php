@@ -50,7 +50,7 @@
             type="search"
             name="q"
             value="{{ $q }}"
-            placeholder="Cari nama, NIY, atau NIK guru"
+            placeholder="Cari nama, NIY, NIK, atau Peg-ID guru"
             class="field-control"
             aria-label="Cari guru"
         >

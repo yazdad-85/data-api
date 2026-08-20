@@ -119,10 +119,10 @@
                     <option value="Belum Menikah" @selected(old('status_menikah') === 'Belum Menikah')>Belum Menikah</option>
                 </x-ui.select>
                 <x-ui.input
-                    name="nuptk"
-                    label="NUPTK"
-                    :value="old('nuptk')"
-                    :error="$errors->first('nuptk')"
+                    name="peg_id"
+                    label="Peg-ID"
+                    :value="old('peg_id')"
+                    :error="$errors->first('peg_id')"
                 />
                 <x-ui.input
                     name="tempat_lahir"

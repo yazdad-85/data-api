@@ -41,8 +41,8 @@
                 <dd class="detail-grid__value">{{ $guru->nik ?? '—' }}</dd>
             </div>
             <div>
-                <dt class="detail-grid__label">NUPTK</dt>
-                <dd class="detail-grid__value">{{ $guru->nuptk ?? '—' }}</dd>
+                <dt class="detail-grid__label">Peg-ID</dt>
+                <dd class="detail-grid__value">{{ $guru->peg_id ?? '—' }}</dd>
             </div>
             <div>
                 <dt class="detail-grid__label">Pendidikan terakhir</dt>

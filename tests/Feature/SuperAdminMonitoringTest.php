@@ -155,6 +155,7 @@ class SuperAdminMonitoringTest extends TestCase
             'nama' => 'Guru Export',
             'niy' => 'NIY-EXPORT',
             'nik' => 'NIK-GURU-EXPORT',
+            'peg_id' => 'PEG-EXPORT',
             'tahun_masuk' => 2026,
             'pendidikan_terakhir' => 'S1',
         ]);
@@ -173,6 +174,8 @@ class SuperAdminMonitoringTest extends TestCase
         $this->assertSame('Guru Export', $guruRows[1][0]);
         $this->assertSame('NIY-EXPORT', $guruRows[1][2]);
         $this->assertSame('NIK-GURU-EXPORT', $guruRows[1][3]);
+        $this->assertSame('Peg-ID', $guruRows[0][4]);
+        $this->assertSame('PEG-EXPORT', $guruRows[1][4]);
         $this->assertSame('S1', $guruRows[1][6]);
 
         $karyawan = $this->actingAs($superAdmin)

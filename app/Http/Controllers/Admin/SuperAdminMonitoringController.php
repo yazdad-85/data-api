@@ -173,7 +173,7 @@ class SuperAdminMonitoringController extends Controller
             ->when($filters['lembaga_id'] !== '', fn (Builder $query) => $query->where('lembaga_id', $filters['lembaga_id']))
             ->when($filters['tahun'] !== '', fn (Builder $query) => $query->where('tahun_masuk', (int) $filters['tahun']))
             ->when($filters['status'] !== '', fn (Builder $query) => $query->where('is_active', $filters['status'] === 'aktif'))
-            ->when($filters['q'] !== '', fn (Builder $query) => $this->search($query, $filters['q'], ['nama', 'niy', 'nik', 'nuptk']));
+            ->when($filters['q'] !== '', fn (Builder $query) => $this->search($query, $filters['q'], ['nama', 'niy', 'nik', 'peg_id']));
     }
 
     /**
@@ -268,7 +268,7 @@ class SuperAdminMonitoringController extends Controller
     private function exportHeaders(string $resource): array
     {
         return match ($resource) {
-            'guru' => ['Nama', 'Lembaga', 'NIY', 'NIK', 'NUPTK', 'Tahun Masuk', 'Pendidikan Terakhir', 'Instansi Pendidikan', 'Jurusan', 'Status Sertifikasi', 'Status Inpasing', 'Mapel Sertifikasi', 'Status Menikah', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Email', 'Telepon', 'Alamat', 'Status Kepegawaian', 'Status Aktif'],
+            'guru' => ['Nama', 'Lembaga', 'NIY', 'NIK', 'Peg-ID', 'Tahun Masuk', 'Pendidikan Terakhir', 'Instansi Pendidikan', 'Jurusan', 'Status Sertifikasi', 'Status Inpasing', 'Mapel Sertifikasi', 'Status Menikah', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Email', 'Telepon', 'Alamat', 'Status Kepegawaian', 'Status Aktif'],
             'siswa' => ['Nama', 'Lembaga', 'NIS', 'NISN', 'Tahun Ajaran', 'Kelas', 'Status Siswa', 'Status Aktif', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Email', 'Telepon', 'Alamat', 'Nama Wali', 'Telepon Wali', 'Asal', 'Tujuan', 'Alasan Status'],
             'karyawan' => ['Nama', 'Lembaga', 'NIK Pegawai', 'Tahun Masuk', 'Jenis Kelamin', 'Jabatan', 'Email', 'Telepon', 'Alamat', 'Status Aktif'],
             default => [],
@@ -286,7 +286,7 @@ class SuperAdminMonitoringController extends Controller
                 $row->lembaga?->nama,
                 $row->niy,
                 $row->nik,
-                $row->nuptk,
+                $row->peg_id,
                 $row->tahun_masuk,
                 $row->pendidikan_terakhir,
                 $row->instansi_pendidikan,

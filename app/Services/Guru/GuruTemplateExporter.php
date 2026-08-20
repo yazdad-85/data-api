@@ -25,7 +25,7 @@ final class GuruTemplateExporter
             'status_inpasing',
             'mapel_sertifikasi',
             'status_menikah',
-            'nuptk',
+            'peg_id',
             'tempat_lahir',
             'tanggal_lahir',
             'email',

@@ -37,7 +37,7 @@ class MetadataRedactor
         'niy',
         'nis',
         'nisn',
-        'nuptk',
+        'peg_id',
         'tanggal_lahir',
         'telepon',
         'telepon_wali',

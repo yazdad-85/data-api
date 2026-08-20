@@ -19,7 +19,7 @@ class UpdateGuruRequest extends FormRequest
     {
         return [
             'nik' => ['nullable', 'string', 'max:30'],
-            'nuptk' => ['nullable', 'string', 'max:40'],
+            'peg_id' => ['nullable', 'string', 'max:40'],
             'nama' => ['required', 'string', 'max:150'],
             'jenis_kelamin' => ['nullable', Rule::in(['L', 'P'])],
             'pendidikan_terakhir' => ['nullable', Rule::in(['SMP', 'SMA', 'S1', 'S2', 'S3'])],

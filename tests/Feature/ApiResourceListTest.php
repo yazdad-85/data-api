@@ -96,7 +96,7 @@ class ApiResourceListTest extends TestCase
         Guru::factory()->create([
             'lembaga_id' => $lembaga->id,
             'email' => 'guru@example.test',
-            'nuptk' => '1234567890',
+            'peg_id' => 'PEG-123',
         ]);
 
         $response = $this->getJson('/api/v1/guru', ['X-API-Key' => $plain])->assertOk();
@@ -104,7 +104,7 @@ class ApiResourceListTest extends TestCase
         $row = $response->json('data.0');
         $this->assertArrayHasKey('niy', $row);
         $this->assertArrayNotHasKey('email', $row);
-        $this->assertArrayNotHasKey('nuptk', $row);
+        $this->assertArrayNotHasKey('peg_id', $row);
     }
 
     public function test_siswa_minimal_omits_penempatan_aktif(): void

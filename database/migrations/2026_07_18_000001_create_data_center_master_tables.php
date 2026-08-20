@@ -49,7 +49,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->uuid('lembaga_id');
             $table->string('nip', 40)->nullable();
-            $table->string('nuptk', 40)->nullable();
+            $table->string('peg_id', 40)->nullable();
             $table->string('nama', 150);
             $table->enum('jenis_kelamin', ['L', 'P'])->nullable();
             $table->string('tempat_lahir', 100)->nullable();

@@ -61,7 +61,7 @@ class ApiResourceCatalogTest extends TestCase
             $this->assertContains($field, $entry['fields']['contact']);
         }
 
-        foreach (['nuptk', 'tahun_masuk', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'status_kepegawaian', 'pendidikan_terakhir', 'instansi_pendidikan', 'jurusan', 'status_sertifikasi', 'status_inpasing', 'mapel_sertifikasi'] as $field) {
+        foreach (['peg_id', 'tahun_masuk', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'status_kepegawaian', 'pendidikan_terakhir', 'instansi_pendidikan', 'jurusan', 'status_sertifikasi', 'status_inpasing', 'mapel_sertifikasi'] as $field) {
             $this->assertContains($field, $entry['fields']['academic']);
             $this->assertContains($field, $entry['fields']['contact']);
         }

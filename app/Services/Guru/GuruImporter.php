@@ -219,7 +219,7 @@ final class GuruImporter
             ),
             'mapel_sertifikasi' => $this->nullableString($payload['mapel_sertifikasi'] ?? null, 100),
             'status_menikah' => $this->nullableStatusMenikah($payload['status_menikah'] ?? null),
-            'nuptk' => $this->nullableString($payload['nuptk'] ?? null, 40),
+            'peg_id' => $this->nullableString($payload['peg_id'] ?? $payload['nuptk'] ?? null, 40),
             'tempat_lahir' => $this->nullableString($payload['tempat_lahir'] ?? null, 100),
             'tanggal_lahir' => $tanggalLahir,
             'email' => $email !== '' ? $email : null,

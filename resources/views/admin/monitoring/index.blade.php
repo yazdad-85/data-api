@@ -81,7 +81,7 @@
             type="search"
             name="q"
             value="{{ $filters['q'] }}"
-            placeholder="@if ($resource === 'siswa') Cari nama, NIS, NISN @elseif ($resource === 'guru') Cari nama, NIY, NIK, NUPTK @else Cari nama, NIK, jabatan @endif"
+            placeholder="@if ($resource === 'siswa') Cari nama, NIS, NISN @elseif ($resource === 'guru') Cari nama, NIY, NIK, Peg-ID @else Cari nama, NIK, jabatan @endif"
             class="field-control"
             aria-label="Cari data"
         >

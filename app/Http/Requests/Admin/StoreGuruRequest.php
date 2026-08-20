@@ -19,7 +19,7 @@ class StoreGuruRequest extends FormRequest
     {
         return [
             'nik' => ['nullable', 'string', 'max:30'],
-            'nuptk' => ['nullable', 'string', 'max:40'],
+            'peg_id' => ['nullable', 'string', 'max:40'],
             'nama' => ['required', 'string', 'max:150'],
             'jenis_kelamin' => ['required', Rule::in(['L', 'P'])],
             'tahun_masuk' => ['required', 'integer', 'min:1950', 'max:'.((int) now()->year + 1)],

@@ -30,7 +30,7 @@ class Guru extends Model
         'status_inpasing',
         'mapel_sertifikasi',
         'status_menikah',
-        'nuptk',
+        'peg_id',
         'nama',
         'jenis_kelamin',
         'tempat_lahir',

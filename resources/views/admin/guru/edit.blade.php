@@ -46,10 +46,10 @@
                     <p class="field-control" style="background: var(--color-surface-muted, #f3f4f6);">{{ $guru->tahun_masuk ?? '—' }}</p>
                 </div>
                 <x-ui.input
-                    name="nuptk"
-                    label="NUPTK"
-                    :value="old('nuptk', $guru->nuptk)"
-                    :error="$errors->first('nuptk')"
+                    name="peg_id"
+                    label="Peg-ID"
+                    :value="old('peg_id', $guru->peg_id)"
+                    :error="$errors->first('peg_id')"
                 />
                 <x-ui.select
                     name="jenis_kelamin"

@@ -35,7 +35,7 @@ class MasterGuruTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.guru.store'), [
             'nama' => 'Budi Santoso',
             'nik' => '3174010101900001',
-            'nuptk' => 'NUPTK-001',
+            'peg_id' => 'PEG-001',
             'jenis_kelamin' => 'L',
             'tahun_masuk' => 1989,
             'pendidikan_terakhir' => 'S1',
@@ -59,6 +59,7 @@ class MasterGuruTest extends TestCase
         $this->assertSame('Budi Santoso', $guru->nama);
         $this->assertSame('048801018901', $guru->niy);
         $this->assertSame('3174010101900001', $guru->nik);
+        $this->assertSame('PEG-001', $guru->peg_id);
         $this->assertSame(1989, $guru->tahun_masuk);
         $this->assertSame('S1', $guru->pendidikan_terakhir);
         $this->assertSame('Universitas Contoh', $guru->instansi_pendidikan);
@@ -126,7 +127,7 @@ class MasterGuruTest extends TestCase
         $response = $this->actingAs($admin)->put(route('admin.guru.update', $guru), [
             'nama' => 'Nama Baru',
             'nik' => '3174010202900002',
-            'nuptk' => 'NUPTK-999',
+            'peg_id' => 'PEG-999',
             'pendidikan_terakhir' => 'S2',
             'status_sertifikasi' => 'Belum',
             'status_inpasing' => 'Sudah',
@@ -138,7 +139,7 @@ class MasterGuruTest extends TestCase
         $guru->refresh();
         $this->assertSame('Nama Baru', $guru->nama);
         $this->assertSame('3174010202900002', $guru->nik);
-        $this->assertSame('NUPTK-999', $guru->nuptk);
+        $this->assertSame('PEG-999', $guru->peg_id);
         $this->assertSame('S2', $guru->pendidikan_terakhir);
         $this->assertSame('Belum', $guru->status_sertifikasi);
         $this->assertSame('Sudah', $guru->status_inpasing);
@@ -146,7 +147,7 @@ class MasterGuruTest extends TestCase
         $this->assertNotNull($guru->niy);
     }
 
-    public function test_index_search_matches_nama_or_niy(): void
+    public function test_index_search_matches_nama_niy_nik_or_peg_id(): void
     {
         $lembaga = Lembaga::factory()->create();
         $admin = User::factory()->adminLembaga($lembaga->id)->create();
@@ -155,6 +156,7 @@ class MasterGuruTest extends TestCase
             'nama' => 'Siti Aminah',
             'niy' => 'NIY-100',
             'nik' => 'NIK-100',
+            'peg_id' => 'PEG-100',
             'tahun_masuk' => 2020,
             'jenis_kelamin' => 'P',
         ]);
@@ -162,6 +164,7 @@ class MasterGuruTest extends TestCase
             'nama' => 'Joko Susilo',
             'niy' => 'NIY-200',
             'nik' => 'NIK-200',
+            'peg_id' => 'PEG-200',
             'tahun_masuk' => 2021,
             'jenis_kelamin' => 'L',
         ]);
@@ -174,6 +177,9 @@ class MasterGuruTest extends TestCase
 
         $byNik = $this->actingAs($admin)->get(route('admin.guru.index', ['q' => 'NIK-100']));
         $byNik->assertOk()->assertSee('Siti Aminah')->assertDontSee('Joko Susilo');
+
+        $byPegId = $this->actingAs($admin)->get(route('admin.guru.index', ['q' => 'PEG-200']));
+        $byPegId->assertOk()->assertSee('Joko Susilo')->assertDontSee('Siti Aminah');
     }
 
     public function test_destroy_soft_deletes_guru(): void
