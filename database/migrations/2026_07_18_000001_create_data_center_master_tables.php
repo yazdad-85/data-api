@@ -110,6 +110,11 @@ return new class extends Migration
             $table->string('email', 150)->nullable();
             $table->string('telepon', 30)->nullable();
             $table->text('alamat')->nullable();
+            $table->string('status_keluarga', 20)->nullable();
+            $table->string('nama_ayah', 150)->nullable();
+            $table->string('pekerjaan_ayah', 100)->nullable();
+            $table->string('nama_ibu', 150)->nullable();
+            $table->string('pekerjaan_ibu', 100)->nullable();
             $table->string('nama_wali', 150)->nullable();
             $table->string('telepon_wali', 30)->nullable();
             $table->boolean('is_active')->default(true);

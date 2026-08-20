@@ -62,7 +62,16 @@ class KelasSiswaImportTest extends TestCase
         ]);
 
         $file = $this->makeImportFile([
-            ['nis' => 'NIS-101', 'nama' => 'Andi Pratama', 'asal_lembaga' => 'SMP Asal'],
+            [
+                'nis' => 'NIS-101',
+                'nama' => 'Andi Pratama',
+                'status_keluarga' => 'yatim piatu',
+                'nama_ayah' => 'Ayah Import',
+                'pekerjaan_ayah' => 'Nelayan',
+                'nama_ibu' => 'Ibu Import',
+                'pekerjaan_ibu' => 'Pedagang',
+                'asal_lembaga' => 'SMP Asal',
+            ],
             ['nis' => 'NIS-102', 'nama' => 'Siti Rahma'],
         ]);
 
@@ -77,6 +86,11 @@ class KelasSiswaImportTest extends TestCase
 
         $siswaA = Siswa::query()->where('nis', 'NIS-101')->firstOrFail();
         $this->assertSame('Andi Pratama', $siswaA->nama);
+        $this->assertSame('Yatim Piatu', $siswaA->status_keluarga);
+        $this->assertSame('Ayah Import', $siswaA->nama_ayah);
+        $this->assertSame('Nelayan', $siswaA->pekerjaan_ayah);
+        $this->assertSame('Ibu Import', $siswaA->nama_ibu);
+        $this->assertSame('Pedagang', $siswaA->pekerjaan_ibu);
         $this->assertSame('SMP Asal', $siswaA->status_asal);
         $this->assertSame($kelas->id, $siswaA->kelas_id);
         $this->assertSame($tahunAjaran->id, $siswaA->tahun_ajaran_id);
@@ -145,6 +159,11 @@ class KelasSiswaImportTest extends TestCase
                 'jenis_kelamin' => 'P',
                 'tanggal_lahir' => '2014-02-03',
                 'telepon' => '',
+                'status_keluarga' => 'Piatu',
+                'nama_ayah' => 'Ayah Lama',
+                'pekerjaan_ayah' => 'Buruh',
+                'nama_ibu' => 'Ibu Lama',
+                'pekerjaan_ibu' => 'Ibu Rumah Tangga',
                 'asal_lembaga' => 'SMP Lama',
             ],
         ]);
@@ -164,6 +183,11 @@ class KelasSiswaImportTest extends TestCase
         $this->assertSame('P', $siswa->jenis_kelamin);
         $this->assertSame('2014-02-03', $siswa->tanggal_lahir?->toDateString());
         $this->assertSame('0811', $siswa->telepon);
+        $this->assertSame('Piatu', $siswa->status_keluarga);
+        $this->assertSame('Ayah Lama', $siswa->nama_ayah);
+        $this->assertSame('Buruh', $siswa->pekerjaan_ayah);
+        $this->assertSame('Ibu Lama', $siswa->nama_ibu);
+        $this->assertSame('Ibu Rumah Tangga', $siswa->pekerjaan_ibu);
         $this->assertSame('SMP Lama', $siswa->status_asal);
         $this->assertSame($kelas->id, $siswa->kelas_id);
     }
@@ -310,20 +334,14 @@ class KelasSiswaImportTest extends TestCase
             $sheet->setCellValue($column.'1', $header);
         }
 
+        $headers = SiswaTemplateExporter::dataHeaders();
+
         foreach ($rows as $rowIndex => $row) {
             $excelRow = $rowIndex + 2;
-            $sheet->setCellValue('A'.$excelRow, $row['nis'] ?? '');
-            $sheet->setCellValue('B'.$excelRow, $row['nama'] ?? '');
-            $sheet->setCellValue('C'.$excelRow, $row['nisn'] ?? '');
-            $sheet->setCellValue('D'.$excelRow, $row['jenis_kelamin'] ?? '');
-            $sheet->setCellValue('E'.$excelRow, $row['tempat_lahir'] ?? '');
-            $sheet->setCellValue('F'.$excelRow, $row['tanggal_lahir'] ?? '');
-            $sheet->setCellValue('G'.$excelRow, $row['email'] ?? '');
-            $sheet->setCellValue('H'.$excelRow, $row['telepon'] ?? '');
-            $sheet->setCellValue('I'.$excelRow, $row['alamat'] ?? '');
-            $sheet->setCellValue('J'.$excelRow, $row['nama_wali'] ?? '');
-            $sheet->setCellValue('K'.$excelRow, $row['telepon_wali'] ?? '');
-            $sheet->setCellValue('L'.$excelRow, $row['asal_lembaga'] ?? '');
+            foreach ($headers as $index => $header) {
+                $column = chr(ord('A') + $index);
+                $sheet->setCellValue($column.$excelRow, $row[$header] ?? '');
+            }
         }
 
         $path = tempnam(sys_get_temp_dir(), 'siswa-import-').'.xlsx';

@@ -19,7 +19,7 @@ class StoreSiswaRequest extends FormRequest
     {
         $merge = [];
 
-        foreach (['nisn', 'kelas_id', 'tahun_ajaran_id', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'nama_wali', 'telepon_wali'] as $field) {
+        foreach (['nisn', 'kelas_id', 'tahun_ajaran_id', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'status_keluarga', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali'] as $field) {
             if ($this->input($field) === '') {
                 $merge[$field] = null;
             }
@@ -52,6 +52,11 @@ class StoreSiswaRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:150'],
             'telepon' => ['nullable', 'string', 'max:30'],
             'alamat' => ['nullable', 'string'],
+            'status_keluarga' => ['nullable', Rule::in(['Yatim', 'Piatu', 'Yatim Piatu'])],
+            'nama_ayah' => ['nullable', 'string', 'max:150'],
+            'pekerjaan_ayah' => ['nullable', 'string', 'max:100'],
+            'nama_ibu' => ['nullable', 'string', 'max:150'],
+            'pekerjaan_ibu' => ['nullable', 'string', 'max:100'],
             'nama_wali' => ['nullable', 'string', 'max:150'],
             'telepon_wali' => ['nullable', 'string', 'max:30'],
             'kelas_id' => [

@@ -23,6 +23,11 @@ final class SiswaTemplateExporter
             'email',
             'telepon',
             'alamat',
+            'status_keluarga',
+            'nama_ayah',
+            'pekerjaan_ayah',
+            'nama_ibu',
+            'pekerjaan_ibu',
             'nama_wali',
             'telepon_wali',
             'asal_lembaga',
@@ -38,11 +43,12 @@ final class SiswaTemplateExporter
         $petunjuk->setCellValue('A1', 'Petunjuk Import Data Siswa');
         $petunjuk->setCellValue('A3', '1. Isi data pada sheet "Data Siswa". Baris pertama adalah header — jangan diubah.');
         $petunjuk->setCellValue('A4', '2. Kolom wajib: nis, nama.');
-        $petunjuk->setCellValue('A5', '3. Kolom opsional: nisn, jenis_kelamin (L atau P), tempat_lahir, tanggal_lahir, email, telepon, alamat, nama_wali, telepon_wali, asal_lembaga.');
-        $petunjuk->setCellValue('A6', '4. Kelas dan tahun ajaran diisi otomatis dari halaman kelas saat import.');
-        $petunjuk->setCellValue('A7', '5. Format tanggal_lahir: YYYY-MM-DD (mis. 2010-05-17).');
-        $petunjuk->setCellValue('A8', '6. Baris kosong akan dilewati.');
-        $petunjuk->setCellValue('A9', '7. NIS harus unik di lembaga (termasuk siswa yang pernah dihapus).');
+        $petunjuk->setCellValue('A5', '3. Kolom opsional: nisn, jenis_kelamin (L atau P), tempat_lahir, tanggal_lahir, email, telepon, alamat, status_keluarga, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, nama_wali, telepon_wali, asal_lembaga.');
+        $petunjuk->setCellValue('A6', '4. status_keluarga: Yatim, Piatu, atau Yatim Piatu.');
+        $petunjuk->setCellValue('A7', '5. Kelas dan tahun ajaran diisi otomatis dari halaman kelas saat import.');
+        $petunjuk->setCellValue('A8', '6. Format tanggal_lahir: YYYY-MM-DD (mis. 2010-05-17).');
+        $petunjuk->setCellValue('A9', '7. Baris kosong akan dilewati.');
+        $petunjuk->setCellValue('A10', '8. NIS harus unik di lembaga (termasuk siswa yang pernah dihapus).');
         $petunjuk->getColumnDimension('A')->setWidth(90);
 
         $data = $spreadsheet->createSheet();
@@ -62,9 +68,14 @@ final class SiswaTemplateExporter
         $data->setCellValue('G2', 'siswa@example.com');
         $data->setCellValue('H2', '08123456789');
         $data->setCellValue('I2', 'Jl. Contoh No. 1');
-        $data->setCellValue('J2', 'Wali Contoh');
-        $data->setCellValue('K2', '08198765432');
-        $data->setCellValue('L2', 'SMP Contoh');
+        $data->setCellValue('J2', 'Yatim');
+        $data->setCellValue('K2', 'Ayah Contoh');
+        $data->setCellValue('L2', 'Wiraswasta');
+        $data->setCellValue('M2', 'Ibu Contoh');
+        $data->setCellValue('N2', 'Guru');
+        $data->setCellValue('O2', 'Wali Contoh');
+        $data->setCellValue('P2', '08198765432');
+        $data->setCellValue('Q2', 'SMP Contoh');
 
         $spreadsheet->setActiveSheetIndex(1);
 

@@ -120,6 +120,7 @@ class ApiResourceListTest extends TestCase
         $this->assertArrayNotHasKey('penempatan_aktif', $row);
         $this->assertArrayNotHasKey('riwayat_penempatan', $row);
         $this->assertArrayNotHasKey('email', $row);
+        $this->assertArrayNotHasKey('status_keluarga', $row);
     }
 
     public function test_siswa_academic_includes_penempatan_aktif_not_riwayat(): void
@@ -135,6 +136,8 @@ class ApiResourceListTest extends TestCase
         $this->assertArrayHasKey('penempatan_aktif', $row);
         $this->assertArrayNotHasKey('riwayat_penempatan', $row);
         $this->assertNotNull($row['penempatan_aktif']);
+        $this->assertSame('Yatim', $row['status_keluarga']);
+        $this->assertArrayNotHasKey('nama_ayah', $row);
     }
 
     public function test_siswa_contact_includes_riwayat(): void
@@ -150,6 +153,8 @@ class ApiResourceListTest extends TestCase
         $this->assertArrayHasKey('penempatan_aktif', $row);
         $this->assertArrayHasKey('riwayat_penempatan', $row);
         $this->assertCount(2, $row['riwayat_penempatan']);
+        $this->assertSame('Ayah API', $row['nama_ayah']);
+        $this->assertSame('Ibu API', $row['nama_ibu']);
     }
 
     public function test_per_page_clamped_to_200(): void
@@ -232,7 +237,12 @@ class ApiResourceListTest extends TestCase
 
     private function makeSiswaWithPenempatan(Lembaga $lembaga): Siswa
     {
-        $siswa = Siswa::factory()->create(['lembaga_id' => $lembaga->id]);
+        $siswa = Siswa::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'status_keluarga' => 'Yatim',
+            'nama_ayah' => 'Ayah API',
+            'nama_ibu' => 'Ibu API',
+        ]);
 
         SiswaPenempatan::factory()->create([
             'lembaga_id' => $lembaga->id,

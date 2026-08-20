@@ -33,6 +33,8 @@ class MetadataRedactor
     private const PII_KEYS = [
         'alamat',
         'email',
+        'nama_ayah',
+        'nama_ibu',
         'nama_wali',
         'niy',
         'nis',

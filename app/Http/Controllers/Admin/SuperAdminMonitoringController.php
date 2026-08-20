@@ -187,7 +187,7 @@ class SuperAdminMonitoringController extends Controller
             ->when($filters['tahun_ajaran_id'] !== '', fn (Builder $query) => $query->where('tahun_ajaran_id', $filters['tahun_ajaran_id']))
             ->when($filters['status_siswa'] !== '', fn (Builder $query) => $query->where('status_siswa', $filters['status_siswa']))
             ->when($filters['status'] !== '', fn (Builder $query) => $query->where('is_active', $filters['status'] === 'aktif'))
-            ->when($filters['q'] !== '', fn (Builder $query) => $this->search($query, $filters['q'], ['nama', 'nis', 'nisn']));
+            ->when($filters['q'] !== '', fn (Builder $query) => $this->search($query, $filters['q'], ['nama', 'nis', 'nisn', 'nama_ayah', 'nama_ibu']));
     }
 
     /**
@@ -269,7 +269,7 @@ class SuperAdminMonitoringController extends Controller
     {
         return match ($resource) {
             'guru' => ['Nama', 'Lembaga', 'NIY', 'NIK', 'Peg-ID', 'Tahun Masuk', 'Pendidikan Terakhir', 'Instansi Pendidikan', 'Jurusan', 'Status Sertifikasi', 'Status Inpasing', 'Mapel Sertifikasi', 'Status Menikah', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Email', 'Telepon', 'Alamat', 'Status Kepegawaian', 'Status Aktif'],
-            'siswa' => ['Nama', 'Lembaga', 'NIS', 'NISN', 'Tahun Ajaran', 'Kelas', 'Status Siswa', 'Status Aktif', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Email', 'Telepon', 'Alamat', 'Nama Wali', 'Telepon Wali', 'Asal', 'Tujuan', 'Alasan Status'],
+            'siswa' => ['Nama', 'Lembaga', 'NIS', 'NISN', 'Tahun Ajaran', 'Kelas', 'Status Siswa', 'Status Aktif', 'Status Keluarga', 'Nama Ayah', 'Pekerjaan Ayah', 'Nama Ibu', 'Pekerjaan Ibu', 'Jenis Kelamin', 'Tempat Lahir', 'Tanggal Lahir', 'Email', 'Telepon', 'Alamat', 'Nama Wali', 'Telepon Wali', 'Asal', 'Tujuan', 'Alasan Status'],
             'karyawan' => ['Nama', 'Lembaga', 'NIK Pegawai', 'Tahun Masuk', 'Jenis Kelamin', 'Jabatan', 'Email', 'Telepon', 'Alamat', 'Status Aktif'],
             default => [],
         };
@@ -313,6 +313,11 @@ class SuperAdminMonitoringController extends Controller
                 $row->kelas?->nama,
                 SiswaStatus::label($row->status_siswa),
                 $row->is_active ? 'Aktif' : 'Nonaktif',
+                $row->status_keluarga,
+                $row->nama_ayah,
+                $row->pekerjaan_ayah,
+                $row->nama_ibu,
+                $row->pekerjaan_ibu,
                 $row->jenis_kelamin,
                 $row->tempat_lahir,
                 $row->tanggal_lahir?->format('Y-m-d'),

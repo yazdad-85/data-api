@@ -256,6 +256,11 @@ final class SiswaImporter
             'email' => $email !== '' ? $email : null,
             'telepon' => $this->nullableString($payload['telepon'] ?? null, 30),
             'alamat' => $this->nullableString($payload['alamat'] ?? null),
+            'status_keluarga' => $this->nullableStatusKeluarga($payload['status_keluarga'] ?? null),
+            'nama_ayah' => $this->nullableString($payload['nama_ayah'] ?? null, 150),
+            'pekerjaan_ayah' => $this->nullableString($payload['pekerjaan_ayah'] ?? null, 100),
+            'nama_ibu' => $this->nullableString($payload['nama_ibu'] ?? null, 150),
+            'pekerjaan_ibu' => $this->nullableString($payload['pekerjaan_ibu'] ?? null, 100),
             'nama_wali' => $this->nullableString($payload['nama_wali'] ?? null, 150),
             'telepon_wali' => $this->nullableString($payload['telepon_wali'] ?? null, 30),
             'status_asal' => $this->nullableString($payload['asal_lembaga'] ?? null, 150),
@@ -275,6 +280,24 @@ final class SiswaImporter
         }
 
         return $string;
+    }
+
+    private function nullableStatusKeluarga(mixed $value): ?string
+    {
+        $string = trim((string) ($value ?? ''));
+
+        if ($string === '') {
+            return null;
+        }
+
+        $normalized = strtolower(preg_replace('/\s+/', ' ', $string) ?? $string);
+
+        return match ($normalized) {
+            'yatim' => 'Yatim',
+            'piatu' => 'Piatu',
+            'yatim piatu', 'yatim_piatu' => 'Yatim Piatu',
+            default => throw new InvalidArgumentException('Status keluarga harus Yatim, Piatu, atau Yatim Piatu.'),
+        };
     }
 
     private function parseDate(mixed $value): ?string
@@ -344,7 +367,7 @@ final class SiswaImporter
     {
         $payload = ['nama' => $validated['nama']];
 
-        foreach (['nisn', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'email', 'telepon', 'alamat', 'nama_wali', 'telepon_wali', 'status_asal'] as $field) {
+        foreach (['nisn', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'email', 'telepon', 'alamat', 'status_keluarga', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali', 'status_asal'] as $field) {
             if ($validated[$field] !== null) {
                 $payload[$field] = $validated[$field];
             }

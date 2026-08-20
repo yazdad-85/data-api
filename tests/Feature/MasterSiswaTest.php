@@ -51,6 +51,11 @@ class MasterSiswaTest extends TestCase
             'email' => 'andi@example.com',
             'telepon' => '08123456789',
             'alamat' => 'Jl. Merdeka No. 1',
+            'status_keluarga' => 'Yatim',
+            'nama_ayah' => 'Ayah Andi',
+            'pekerjaan_ayah' => 'Wiraswasta',
+            'nama_ibu' => 'Ibu Andi',
+            'pekerjaan_ibu' => 'Guru',
             'nama_wali' => 'Budi Pratama',
             'telepon_wali' => '08198765432',
             'kelas_id' => $kelas->id,
@@ -65,6 +70,11 @@ class MasterSiswaTest extends TestCase
         $this->assertSame('Andi Pratama', $siswa->nama);
         $this->assertSame($kelas->id, $siswa->kelas_id);
         $this->assertSame($tahunAjaran->id, $siswa->tahun_ajaran_id);
+        $this->assertSame('Yatim', $siswa->status_keluarga);
+        $this->assertSame('Ayah Andi', $siswa->nama_ayah);
+        $this->assertSame('Wiraswasta', $siswa->pekerjaan_ayah);
+        $this->assertSame('Ibu Andi', $siswa->nama_ibu);
+        $this->assertSame('Guru', $siswa->pekerjaan_ibu);
         $this->assertTrue($siswa->is_active);
 
         $log = AuditLog::query()->where('event', 'siswa.create')->first();
@@ -151,6 +161,11 @@ class MasterSiswaTest extends TestCase
         $response = $this->actingAs($admin)->put(route('admin.siswa.update', $siswa), [
             'nis' => 'NIS-UPD',
             'nama' => 'Nama Baru',
+            'status_keluarga' => 'Yatim Piatu',
+            'nama_ayah' => 'Ayah Baru',
+            'pekerjaan_ayah' => 'Petani',
+            'nama_ibu' => 'Ibu Baru',
+            'pekerjaan_ibu' => 'Pedagang',
             'kelas_id' => $kelasLain->id,
             'tahun_ajaran_id' => $tahunAjaran->id,
         ]);
@@ -159,6 +174,11 @@ class MasterSiswaTest extends TestCase
 
         $siswa->refresh();
         $this->assertSame('Nama Baru', $siswa->nama);
+        $this->assertSame('Yatim Piatu', $siswa->status_keluarga);
+        $this->assertSame('Ayah Baru', $siswa->nama_ayah);
+        $this->assertSame('Petani', $siswa->pekerjaan_ayah);
+        $this->assertSame('Ibu Baru', $siswa->nama_ibu);
+        $this->assertSame('Pedagang', $siswa->pekerjaan_ibu);
         $this->assertSame($kelasAsal->id, $siswa->kelas_id);
         $this->assertSame($tahunAjaran->id, $siswa->tahun_ajaran_id);
 

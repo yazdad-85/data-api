@@ -136,6 +136,7 @@ class ApiResourceListerTest extends TestCase
         $row = $result['data'][0];
         $this->assertArrayNotHasKey('penempatan_aktif', $row);
         $this->assertArrayNotHasKey('riwayat_penempatan', $row);
+        $this->assertArrayNotHasKey('status_keluarga', $row);
     }
 
     public function test_siswa_academic_includes_penempatan_aktif_not_riwayat(): void
@@ -149,6 +150,8 @@ class ApiResourceListerTest extends TestCase
         $this->assertArrayHasKey('penempatan_aktif', $row);
         $this->assertArrayNotHasKey('riwayat_penempatan', $row);
         $this->assertNotNull($row['penempatan_aktif']);
+        $this->assertSame('Piatu', $row['status_keluarga']);
+        $this->assertArrayNotHasKey('nama_ayah', $row);
         $this->assertSame(
             ['id', 'kelas_id', 'tahun_ajaran_id', 'mulai_at', 'jenis'],
             array_keys($row['penempatan_aktif'])
@@ -166,6 +169,8 @@ class ApiResourceListerTest extends TestCase
         $this->assertArrayHasKey('penempatan_aktif', $row);
         $this->assertArrayHasKey('riwayat_penempatan', $row);
         $this->assertCount(2, $row['riwayat_penempatan']);
+        $this->assertSame('Ayah Unit', $row['nama_ayah']);
+        $this->assertSame('Ibu Unit', $row['nama_ibu']);
         $this->assertSame(
             ['id', 'kelas_id', 'tahun_ajaran_id', 'mulai_at', 'selesai_at', 'jenis'],
             array_keys($row['riwayat_penempatan'][0])
@@ -174,7 +179,12 @@ class ApiResourceListerTest extends TestCase
 
     private function makeSiswaWithPenempatan(Lembaga $lembaga): Siswa
     {
-        $siswa = Siswa::factory()->create(['lembaga_id' => $lembaga->id]);
+        $siswa = Siswa::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'status_keluarga' => 'Piatu',
+            'nama_ayah' => 'Ayah Unit',
+            'nama_ibu' => 'Ibu Unit',
+        ]);
 
         SiswaPenempatan::factory()->create([
             'lembaga_id' => $lembaga->id,

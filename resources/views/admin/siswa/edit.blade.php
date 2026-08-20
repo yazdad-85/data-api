@@ -81,6 +81,40 @@
                     :value="old('telepon', $siswa->telepon)"
                     :error="$errors->first('telepon')"
                 />
+                <x-ui.select
+                    name="status_keluarga"
+                    label="Status keluarga"
+                    :error="$errors->first('status_keluarga')"
+                >
+                    <option value="" @selected(old('status_keluarga', $siswa->status_keluarga) === null || old('status_keluarga', $siswa->status_keluarga) === '')>— Pilih —</option>
+                    <option value="Yatim" @selected(old('status_keluarga', $siswa->status_keluarga) === 'Yatim')>Yatim</option>
+                    <option value="Piatu" @selected(old('status_keluarga', $siswa->status_keluarga) === 'Piatu')>Piatu</option>
+                    <option value="Yatim Piatu" @selected(old('status_keluarga', $siswa->status_keluarga) === 'Yatim Piatu')>Yatim Piatu</option>
+                </x-ui.select>
+                <x-ui.input
+                    name="nama_ayah"
+                    label="Nama ayah"
+                    :value="old('nama_ayah', $siswa->nama_ayah)"
+                    :error="$errors->first('nama_ayah')"
+                />
+                <x-ui.input
+                    name="pekerjaan_ayah"
+                    label="Pekerjaan ayah"
+                    :value="old('pekerjaan_ayah', $siswa->pekerjaan_ayah)"
+                    :error="$errors->first('pekerjaan_ayah')"
+                />
+                <x-ui.input
+                    name="nama_ibu"
+                    label="Nama ibu"
+                    :value="old('nama_ibu', $siswa->nama_ibu)"
+                    :error="$errors->first('nama_ibu')"
+                />
+                <x-ui.input
+                    name="pekerjaan_ibu"
+                    label="Pekerjaan ibu"
+                    :value="old('pekerjaan_ibu', $siswa->pekerjaan_ibu)"
+                    :error="$errors->first('pekerjaan_ibu')"
+                />
                 <div class="field">
                     <span class="field-label">Kelas</span>
                     <p class="field-hint">

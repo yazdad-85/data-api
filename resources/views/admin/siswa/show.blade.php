@@ -131,6 +131,26 @@
                 <dd class="detail-grid__value">{{ $siswa->alamat ?? '—' }}</dd>
             </div>
             <div>
+                <dt class="detail-grid__label">Status keluarga</dt>
+                <dd class="detail-grid__value">{{ $siswa->status_keluarga ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Nama ayah</dt>
+                <dd class="detail-grid__value">{{ $siswa->nama_ayah ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Pekerjaan ayah</dt>
+                <dd class="detail-grid__value">{{ $siswa->pekerjaan_ayah ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Nama ibu</dt>
+                <dd class="detail-grid__value">{{ $siswa->nama_ibu ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Pekerjaan ibu</dt>
+                <dd class="detail-grid__value">{{ $siswa->pekerjaan_ibu ?? '—' }}</dd>
+            </div>
+            <div>
                 <dt class="detail-grid__label">Nama wali</dt>
                 <dd class="detail-grid__value">{{ $siswa->nama_wali ?? '—' }}</dd>
             </div>

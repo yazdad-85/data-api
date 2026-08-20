@@ -65,7 +65,7 @@
             type="search"
             name="q"
             value="{{ $q }}"
-            placeholder="Cari nama, NIS, atau NISN"
+            placeholder="Cari nama, NIS, NISN, ayah, atau ibu"
             class="field-control"
             aria-label="Cari siswa"
         >
@@ -92,6 +92,7 @@
                     <th>NIS</th>
                     <th>NISN</th>
                     <th>Kelas</th>
+                    <th>Status keluarga</th>
                     <th>Status</th>
                     <th>Aksi</th>
                 </tr>
@@ -108,6 +109,7 @@
                             <x-ui.badge tone="neutral">Belum ada kelas</x-ui.badge>
                         @endif
                     </td>
+                    <td>{{ $siswa->status_keluarga ?? '—' }}</td>
                     <td>
                         <x-ui.badge :tone="SiswaStatus::tone($siswa->status_siswa)">
                             {{ SiswaStatus::label($siswa->status_siswa) }}

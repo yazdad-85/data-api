@@ -13,9 +13,9 @@ use App\Models\TahunAjaran;
 use App\Services\AuditLogger;
 use App\Services\Siswa\SiswaLifecycleService;
 use App\Support\Master\SiswaStatus;
-use Illuminate\Support\Carbon;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use InvalidArgumentException;
 
@@ -51,11 +51,15 @@ class SiswaController extends Controller
                     if ($inner->getConnection()->getDriverName() === 'pgsql') {
                         $inner->where('nama', 'ilike', $like)
                             ->orWhere('nis', 'ilike', $like)
-                            ->orWhere('nisn', 'ilike', $like);
+                            ->orWhere('nisn', 'ilike', $like)
+                            ->orWhere('nama_ayah', 'ilike', $like)
+                            ->orWhere('nama_ibu', 'ilike', $like);
                     } else {
                         $inner->whereRaw('lower(nama) like lower(?)', [$like])
                             ->orWhereRaw('lower(nis) like lower(?)', [$like])
-                            ->orWhereRaw('lower(nisn) like lower(?)', [$like]);
+                            ->orWhereRaw('lower(nisn) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nama_ayah) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nama_ibu) like lower(?)', [$like]);
                     }
                 });
             })

@@ -104,13 +104,16 @@ final class ApiResourceCatalog
                         'kelas_id', 'tahun_ajaran_id', 'created_at', 'updated_at',
                         'nisn', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
                         'status_at', 'status_alasan', 'status_asal', 'status_tujuan',
+                        'status_keluarga',
                     ],
                     'contact' => [
                         'id', 'lembaga_id', 'nis', 'nama', 'status_siswa', 'is_active',
                         'kelas_id', 'tahun_ajaran_id', 'created_at', 'updated_at',
                         'nisn', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
                         'status_at', 'status_alasan', 'status_asal', 'status_tujuan',
-                        'email', 'telepon', 'alamat', 'nama_wali', 'telepon_wali',
+                        'status_keluarga', 'email', 'telepon', 'alamat',
+                        'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu',
+                        'nama_wali', 'telepon_wali',
                     ],
                 ],
                 'embeds' => [

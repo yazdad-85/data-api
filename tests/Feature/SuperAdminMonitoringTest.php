@@ -89,6 +89,11 @@ class SuperAdminMonitoringTest extends TestCase
             'tahun_ajaran_id' => $tahunA->id,
             'nama' => 'Siswa Export',
             'nis' => 'NIS-EXPORT',
+            'status_keluarga' => 'Yatim',
+            'nama_ayah' => 'Ayah Export',
+            'pekerjaan_ayah' => 'Petani',
+            'nama_ibu' => 'Ibu Export',
+            'pekerjaan_ibu' => 'Pedagang',
             'status_asal' => 'SMP Asal',
         ]);
         Siswa::factory()->create([
@@ -113,11 +118,17 @@ class SuperAdminMonitoringTest extends TestCase
 
         $rows = $this->xlsxRows($response->streamedContent());
         $this->assertSame('Nama', $rows[0][0]);
-        $this->assertSame('Asal', $rows[0][16]);
+        $this->assertSame('Status Keluarga', $rows[0][8]);
+        $this->assertSame('Asal', $rows[0][21]);
         $this->assertSame('Siswa Export', $rows[1][0]);
         $this->assertSame('SMP Export A', $rows[1][1]);
         $this->assertSame('NIS-EXPORT', $rows[1][2]);
-        $this->assertSame('SMP Asal', $rows[1][16]);
+        $this->assertSame('Yatim', $rows[1][8]);
+        $this->assertSame('Ayah Export', $rows[1][9]);
+        $this->assertSame('Petani', $rows[1][10]);
+        $this->assertSame('Ibu Export', $rows[1][11]);
+        $this->assertSame('Pedagang', $rows[1][12]);
+        $this->assertSame('SMP Asal', $rows[1][21]);
         $this->assertCount(2, $rows);
     }
 

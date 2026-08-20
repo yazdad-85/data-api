@@ -134,13 +134,14 @@ class ApiResourceCatalogTest extends TestCase
         $academicOnly = [
             'nisn', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
             'status_at', 'status_alasan', 'status_asal', 'status_tujuan',
+            'status_keluarga',
         ];
         foreach ($academicOnly as $field) {
             $this->assertContains($field, $entry['fields']['academic']);
             $this->assertContains($field, $entry['fields']['contact']);
         }
 
-        $contactOnly = ['email', 'telepon', 'alamat', 'nama_wali', 'telepon_wali'];
+        $contactOnly = ['email', 'telepon', 'alamat', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali'];
         foreach ($contactOnly as $field) {
             $this->assertNotContains($field, $entry['fields']['academic']);
             $this->assertContains($field, $entry['fields']['contact']);
