@@ -52,6 +52,7 @@ final class GuruImporter
         $success = 0;
         $failed = 0;
         $errors = [];
+        $seenNames = [];
 
         foreach ($rows as $rowNumber => $row) {
             $excelRow = (int) $rowNumber;
@@ -70,18 +71,36 @@ final class GuruImporter
                 continue;
             }
 
-            if ($this->namaExists($lembagaId, $validated['nama'])) {
+            $nameKey = mb_strtolower($validated['nama']);
+            if (isset($seenNames[$nameKey])) {
                 $failed++;
                 $errors[] = [
                     'row' => $excelRow,
-                    'message' => "Guru dengan nama \"{$validated['nama']}\" sudah ada.",
+                    'message' => "Guru dengan nama \"{$validated['nama']}\" muncul lebih dari sekali di file import.",
                 ];
 
                 continue;
             }
 
+            $seenNames[$nameKey] = true;
+
             try {
-                DB::transaction(function () use ($lembaga, $lembagaId, $validated) {
+                $existing = $this->findExistingGuru($lembagaId, $validated['nama']);
+            } catch (InvalidArgumentException $exception) {
+                $failed++;
+                $errors[] = ['row' => $excelRow, 'message' => $exception->getMessage()];
+
+                continue;
+            }
+
+            try {
+                DB::transaction(function () use ($lembaga, $lembagaId, $validated, $existing) {
+                    if ($existing !== null) {
+                        $this->updateExisting($existing, $validated);
+
+                        return;
+                    }
+
                     $niy = $this->niyGenerator->generate(
                         $lembaga,
                         $validated['jenis_kelamin'],
@@ -301,14 +320,54 @@ final class GuruImporter
         return date('Y-m-d', $timestamp);
     }
 
-    private function namaExists(string $lembagaId, string $nama): bool
+    private function findExistingGuru(string $lembagaId, string $nama): ?Guru
     {
         $query = Guru::query()->where('lembaga_id', $lembagaId);
 
         if ($query->getConnection()->getDriverName() === 'pgsql') {
-            return $query->where('nama', 'ilike', $nama)->exists();
+            $matches = $query->where('nama', 'ilike', $nama)->limit(2)->get();
+        } else {
+            $matches = $query->whereRaw('lower(nama) = lower(?)', [$nama])->limit(2)->get();
         }
 
-        return $query->whereRaw('lower(nama) = lower(?)', [$nama])->exists();
+        if ($matches->count() > 1) {
+            throw new InvalidArgumentException("Guru dengan nama \"{$nama}\" ditemukan lebih dari satu kali. Update lewat import membutuhkan nama yang unik.");
+        }
+
+        return $matches->first();
+    }
+
+    /**
+     * @param  array<string, mixed>  $validated
+     */
+    private function updateExisting(Guru $guru, array $validated): void
+    {
+        $payload = ['nama' => $validated['nama']];
+
+        foreach ([
+            'jenis_kelamin',
+            'nik',
+            'pendidikan_terakhir',
+            'instansi_pendidikan',
+            'jurusan',
+            'status_sertifikasi',
+            'status_inpasing',
+            'mapel_sertifikasi',
+            'status_menikah',
+            'peg_id',
+            'tempat_lahir',
+            'tanggal_lahir',
+            'email',
+            'telepon',
+            'alamat',
+            'status_kepegawaian',
+        ] as $field) {
+            if ($validated[$field] !== null) {
+                $payload[$field] = $validated[$field];
+            }
+        }
+
+        $guru->fill($payload);
+        $guru->save();
     }
 }

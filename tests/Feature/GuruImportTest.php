@@ -103,21 +103,108 @@ class GuruImportTest extends TestCase
         $this->assertSame(1, Guru::query()->count());
     }
 
+    public function test_import_from_old_template_can_be_updated_with_new_profile_fields(): void
+    {
+        $lembaga = Lembaga::factory()->create(['niy_kode' => '01']);
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $oldTemplateFile = $this->makeLegacyImportFile([
+            [
+                'nama' => 'Guru Legacy',
+                'jenis_kelamin' => 'L',
+                'tahun_masuk' => 1989,
+                'nuptk' => 'OLD-NUPTK',
+                'telepon' => '0811',
+            ],
+        ]);
+
+        $this->actingAs($admin)->post(route('admin.guru.import'), [
+            'file' => $oldTemplateFile,
+        ])->assertRedirect(route('admin.guru.index'))
+            ->assertSessionHas('import_errors', []);
+
+        $newTemplateFile = $this->makeImportFile([
+            [
+                'nama' => 'Guru Legacy',
+                'jenis_kelamin' => 'L',
+                'tahun_masuk' => 1989,
+                'nik' => '3174010101890001',
+                'pendidikan_terakhir' => 'S1',
+                'instansi_pendidikan' => 'Universitas Update',
+                'jurusan' => 'PGMI',
+                'status_sertifikasi' => 'Sudah',
+                'status_inpasing' => 'Belum',
+                'mapel_sertifikasi' => 'Tematik',
+                'status_menikah' => 'Sudah Menikah',
+                'peg_id' => 'PEG-UPDATE',
+                'telepon' => '',
+            ],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.guru.import'), [
+            'file' => $newTemplateFile,
+        ]);
+
+        $response->assertRedirect(route('admin.guru.index'));
+        $response->assertSessionHas('import_errors', []);
+
+        $this->assertSame(1, Guru::query()->count());
+
+        $guru = Guru::query()->where('nama', 'Guru Legacy')->firstOrFail();
+        $this->assertSame('048801018901', $guru->niy);
+        $this->assertSame('3174010101890001', $guru->nik);
+        $this->assertSame('S1', $guru->pendidikan_terakhir);
+        $this->assertSame('Universitas Update', $guru->instansi_pendidikan);
+        $this->assertSame('PGMI', $guru->jurusan);
+        $this->assertSame('Sudah', $guru->status_sertifikasi);
+        $this->assertSame('Belum', $guru->status_inpasing);
+        $this->assertSame('Tematik', $guru->mapel_sertifikasi);
+        $this->assertSame('Sudah Menikah', $guru->status_menikah);
+        $this->assertSame('PEG-UPDATE', $guru->peg_id);
+        $this->assertSame('0811', $guru->telepon);
+    }
+
     /**
      * @param  list<array<string, mixed>>  $rows
      */
     private function makeImportFile(array $rows): UploadedFile
     {
+        return $this->makeImportFileWithHeaders(GuruTemplateExporter::dataHeaders(), $rows);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function makeLegacyImportFile(array $rows): UploadedFile
+    {
+        return $this->makeImportFileWithHeaders([
+            'nama',
+            'jenis_kelamin',
+            'tahun_masuk',
+            'nuptk',
+            'tempat_lahir',
+            'tanggal_lahir',
+            'email',
+            'telepon',
+            'alamat',
+            'status_kepegawaian',
+        ], $rows);
+    }
+
+    /**
+     * @param  list<string>  $headers
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function makeImportFileWithHeaders(array $headers, array $rows): UploadedFile
+    {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Data Guru');
 
-        foreach (GuruTemplateExporter::dataHeaders() as $index => $header) {
+        foreach ($headers as $index => $header) {
             $column = chr(ord('A') + $index);
             $sheet->setCellValue($column.'1', $header);
         }
-
-        $headers = GuruTemplateExporter::dataHeaders();
 
         foreach ($rows as $rowIndex => $row) {
             $excelRow = $rowIndex + 2;
