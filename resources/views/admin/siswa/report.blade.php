@@ -31,7 +31,6 @@
         </div>
         @unless ($isSuperAdmin)
             <div class="page-header__actions">
-                <x-ui.button href="{{ route('admin.siswa.create', ['jenis_masuk' => 'mutasi_masuk']) }}">Mutasi masuk</x-ui.button>
                 <x-ui.button href="{{ route('admin.siswa.index') }}" variant="secondary">Data siswa</x-ui.button>
             </div>
         @endunless
