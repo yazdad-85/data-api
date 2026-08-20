@@ -50,7 +50,7 @@
             type="search"
             name="q"
             value="{{ $q }}"
-            placeholder="Cari nama atau NIY guru"
+            placeholder="Cari nama, NIY, atau NIK guru"
             class="field-control"
             aria-label="Cari guru"
         >
@@ -75,6 +75,7 @@
                 <tr>
                     <th>Nama</th>
                     <th>NIY</th>
+                    <th>NIK</th>
                     <th>Status kepegawaian</th>
                     <th>Status</th>
                     <th>Aksi</th>
@@ -84,6 +85,7 @@
                 <tr>
                     <td>{{ $guru->nama }}</td>
                     <td>{{ $guru->niy ?? '—' }}</td>
+                    <td>{{ $guru->nik ?? '—' }}</td>
                     <td>{{ $guru->status_kepegawaian ?? '—' }}</td>
                     <td>
                         @if ($guru->is_active)

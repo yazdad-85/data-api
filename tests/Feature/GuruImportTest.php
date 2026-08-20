@@ -47,7 +47,19 @@ class GuruImportTest extends TestCase
         $admin = User::factory()->adminLembaga($lembaga->id)->create();
 
         $file = $this->makeImportFile([
-            ['nama' => 'Guru Import A', 'jenis_kelamin' => 'L', 'tahun_masuk' => 1989],
+            [
+                'nama' => 'Guru Import A',
+                'jenis_kelamin' => 'L',
+                'tahun_masuk' => 1989,
+                'nik' => '3174010101890001',
+                'pendidikan_terakhir' => 's1',
+                'instansi_pendidikan' => 'Universitas Import',
+                'jurusan' => 'PGMI',
+                'status_sertifikasi' => 'sudah',
+                'status_inpasing' => 'belum',
+                'mapel_sertifikasi' => 'Tematik',
+                'status_menikah' => 'menikah',
+            ],
             ['nama' => 'Guru Import B', 'jenis_kelamin' => 'P', 'tahun_masuk' => 1989],
         ]);
 
@@ -59,7 +71,16 @@ class GuruImportTest extends TestCase
         $response->assertSessionHas('status');
 
         $this->assertSame(2, Guru::query()->count());
-        $this->assertSame('048801018901', Guru::query()->where('nama', 'Guru Import A')->value('niy'));
+        $guruA = Guru::query()->where('nama', 'Guru Import A')->firstOrFail();
+        $this->assertSame('048801018901', $guruA->niy);
+        $this->assertSame('3174010101890001', $guruA->nik);
+        $this->assertSame('S1', $guruA->pendidikan_terakhir);
+        $this->assertSame('Universitas Import', $guruA->instansi_pendidikan);
+        $this->assertSame('PGMI', $guruA->jurusan);
+        $this->assertSame('Sudah', $guruA->status_sertifikasi);
+        $this->assertSame('Belum', $guruA->status_inpasing);
+        $this->assertSame('Tematik', $guruA->mapel_sertifikasi);
+        $this->assertSame('Sudah Menikah', $guruA->status_menikah);
         $this->assertSame('048801028902', Guru::query()->where('nama', 'Guru Import B')->value('niy'));
     }
 
@@ -96,11 +117,14 @@ class GuruImportTest extends TestCase
             $sheet->setCellValue($column.'1', $header);
         }
 
+        $headers = GuruTemplateExporter::dataHeaders();
+
         foreach ($rows as $rowIndex => $row) {
             $excelRow = $rowIndex + 2;
-            $sheet->setCellValue('A'.$excelRow, $row['nama'] ?? '');
-            $sheet->setCellValue('B'.$excelRow, $row['jenis_kelamin'] ?? '');
-            $sheet->setCellValue('C'.$excelRow, $row['tahun_masuk'] ?? '');
+            foreach ($headers as $index => $header) {
+                $column = chr(ord('A') + $index);
+                $sheet->setCellValue($column.$excelRow, $row[$header] ?? '');
+            }
         }
 
         $path = tempnam(sys_get_temp_dir(), 'guru-import-').'.xlsx';

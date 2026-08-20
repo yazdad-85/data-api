@@ -81,7 +81,7 @@
             type="search"
             name="q"
             value="{{ $filters['q'] }}"
-            placeholder="@if ($resource === 'siswa') Cari nama, NIS, NISN @elseif ($resource === 'guru') Cari nama, NIY, NUPTK @else Cari nama, NIK, jabatan @endif"
+            placeholder="@if ($resource === 'siswa') Cari nama, NIS, NISN @elseif ($resource === 'guru') Cari nama, NIY, NIK, NUPTK @else Cari nama, NIK, jabatan @endif"
             class="field-control"
             aria-label="Cari data"
         >
@@ -115,7 +115,9 @@
                         <th>Nama</th>
                         <th>Lembaga</th>
                         <th>NIY</th>
+                        <th>NIK</th>
                         <th>Tahun masuk</th>
+                        <th>Pendidikan</th>
                         <th>Status kepegawaian</th>
                         <th>Status</th>
                     </tr>
@@ -153,7 +155,9 @@
                             @endif
                         </td>
                         <td>{{ $row->niy ?? '—' }}</td>
+                        <td>{{ $row->nik ?? '—' }}</td>
                         <td>{{ $row->tahun_masuk ?? '—' }}</td>
+                        <td>{{ $row->pendidikan_terakhir ?? '—' }}</td>
                         <td>{{ $row->status_kepegawaian ?? '—' }}</td>
                         <td>
                             <x-ui.badge tone="{{ $row->is_active ? 'ok' : 'neutral' }}">

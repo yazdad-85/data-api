@@ -23,6 +23,10 @@ class GuruFactory extends Factory
             'nama' => fake()->name(),
             'jenis_kelamin' => fake()->randomElement(['L', 'P']),
             'tahun_masuk' => fake()->numberBetween(1990, (int) date('Y')),
+            'pendidikan_terakhir' => fake()->randomElement(['SMA', 'S1', 'S2']),
+            'status_sertifikasi' => fake()->randomElement(['Sudah', 'Belum']),
+            'status_inpasing' => fake()->randomElement(['Sudah', 'Belum']),
+            'status_menikah' => fake()->randomElement(['Sudah Menikah', 'Belum Menikah']),
             'is_active' => true,
         ];
     }

@@ -57,12 +57,15 @@ final class ApiResourceCatalog
                     'academic' => [
                         'id', 'lembaga_id', 'niy', 'nama', 'is_active', 'created_at', 'updated_at',
                         'nuptk', 'tahun_masuk', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
-                        'status_kepegawaian',
+                        'status_kepegawaian', 'pendidikan_terakhir', 'instansi_pendidikan', 'jurusan',
+                        'status_sertifikasi', 'status_inpasing', 'mapel_sertifikasi',
                     ],
                     'contact' => [
                         'id', 'lembaga_id', 'niy', 'nama', 'is_active', 'created_at', 'updated_at',
                         'nuptk', 'tahun_masuk', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
-                        'status_kepegawaian',
+                        'status_kepegawaian', 'nik', 'pendidikan_terakhir', 'instansi_pendidikan',
+                        'jurusan', 'status_sertifikasi', 'status_inpasing', 'mapel_sertifikasi',
+                        'status_menikah',
                         'email', 'telepon', 'alamat',
                     ],
                 ],

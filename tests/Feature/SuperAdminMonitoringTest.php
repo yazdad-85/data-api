@@ -154,7 +154,9 @@ class SuperAdminMonitoringTest extends TestCase
             'lembaga_id' => $lembaga->id,
             'nama' => 'Guru Export',
             'niy' => 'NIY-EXPORT',
+            'nik' => 'NIK-GURU-EXPORT',
             'tahun_masuk' => 2026,
+            'pendidikan_terakhir' => 'S1',
         ]);
         Karyawan::factory()->create([
             'lembaga_id' => $lembaga->id,
@@ -170,6 +172,8 @@ class SuperAdminMonitoringTest extends TestCase
         $this->assertSame('Nama', $guruRows[0][0]);
         $this->assertSame('Guru Export', $guruRows[1][0]);
         $this->assertSame('NIY-EXPORT', $guruRows[1][2]);
+        $this->assertSame('NIK-GURU-EXPORT', $guruRows[1][3]);
+        $this->assertSame('S1', $guruRows[1][6]);
 
         $karyawan = $this->actingAs($superAdmin)
             ->get(route('admin.monitoring.karyawan.export', ['lembaga_id' => $lembaga->id]));

@@ -30,6 +30,12 @@
                     :value="old('nama', $guru->nama)"
                     :error="$errors->first('nama')"
                 />
+                <x-ui.input
+                    name="nik"
+                    label="NIK"
+                    :value="old('nik', $guru->nik)"
+                    :error="$errors->first('nik')"
+                />
                 <div class="field">
                     <span class="field-label">NIY</span>
                     <p class="field-control" style="background: var(--color-surface-muted, #f3f4f6);">{{ $guru->niy ?? '—' }}</p>
@@ -53,6 +59,61 @@
                     <option value="" @selected(old('jenis_kelamin', $guru->jenis_kelamin) === null)>— Pilih —</option>
                     <option value="L" @selected(old('jenis_kelamin', $guru->jenis_kelamin) === 'L')>Laki-laki</option>
                     <option value="P" @selected(old('jenis_kelamin', $guru->jenis_kelamin) === 'P')>Perempuan</option>
+                </x-ui.select>
+                <x-ui.select
+                    name="pendidikan_terakhir"
+                    label="Pendidikan terakhir"
+                    :error="$errors->first('pendidikan_terakhir')"
+                >
+                    <option value="" @selected(old('pendidikan_terakhir', $guru->pendidikan_terakhir) === null || old('pendidikan_terakhir', $guru->pendidikan_terakhir) === '')>— Pilih —</option>
+                    @foreach (['SMP', 'SMA', 'S1', 'S2', 'S3'] as $pendidikan)
+                        <option value="{{ $pendidikan }}" @selected(old('pendidikan_terakhir', $guru->pendidikan_terakhir) === $pendidikan)>{{ $pendidikan }}</option>
+                    @endforeach
+                </x-ui.select>
+                <x-ui.input
+                    name="instansi_pendidikan"
+                    label="Instansi pendidikan"
+                    :value="old('instansi_pendidikan', $guru->instansi_pendidikan)"
+                    :error="$errors->first('instansi_pendidikan')"
+                />
+                <x-ui.input
+                    name="jurusan"
+                    label="Jurusan"
+                    :value="old('jurusan', $guru->jurusan)"
+                    :error="$errors->first('jurusan')"
+                />
+                <x-ui.select
+                    name="status_sertifikasi"
+                    label="Status sertifikasi"
+                    :error="$errors->first('status_sertifikasi')"
+                >
+                    <option value="" @selected(old('status_sertifikasi', $guru->status_sertifikasi) === null || old('status_sertifikasi', $guru->status_sertifikasi) === '')>— Pilih —</option>
+                    <option value="Sudah" @selected(old('status_sertifikasi', $guru->status_sertifikasi) === 'Sudah')>Sudah</option>
+                    <option value="Belum" @selected(old('status_sertifikasi', $guru->status_sertifikasi) === 'Belum')>Belum</option>
+                </x-ui.select>
+                <x-ui.select
+                    name="status_inpasing"
+                    label="Status inpasing"
+                    :error="$errors->first('status_inpasing')"
+                >
+                    <option value="" @selected(old('status_inpasing', $guru->status_inpasing) === null || old('status_inpasing', $guru->status_inpasing) === '')>— Pilih —</option>
+                    <option value="Sudah" @selected(old('status_inpasing', $guru->status_inpasing) === 'Sudah')>Sudah</option>
+                    <option value="Belum" @selected(old('status_inpasing', $guru->status_inpasing) === 'Belum')>Belum</option>
+                </x-ui.select>
+                <x-ui.input
+                    name="mapel_sertifikasi"
+                    label="Mapel sertifikasi"
+                    :value="old('mapel_sertifikasi', $guru->mapel_sertifikasi)"
+                    :error="$errors->first('mapel_sertifikasi')"
+                />
+                <x-ui.select
+                    name="status_menikah"
+                    label="Status menikah"
+                    :error="$errors->first('status_menikah')"
+                >
+                    <option value="" @selected(old('status_menikah', $guru->status_menikah) === null || old('status_menikah', $guru->status_menikah) === '')>— Pilih —</option>
+                    <option value="Sudah Menikah" @selected(old('status_menikah', $guru->status_menikah) === 'Sudah Menikah')>Sudah Menikah</option>
+                    <option value="Belum Menikah" @selected(old('status_menikah', $guru->status_menikah) === 'Belum Menikah')>Belum Menikah</option>
                 </x-ui.select>
                 <x-ui.input
                     name="tempat_lahir"

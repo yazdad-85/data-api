@@ -199,6 +199,26 @@ final class GuruImporter
             'nama' => $nama,
             'jenis_kelamin' => $jenisKelamin,
             'tahun_masuk' => $tahunMasuk,
+            'nik' => $this->nullableString($payload['nik'] ?? null, 30),
+            'pendidikan_terakhir' => $this->nullableOption(
+                $payload['pendidikan_terakhir'] ?? null,
+                ['SMP', 'SMA', 'S1', 'S2', 'S3'],
+                'Pendidikan terakhir'
+            ),
+            'instansi_pendidikan' => $this->nullableString($payload['instansi_pendidikan'] ?? null, 150),
+            'jurusan' => $this->nullableString($payload['jurusan'] ?? null, 100),
+            'status_sertifikasi' => $this->nullableOption(
+                $payload['status_sertifikasi'] ?? null,
+                ['Sudah', 'Belum'],
+                'Status sertifikasi'
+            ),
+            'status_inpasing' => $this->nullableOption(
+                $payload['status_inpasing'] ?? null,
+                ['Sudah', 'Belum'],
+                'Status inpasing'
+            ),
+            'mapel_sertifikasi' => $this->nullableString($payload['mapel_sertifikasi'] ?? null, 100),
+            'status_menikah' => $this->nullableStatusMenikah($payload['status_menikah'] ?? null),
             'nuptk' => $this->nullableString($payload['nuptk'] ?? null, 40),
             'tempat_lahir' => $this->nullableString($payload['tempat_lahir'] ?? null, 100),
             'tanggal_lahir' => $tanggalLahir,
@@ -222,6 +242,43 @@ final class GuruImporter
         }
 
         return $string;
+    }
+
+    /**
+     * @param  list<string>  $allowed
+     */
+    private function nullableOption(mixed $value, array $allowed, string $label): ?string
+    {
+        $string = trim((string) ($value ?? ''));
+
+        if ($string === '') {
+            return null;
+        }
+
+        foreach ($allowed as $option) {
+            if (strcasecmp($string, $option) === 0) {
+                return $option;
+            }
+        }
+
+        throw new InvalidArgumentException($label.' harus salah satu: '.implode(', ', $allowed).'.');
+    }
+
+    private function nullableStatusMenikah(mixed $value): ?string
+    {
+        $string = trim((string) ($value ?? ''));
+
+        if ($string === '') {
+            return null;
+        }
+
+        $normalized = strtolower($string);
+
+        return match ($normalized) {
+            'sudah', 'menikah', 'sudah menikah' => 'Sudah Menikah',
+            'belum', 'belum menikah' => 'Belum Menikah',
+            default => throw new InvalidArgumentException('Status menikah harus Sudah Menikah atau Belum Menikah.'),
+        };
     }
 
     private function parseDate(mixed $value): ?string

@@ -18,9 +18,17 @@ class UpdateGuruRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'nik' => ['nullable', 'string', 'max:30'],
             'nuptk' => ['nullable', 'string', 'max:40'],
             'nama' => ['required', 'string', 'max:150'],
             'jenis_kelamin' => ['nullable', Rule::in(['L', 'P'])],
+            'pendidikan_terakhir' => ['nullable', Rule::in(['SMP', 'SMA', 'S1', 'S2', 'S3'])],
+            'instansi_pendidikan' => ['nullable', 'string', 'max:150'],
+            'jurusan' => ['nullable', 'string', 'max:100'],
+            'status_sertifikasi' => ['nullable', Rule::in(['Sudah', 'Belum'])],
+            'status_inpasing' => ['nullable', Rule::in(['Sudah', 'Belum'])],
+            'mapel_sertifikasi' => ['nullable', 'string', 'max:100'],
+            'status_menikah' => ['nullable', Rule::in(['Sudah Menikah', 'Belum Menikah'])],
             'tempat_lahir' => ['nullable', 'string', 'max:100'],
             'tanggal_lahir' => ['nullable', 'date'],
             'email' => ['nullable', 'email', 'max:150'],

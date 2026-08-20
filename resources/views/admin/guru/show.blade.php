@@ -37,8 +37,40 @@
                 <dd class="detail-grid__value">{{ $guru->tahun_masuk ?? '—' }}</dd>
             </div>
             <div>
+                <dt class="detail-grid__label">NIK</dt>
+                <dd class="detail-grid__value">{{ $guru->nik ?? '—' }}</dd>
+            </div>
+            <div>
                 <dt class="detail-grid__label">NUPTK</dt>
                 <dd class="detail-grid__value">{{ $guru->nuptk ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Pendidikan terakhir</dt>
+                <dd class="detail-grid__value">{{ $guru->pendidikan_terakhir ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Instansi pendidikan</dt>
+                <dd class="detail-grid__value">{{ $guru->instansi_pendidikan ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Jurusan</dt>
+                <dd class="detail-grid__value">{{ $guru->jurusan ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Status sertifikasi</dt>
+                <dd class="detail-grid__value">{{ $guru->status_sertifikasi ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Status inpasing</dt>
+                <dd class="detail-grid__value">{{ $guru->status_inpasing ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Mapel sertifikasi</dt>
+                <dd class="detail-grid__value">{{ $guru->mapel_sertifikasi ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Status menikah</dt>
+                <dd class="detail-grid__value">{{ $guru->status_menikah ?? '—' }}</dd>
             </div>
             <div>
                 <dt class="detail-grid__label">Jenis kelamin</dt>

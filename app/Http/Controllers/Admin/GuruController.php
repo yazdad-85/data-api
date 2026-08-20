@@ -42,10 +42,13 @@ class GuruController extends Controller
                 $like = '%'.$q.'%';
                 $query->where(function ($inner) use ($like) {
                     if ($inner->getConnection()->getDriverName() === 'pgsql') {
-                        $inner->where('nama', 'ilike', $like)->orWhere('niy', 'ilike', $like);
+                        $inner->where('nama', 'ilike', $like)
+                            ->orWhere('niy', 'ilike', $like)
+                            ->orWhere('nik', 'ilike', $like);
                     } else {
                         $inner->whereRaw('lower(nama) like lower(?)', [$like])
-                            ->orWhereRaw('lower(niy) like lower(?)', [$like]);
+                            ->orWhereRaw('lower(niy) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nik) like lower(?)', [$like]);
                     }
                 });
             })
