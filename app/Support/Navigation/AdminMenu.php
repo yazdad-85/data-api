@@ -32,6 +32,7 @@ final class AdminMenu
                 ['label' => 'Laporan Siswa', 'route' => 'admin.laporan.siswa', 'available' => true],
                 ['label' => 'Karyawan', 'route' => 'admin.karyawan.index', 'available' => true],
                 ['label' => 'API client', 'route' => 'admin.api-clients.index', 'available' => true],
+                ['label' => 'Profil Lembaga', 'route' => 'admin.lembaga-profile.show', 'available' => true],
             ]);
         }
 

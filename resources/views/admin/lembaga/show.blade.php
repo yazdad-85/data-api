@@ -54,6 +54,10 @@
 
         <dl class="detail-grid">
             <div>
+                <dt class="detail-grid__label">Nama kepala</dt>
+                <dd class="detail-grid__value">{{ $lembaga->nama_kepala ?? '—' }}</dd>
+            </div>
+            <div>
                 <dt class="detail-grid__label">Jenis</dt>
                 <dd class="detail-grid__value">{{ $lembaga->jenis ?? '—' }}</dd>
             </div>
@@ -76,6 +80,16 @@
             <div>
                 <dt class="detail-grid__label">Alamat</dt>
                 <dd class="detail-grid__value">{{ $lembaga->alamat ?? '—' }}</dd>
+            </div>
+            <div>
+                <dt class="detail-grid__label">Kop surat</dt>
+                <dd class="detail-grid__value">
+                    @if ($kopSuratUrl)
+                        <img src="{{ $kopSuratUrl }}" alt="Kop surat {{ $lembaga->nama }}" style="max-height: 64px; max-width: 220px;">
+                    @else
+                        —
+                    @endif
+                </dd>
             </div>
         </dl>
     </div>

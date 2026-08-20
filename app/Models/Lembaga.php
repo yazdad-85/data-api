@@ -20,12 +20,14 @@ class Lembaga extends Model
         'kode',
         'niy_kode',
         'nama',
+        'nama_kepala',
         'jenis',
         'alamat',
         'kota',
         'provinsi',
         'telepon',
         'email',
+        'kop_surat_path',
         'is_active',
     ];
 

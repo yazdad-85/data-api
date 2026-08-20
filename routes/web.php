@@ -14,6 +14,7 @@ use App\Http\Controllers\Admin\SuperAdminMonitoringController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
 use App\Http\Controllers\Admin\LembagaController;
+use App\Http\Controllers\Admin\LembagaProfileController;
 use App\Http\Controllers\Admin\TahunAjaranController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -43,6 +44,9 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::put('/profil/password', [ProfileController::class, 'updatePassword'])
         ->middleware('throttle:admin-profile-password')
         ->name('admin.profile.password');
+
+    Route::get('/profil-lembaga', [LembagaProfileController::class, 'show'])->name('admin.lembaga-profile.show');
+    Route::put('/profil-lembaga', [LembagaProfileController::class, 'update'])->name('admin.lembaga-profile.update');
 
     Route::get('/pengaturan', [SettingsController::class, 'show'])->name('admin.settings.show');
     Route::put('/pengaturan/branding', [SettingsController::class, 'updateBranding'])->name('admin.settings.branding');

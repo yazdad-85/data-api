@@ -13,6 +13,7 @@ use App\Support\Master\LembagaKodeGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 
 class LembagaController extends Controller
@@ -89,12 +90,17 @@ class LembagaController extends Controller
             ->whereNull('revoked_at')
             ->count();
 
+        $kopSuratUrl = $lembaga->kop_surat_path
+            ? Storage::disk('public')->url($lembaga->kop_surat_path)
+            : null;
+
         return view('admin.lembaga.show', compact(
             'lembaga',
             'admins',
             'adminsAktif',
             'apiClients',
             'apiClientsAktif',
+            'kopSuratUrl',
         ));
     }
 
