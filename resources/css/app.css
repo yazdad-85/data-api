@@ -457,10 +457,14 @@ body {
 
 .dashboard-chart {
     display: grid;
-    grid-template-columns: repeat(6, minmax(3.75rem, 1fr));
+    grid-template-columns: repeat(var(--chart-columns, 6), minmax(3.75rem, 1fr));
     gap: 0.7rem;
     min-height: 16rem;
     padding-top: 0.5rem;
+}
+
+.dashboard-chart--academic {
+    margin-top: 1rem;
 }
 
 .dashboard-chart__group {
@@ -507,6 +511,31 @@ body {
     background: var(--brand);
 }
 
+.dashboard-chart__bar--blue,
+.dashboard-chart__legend-item--blue::before {
+    background: #2563eb;
+}
+
+.dashboard-chart__bar--emerald,
+.dashboard-chart__legend-item--emerald::before {
+    background: #059669;
+}
+
+.dashboard-chart__bar--amber,
+.dashboard-chart__legend-item--amber::before {
+    background: #d97706;
+}
+
+.dashboard-chart__bar--slate,
+.dashboard-chart__legend-item--slate::before {
+    background: #64748b;
+}
+
+.dashboard-chart__bar--red,
+.dashboard-chart__legend-item--red::before {
+    background: #dc2626;
+}
+
 .dashboard-chart__bar--ok,
 .dashboard-chart__legend-item--ok::before {
     background: var(--ok);
@@ -515,6 +544,16 @@ body {
 .dashboard-chart__bar--warn,
 .dashboard-chart__legend-item--warn::before {
     background: var(--warn);
+}
+
+.dashboard-chart__bar--danger,
+.dashboard-chart__legend-item--danger::before {
+    background: var(--danger);
+}
+
+.dashboard-chart__bar--neutral,
+.dashboard-chart__legend-item--neutral::before {
+    background: var(--muted);
 }
 
 .dashboard-chart__label {
@@ -528,6 +567,11 @@ body {
     flex-wrap: wrap;
     justify-content: flex-end;
     gap: 0.55rem;
+}
+
+.dashboard-chart__legend--inline {
+    justify-content: flex-start;
+    margin-top: 0.75rem;
 }
 
 .dashboard-chart__legend-item {
@@ -585,6 +629,46 @@ body {
     height: 100%;
     border-radius: inherit;
     background: linear-gradient(90deg, var(--brand), var(--ok));
+}
+
+.dashboard-filter {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+}
+
+.dashboard-filter .field-control {
+    min-width: min(18rem, 100%);
+}
+
+.dashboard-academic-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+    gap: 0.65rem;
+    margin-top: 0.85rem;
+}
+
+.dashboard-academic-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--border) 75%, white);
+    border-radius: 0.45rem;
+    background: color-mix(in srgb, var(--surface) 55%, white);
+}
+
+.dashboard-academic-card span {
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.dashboard-academic-card strong {
+    color: var(--brand-deep);
+    font-size: 1.35rem;
 }
 
 .dashboard-progress-list {
@@ -752,7 +836,7 @@ body {
 
     .dashboard-chart {
         overflow-x: auto;
-        grid-template-columns: repeat(6, minmax(4.5rem, 1fr));
+        grid-template-columns: repeat(var(--chart-columns, 6), minmax(4.5rem, 1fr));
         padding-bottom: 0.25rem;
     }
 }

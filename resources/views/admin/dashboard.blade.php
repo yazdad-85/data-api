@@ -4,7 +4,9 @@
     use App\Support\Master\SiswaStatus;
 
     $trend = $stats['trend_master'];
-    $trendColors = ['Siswa' => 'brand', 'Guru' => 'ok', 'Karyawan' => 'warn'];
+    $trendColors = ['Siswa' => 'blue', 'Guru' => 'emerald', 'Karyawan' => 'amber'];
+    $academic = $stats['tahun_ajaran_analysis'];
+    $academicColors = ['Total' => 'slate', 'Aktif' => 'emerald', 'Mutasi masuk' => 'blue', 'Mutasi keluar' => 'red', 'Lulus' => 'amber'];
     $statusTotal = max(1, array_sum($stats['siswa_status']));
     $statusItems = [
         SiswaStatus::AKTIF,
@@ -77,6 +79,11 @@
                     <span class="dashboard-metric__value font-display">{{ $stats['siswa'] }}</span>
                     <span class="dashboard-metric__hint">{{ $stats['total_siswa'] }} total data</span>
                 </div>
+                <a class="dashboard-metric" href="{{ route('admin.laporan.siswa', ['status_siswa' => SiswaStatus::MUTASI_MASUK]) }}" role="listitem">
+                    <span class="dashboard-metric__label">Mutasi masuk</span>
+                    <span class="dashboard-metric__value font-display">{{ $stats['siswa_mutasi_masuk'] }}</span>
+                    <span class="dashboard-metric__hint">Siswa pindahan</span>
+                </a>
                 <div class="dashboard-metric" role="listitem">
                     <span class="dashboard-metric__label">Karyawan aktif</span>
                     <span class="dashboard-metric__value font-display">{{ $stats['karyawan_aktif'] }}</span>
@@ -96,6 +103,11 @@
                     <span class="dashboard-metric__label">Siswa aktif</span>
                     <span class="dashboard-metric__value font-display">{{ $stats['siswa'] }}</span>
                     <span class="dashboard-metric__hint">{{ $stats['total_siswa'] }} total data siswa</span>
+                </a>
+                <a class="dashboard-metric" href="{{ route('admin.laporan.siswa', ['status_siswa' => SiswaStatus::MUTASI_MASUK]) }}" role="listitem">
+                    <span class="dashboard-metric__label">Mutasi masuk</span>
+                    <span class="dashboard-metric__value font-display">{{ $stats['siswa_mutasi_masuk'] }}</span>
+                    <span class="dashboard-metric__hint">Siswa pindahan</span>
                 </a>
                 <a class="dashboard-metric" href="{{ route('admin.guru.index') }}" role="listitem">
                     <span class="dashboard-metric__label">Guru</span>
@@ -134,7 +146,7 @@
                     </div>
                 </div>
 
-                <div class="dashboard-chart" aria-label="Grafik perkembangan master data">
+                <div class="dashboard-chart" style="--chart-columns: {{ count($trend['labels']) }};" aria-label="Grafik perkembangan master data">
                     @foreach ($trend['labels'] as $index => $label)
                         <div class="dashboard-chart__group">
                             <div class="dashboard-chart__bars">
@@ -183,6 +195,75 @@
                     @endforeach
                 </div>
             </div>
+        </section>
+
+        <section class="dashboard-panel dashboard-panel--wide">
+            <div class="dashboard-panel__header">
+                <div>
+                    <h2 class="dashboard-panel__title font-display">
+                        {{ $academic['mode'] === 'single' ? 'Komposisi siswa tahun ajaran' : 'Perbandingan tahun ajaran' }}
+                    </h2>
+                    <p class="dashboard-panel__description">
+                        {{ $academic['mode'] === 'single'
+                            ? 'Lihat total, aktif, mutasi masuk, mutasi keluar, dan lulus pada tahun ajaran terpilih.'
+                            : 'Bandingkan total dan status siswa antar tahun ajaran.' }}
+                    </p>
+                </div>
+                <form method="GET" action="{{ route('admin.dashboard') }}" class="dashboard-filter">
+                    <select name="tahun_ajaran_id" class="field-control" aria-label="Filter tahun ajaran dashboard">
+                        <option value="" @selected($academic['selected_id'] === '')>Semua tahun ajaran</option>
+                        @foreach ($stats['tahun_ajaran_options'] as $tahunAjaran)
+                            <option value="{{ $tahunAjaran->id }}" @selected($academic['selected_id'] === $tahunAjaran->id)>
+                                {{ $tahunAjaran->nama }}@if ($stats['role'] === 'super_admin') · {{ $tahunAjaran->lembaga->nama ?? '—' }}@endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <x-ui.button type="submit" variant="secondary">Terapkan</x-ui.button>
+                </form>
+            </div>
+
+            @if ($academic['labels'] === [])
+                <p class="dashboard-panel__description">Belum ada tahun ajaran untuk dibandingkan.</p>
+            @else
+                @if ($academic['selected_summary'] !== null)
+                    <div class="dashboard-academic-summary" role="list">
+                        @foreach (['total' => 'Total siswa', 'aktif' => 'Aktif', 'mutasi_masuk' => 'Mutasi masuk', 'mutasi_keluar' => 'Mutasi keluar', 'lulus' => 'Lulus'] as $key => $label)
+                            <div class="dashboard-academic-card" role="listitem">
+                                <span>{{ $label }}</span>
+                                <strong class="font-display">{{ $academic['selected_summary'][$key] }}</strong>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+
+                <div class="dashboard-chart dashboard-chart--academic" style="--chart-columns: {{ max(1, count($academic['labels'])) }};" aria-label="Grafik perbandingan siswa per tahun ajaran">
+                    @foreach ($academic['labels'] as $index => $label)
+                        <div class="dashboard-chart__group">
+                            <div class="dashboard-chart__bars">
+                                @foreach ($academic['series'] as $name => $values)
+                                    @php
+                                        $value = $values[$index] ?? 0;
+                                        $height = max(4, (int) round(($value / $academic['max']) * 100));
+                                    @endphp
+                                    <div
+                                        class="dashboard-chart__bar dashboard-chart__bar--{{ $academicColors[$name] }}"
+                                        style="--bar-height: {{ $height }}%;"
+                                        title="{{ $name }}: {{ $value }}"
+                                    >
+                                        <span>{{ $value }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <span class="dashboard-chart__label">{{ $label }}</span>
+                        </div>
+                    @endforeach
+                </div>
+                <div class="dashboard-chart__legend dashboard-chart__legend--inline">
+                    @foreach ($academic['series'] as $name => $values)
+                        <span class="dashboard-chart__legend-item dashboard-chart__legend-item--{{ $academicColors[$name] }}">{{ $name }}</span>
+                    @endforeach
+                </div>
+            @endif
         </section>
 
         @if ($stats['role'] === 'super_admin')
@@ -250,45 +331,6 @@
                     </x-ui.table>
                 </section>
             @endif
-        @else
-            <section class="dashboard-section">
-                <div class="dashboard-section__header">
-                    <div>
-                        <h2 class="dashboard-section__title font-display">Kelengkapan data</h2>
-                        <p class="dashboard-section__description">Ringkasan modul master yang dipakai operasional lembaga.</p>
-                    </div>
-                </div>
-
-                <div class="dashboard-progress-list">
-                    @foreach ($stats['urutan'] as $item)
-                    @php
-                        $count = $stats[$item['count_key']] ?? 0;
-                        $route = match ($item['count_key']) {
-                            'tahun_ajaran' => 'admin.tahun-ajaran.index',
-                            'guru' => 'admin.guru.index',
-                            'kelas' => 'admin.kelas.index',
-                            'siswa' => 'admin.siswa.index',
-                            'karyawan' => 'admin.karyawan.index',
-                            default => 'admin.dashboard',
-                        };
-                    @endphp
-                    <a class="dashboard-progress" href="{{ route($route) }}">
-                        <span class="dashboard-progress__step">{{ $item['step'] }}</span>
-                        <span class="dashboard-progress__main">
-                            <span class="dashboard-progress__label">{{ $item['label'] }}</span>
-                            <span class="dashboard-progress__hint">
-                                @if ($item['count_key'] === 'siswa')
-                                    {{ $count }} aktif / {{ $stats['total_siswa'] }} total
-                                @else
-                                    {{ $count }} data
-                                @endif
-                            </span>
-                        </span>
-                        <span class="dashboard-progress__count font-display">{{ $count }}</span>
-                    </a>
-                    @endforeach
-                </div>
-            </section>
         @endif
     </div>
 @endsection

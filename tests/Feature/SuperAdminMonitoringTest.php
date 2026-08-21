@@ -5,9 +5,12 @@ namespace Tests\Feature;
 use App\Models\Guru;
 use App\Models\Karyawan;
 use App\Models\Lembaga;
+use App\Models\Kelas;
 use App\Models\Siswa;
+use App\Models\SiswaPenempatan;
 use App\Models\TahunAjaran;
 use App\Models\User;
+use App\Support\Master\PenempatanJenis;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
@@ -44,6 +47,79 @@ class SuperAdminMonitoringTest extends TestCase
             ->assertSee(route('admin.monitoring.guru', ['lembaga_id' => $lembaga->id]), false)
             ->assertSee(str_replace('&', '&amp;', route('admin.laporan.siswa', ['lembaga_id' => $lembaga->id, 'status_siswa' => 'aktif'])), false)
             ->assertSee(route('admin.monitoring.karyawan', ['lembaga_id' => $lembaga->id]), false);
+    }
+
+    public function test_admin_dashboard_shows_selected_and_comparison_tahun_ajaran_student_history(): void
+    {
+        $lembaga = Lembaga::factory()->create(['nama' => 'UD Farida']);
+        $admin = User::factory()->create(['role' => 'admin_lembaga', 'lembaga_id' => $lembaga->id]);
+        $tahunAjaran25 = TahunAjaran::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'nama' => '2025/2026',
+            'tanggal_mulai' => '2025-07-01',
+            'tanggal_selesai' => '2026-06-30',
+        ]);
+        $tahunAjaran26 = TahunAjaran::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'nama' => '2026/2027',
+            'tanggal_mulai' => '2026-07-01',
+            'tanggal_selesai' => '2027-06-30',
+        ]);
+        $kelas25 = Kelas::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'tahun_ajaran_id' => $tahunAjaran25->id,
+            'nama' => 'VII-A',
+        ]);
+        $kelas26 = Kelas::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'tahun_ajaran_id' => $tahunAjaran26->id,
+            'nama' => 'VIII-A',
+        ]);
+
+        Siswa::factory()->inKelas($kelas25)->create(['nama' => 'Aktif Reguler']);
+        $mutasiMasuk = Siswa::factory()->inKelas($kelas25)->create([
+            'nama' => 'Mutasi Masuk Aktif',
+            'status_at' => '2025-07-20',
+        ]);
+        SiswaPenempatan::factory()->open()->create([
+            'lembaga_id' => $lembaga->id,
+            'siswa_id' => $mutasiMasuk->id,
+            'tahun_ajaran_id' => $tahunAjaran25->id,
+            'kelas_id' => $kelas25->id,
+            'mulai_at' => '2025-07-20',
+            'jenis' => PenempatanJenis::MUTASI_MASUK,
+        ]);
+        Siswa::factory()->for($lembaga)->mutasiKeluar()->create([
+            'nama' => 'Mutasi Keluar Lama',
+            'status_at' => '2026-01-15',
+        ]);
+        Siswa::factory()->for($lembaga)->lulus()->create([
+            'nama' => 'Lulus Lama',
+            'status_at' => '2026-06-15',
+        ]);
+        Siswa::factory()->inKelas($kelas26)->create(['nama' => 'Aktif Tahun Baru']);
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard', ['tahun_ajaran_id' => $tahunAjaran25->id]))
+            ->assertOk()
+            ->assertSee('Komposisi siswa tahun ajaran')
+            ->assertSee('2025/2026')
+            ->assertSee('Mutasi masuk')
+            ->assertSee('title="Total: 4"', false)
+            ->assertSee('title="Aktif: 1"', false)
+            ->assertSee('title="Mutasi masuk: 1"', false)
+            ->assertSee('title="Mutasi keluar: 1"', false)
+            ->assertSee('title="Lulus: 1"', false)
+            ->assertDontSee('Kelengkapan data');
+
+        $this->actingAs($admin)
+            ->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Perbandingan tahun ajaran')
+            ->assertSee('2025/2026')
+            ->assertSee('2026/2027')
+            ->assertSee('title="Total: 4"', false)
+            ->assertSee('title="Total: 1"', false);
     }
 
     public function test_super_admin_can_filter_siswa_monitoring_by_lembaga_and_tahun_ajaran(): void
