@@ -9,6 +9,17 @@
     $academicColors = ['Total' => 'slate', 'Aktif' => 'emerald', 'Mutasi masuk' => 'blue', 'Mutasi keluar' => 'red', 'Lulus' => 'amber'];
     $selectedLembagaId = $stats['selected_lembaga_id'] ?? '';
     $lembagaFilter = $stats['role'] === 'super_admin' && $selectedLembagaId !== '' ? ['lembaga_id' => $selectedLembagaId] : [];
+    $chartValue = static function (int $value): string {
+        if ($value >= 1000000) {
+            return rtrim(rtrim(number_format($value / 1000000, $value >= 10000000 ? 0 : 1, ',', '.'), '0'), ',').'jt';
+        }
+
+        if ($value >= 1000) {
+            return rtrim(rtrim(number_format($value / 1000, $value >= 10000 ? 0 : 1, ',', '.'), '0'), ',').'rb';
+        }
+
+        return (string) $value;
+    };
     $statusTotal = max(1, array_sum($stats['siswa_status']));
     $statusItems = [
         SiswaStatus::AKTIF,
@@ -170,14 +181,14 @@
                                 @foreach ($trend['series'] as $name => $values)
                                     @php
                                         $value = $values[$index] ?? 0;
-                                        $height = max(4, (int) round(($value / $trend['max']) * 100));
+                                        $height = max(4, (int) round(($value / $trend['max']) * 88));
                                     @endphp
                                     <div
                                         class="dashboard-chart__bar dashboard-chart__bar--{{ $trendColors[$name] }}"
                                         style="--bar-height: {{ $height }}%;"
                                         title="{{ $name }}: {{ $value }}"
                                     >
-                                        <span>{{ $value }}</span>
+                                        <span>{{ $chartValue((int) $value) }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -263,14 +274,14 @@
                                 @foreach ($academic['series'] as $name => $values)
                                     @php
                                         $value = $values[$index] ?? 0;
-                                        $height = max(4, (int) round(($value / $academic['max']) * 100));
+                                        $height = max(4, (int) round(($value / $academic['max']) * 88));
                                     @endphp
                                     <div
                                         class="dashboard-chart__bar dashboard-chart__bar--{{ $academicColors[$name] }}"
                                         style="--bar-height: {{ $height }}%;"
                                         title="{{ $name }}: {{ $value }}"
                                     >
-                                        <span>{{ $value }}</span>
+                                        <span>{{ $chartValue((int) $value) }}</span>
                                     </div>
                                 @endforeach
                             </div>
