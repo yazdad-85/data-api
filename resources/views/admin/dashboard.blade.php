@@ -7,6 +7,8 @@
     $trendColors = ['Siswa' => 'blue', 'Guru' => 'emerald', 'Karyawan' => 'amber'];
     $academic = $stats['tahun_ajaran_analysis'];
     $academicColors = ['Total' => 'slate', 'Aktif' => 'emerald', 'Mutasi masuk' => 'blue', 'Mutasi keluar' => 'red', 'Lulus' => 'amber'];
+    $selectedLembagaId = $stats['selected_lembaga_id'] ?? '';
+    $lembagaFilter = $stats['role'] === 'super_admin' && $selectedLembagaId !== '' ? ['lembaga_id' => $selectedLembagaId] : [];
     $statusTotal = max(1, array_sum($stats['siswa_status']));
     $statusItems = [
         SiswaStatus::AKTIF,
@@ -36,8 +38,8 @@
             </div>
             <div class="dashboard-hero__actions">
                 @if ($stats['role'] === 'super_admin')
-                    <x-ui.button href="{{ route('admin.laporan.siswa') }}">Laporan siswa</x-ui.button>
-                    <x-ui.button href="{{ route('admin.monitoring.siswa') }}" variant="secondary">Monitoring</x-ui.button>
+                    <x-ui.button href="{{ route('admin.laporan.siswa', $lembagaFilter) }}">Laporan siswa</x-ui.button>
+                    <x-ui.button href="{{ route('admin.monitoring.siswa', $lembagaFilter) }}" variant="secondary">Monitoring</x-ui.button>
                 @else
                     <x-ui.button href="{{ route('admin.siswa.create') }}">Tambah siswa</x-ui.button>
                     <x-ui.button href="{{ route('admin.laporan.siswa') }}" variant="secondary">Laporan siswa</x-ui.button>
@@ -46,6 +48,21 @@
         </header>
 
         @if ($stats['role'] === 'super_admin')
+            <form method="GET" action="{{ route('admin.dashboard') }}" class="dashboard-filter dashboard-filter--super">
+                <select name="lembaga_id" class="field-control" aria-label="Filter lembaga dashboard">
+                    <option value="" @selected($selectedLembagaId === '')>Semua lembaga</option>
+                    @foreach ($stats['lembaga_options'] as $lembaga)
+                        <option value="{{ $lembaga->id }}" @selected($selectedLembagaId === $lembaga->id)>
+                            {{ $lembaga->nama }}
+                        </option>
+                    @endforeach
+                </select>
+                <x-ui.button type="submit" variant="secondary">Terapkan</x-ui.button>
+                @if ($selectedLembagaId !== '')
+                    <x-ui.button href="{{ route('admin.dashboard') }}" variant="secondary">Semua lembaga</x-ui.button>
+                @endif
+            </form>
+
             @if ($stats['lembaga_aktif'] === 0 && $stats['lembaga_nonaktif'] === 0)
                 <x-ui.empty-state
                     title="Belum ada lembaga"
@@ -79,7 +96,7 @@
                     <span class="dashboard-metric__value font-display">{{ $stats['siswa'] }}</span>
                     <span class="dashboard-metric__hint">{{ $stats['total_siswa'] }} total data</span>
                 </div>
-                <a class="dashboard-metric" href="{{ route('admin.laporan.siswa', ['status_siswa' => SiswaStatus::MUTASI_MASUK]) }}" role="listitem">
+                <a class="dashboard-metric" href="{{ route('admin.laporan.siswa', array_merge($lembagaFilter, ['status_siswa' => SiswaStatus::MUTASI_MASUK])) }}" role="listitem">
                     <span class="dashboard-metric__label">Mutasi masuk</span>
                     <span class="dashboard-metric__value font-display">{{ $stats['siswa_mutasi_masuk'] }}</span>
                     <span class="dashboard-metric__hint">Siswa pindahan</span>
@@ -183,7 +200,7 @@
                             $count = $stats['siswa_status'][$status] ?? 0;
                             $width = (int) round(($count / $statusTotal) * 100);
                         @endphp
-                        <a class="dashboard-status" href="{{ route('admin.laporan.siswa', ['status_siswa' => $status]) }}">
+                        <a class="dashboard-status" href="{{ route('admin.laporan.siswa', array_merge($lembagaFilter, ['status_siswa' => $status])) }}">
                             <span class="dashboard-status__top">
                                 <span>{{ SiswaStatus::label($status) }}</span>
                                 <strong>{{ $count }}</strong>
@@ -210,6 +227,9 @@
                     </p>
                 </div>
                 <form method="GET" action="{{ route('admin.dashboard') }}" class="dashboard-filter">
+                    @if ($selectedLembagaId !== '')
+                        <input type="hidden" name="lembaga_id" value="{{ $selectedLembagaId }}">
+                    @endif
                     <select name="tahun_ajaran_id" class="field-control" aria-label="Filter tahun ajaran dashboard">
                         <option value="" @selected($academic['selected_id'] === '')>Semua tahun ajaran</option>
                         @foreach ($stats['tahun_ajaran_options'] as $tahunAjaran)

@@ -20,12 +20,13 @@ use Illuminate\Support\Carbon;
 final class DashboardStats
 {
     /** @return array<string, mixed> */
-    public function for(User $user, string $tahunAjaranId = ''): array
+    public function for(User $user, string $tahunAjaranId = '', string $lembagaId = ''): array
     {
-        $academicYears = $this->academicYears();
-        $selectedTahunAjaranId = $academicYears->contains('id', $tahunAjaranId) ? $tahunAjaranId : '';
-
         if ($user->isSuperAdmin()) {
+            $lembagaOptions = Lembaga::query()->orderBy('nama')->get();
+            $selectedLembagaId = $lembagaOptions->contains('id', $lembagaId) ? $lembagaId : '';
+            $academicYears = $this->academicYears($selectedLembagaId);
+            $selectedTahunAjaranId = $academicYears->contains('id', $tahunAjaranId) ? $tahunAjaranId : '';
             $lembagas = Lembaga::query()
                 ->withCount([
                     'guru',
@@ -41,26 +42,58 @@ final class DashboardStats
                     'karyawan as karyawan_aktif_count' => fn ($query) => $query->where('is_active', true),
                     'tahunAjaran as tahun_ajaran_aktif_count' => fn ($query) => $query->where('is_aktif', true),
                 ])
+                ->when($selectedLembagaId !== '', fn (Builder $query) => $query->where('id', $selectedLembagaId))
                 ->orderBy('nama')
                 ->get();
+            $lembagaAktifQuery = Lembaga::query()->where('is_active', true);
+            $lembagaNonaktifQuery = Lembaga::query()->where('is_active', false);
+            $apiClientQuery = ApiClient::query()->where('is_active', true)->whereNull('revoked_at');
+            $guruQuery = Guru::query();
+            $guruAktifQuery = Guru::query()->where('is_active', true);
+            $siswaQuery = Siswa::query();
+            $siswaAktifQuery = Siswa::query()->where('status_siswa', SiswaStatus::AKTIF);
+            $siswaMutasiKeluarQuery = Siswa::query()->where('status_siswa', SiswaStatus::MUTASI_KELUAR);
+            $siswaLulusQuery = Siswa::query()->where('status_siswa', SiswaStatus::LULUS);
+            $karyawanQuery = Karyawan::query();
+            $karyawanAktifQuery = Karyawan::query()->where('is_active', true);
+
+            if ($selectedLembagaId !== '') {
+                foreach ([
+                    $apiClientQuery,
+                    $guruQuery,
+                    $guruAktifQuery,
+                    $siswaQuery,
+                    $siswaAktifQuery,
+                    $siswaMutasiKeluarQuery,
+                    $siswaLulusQuery,
+                    $karyawanQuery,
+                    $karyawanAktifQuery,
+                ] as $query) {
+                    $query->where('lembaga_id', $selectedLembagaId);
+                }
+                $lembagaAktifQuery->where('id', $selectedLembagaId);
+                $lembagaNonaktifQuery->where('id', $selectedLembagaId);
+            }
 
             return [
                 'role' => 'super_admin',
-                'lembaga_aktif' => Lembaga::query()->where('is_active', true)->count(),
-                'lembaga_nonaktif' => Lembaga::query()->where('is_active', false)->count(),
-                'api_client_aktif' => ApiClient::query()->where('is_active', true)->whereNull('revoked_at')->count(),
-                'guru' => Guru::query()->count(),
-                'guru_aktif' => Guru::query()->where('is_active', true)->count(),
-                'siswa' => Siswa::query()->where('status_siswa', SiswaStatus::AKTIF)->count(),
-                'total_siswa' => Siswa::query()->count(),
-                'siswa_aktif' => Siswa::query()->where('status_siswa', SiswaStatus::AKTIF)->count(),
-                'siswa_mutasi_masuk' => $this->siswaMutasiMasukCount(),
-                'siswa_mutasi_keluar' => Siswa::query()->where('status_siswa', SiswaStatus::MUTASI_KELUAR)->count(),
-                'siswa_lulus' => Siswa::query()->where('status_siswa', SiswaStatus::LULUS)->count(),
-                'karyawan' => Karyawan::query()->count(),
-                'karyawan_aktif' => Karyawan::query()->where('is_active', true)->count(),
-                'trend_master' => $this->masterTrend(),
-                'siswa_status' => $this->siswaStatusSummary(),
+                'selected_lembaga_id' => $selectedLembagaId,
+                'lembaga_options' => $lembagaOptions,
+                'lembaga_aktif' => $lembagaAktifQuery->count(),
+                'lembaga_nonaktif' => $lembagaNonaktifQuery->count(),
+                'api_client_aktif' => $apiClientQuery->count(),
+                'guru' => $guruQuery->count(),
+                'guru_aktif' => $guruAktifQuery->count(),
+                'siswa' => $siswaAktifQuery->count(),
+                'total_siswa' => $siswaQuery->count(),
+                'siswa_aktif' => $siswaAktifQuery->count(),
+                'siswa_mutasi_masuk' => $this->siswaMutasiMasukCount($selectedLembagaId),
+                'siswa_mutasi_keluar' => $siswaMutasiKeluarQuery->count(),
+                'siswa_lulus' => $siswaLulusQuery->count(),
+                'karyawan' => $karyawanQuery->count(),
+                'karyawan_aktif' => $karyawanAktifQuery->count(),
+                'trend_master' => $this->masterTrend($selectedLembagaId),
+                'siswa_status' => $this->siswaStatusSummary($selectedLembagaId),
                 'tahun_ajaran_options' => $academicYears,
                 'tahun_ajaran_analysis' => $this->tahunAjaranAnalysis($academicYears, $selectedTahunAjaranId, true),
                 'lembaga_rows' => $lembagas,
@@ -70,9 +103,14 @@ final class DashboardStats
             ];
         }
 
+        $academicYears = $this->academicYears();
+        $selectedTahunAjaranId = $academicYears->contains('id', $tahunAjaranId) ? $tahunAjaranId : '';
+
         return [
             'role' => 'admin_lembaga',
             'lembaga_nama' => $user->lembaga?->nama,
+            'selected_lembaga_id' => '',
+            'lembaga_options' => collect(),
             'tahun_ajaran' => TahunAjaran::query()->count(),
             'guru' => Guru::query()->count(),
             'kelas' => Kelas::query()->count(),
@@ -93,10 +131,11 @@ final class DashboardStats
     /**
      * @return Collection<int, TahunAjaran>
      */
-    private function academicYears(): Collection
+    private function academicYears(string $lembagaId = ''): Collection
     {
         return TahunAjaran::query()
             ->with('lembaga')
+            ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
             ->orderBy('tanggal_mulai')
             ->orderBy('nama')
             ->get();
@@ -105,15 +144,15 @@ final class DashboardStats
     /**
      * @return array{labels: list<string>, series: array<string, list<int>>, max: int}
      */
-    private function masterTrend(): array
+    private function masterTrend(string $lembagaId = ''): array
     {
         $months = collect(range(5, 0))
             ->map(fn (int $offset) => Carbon::now()->startOfMonth()->subMonths($offset));
 
         $series = [
-            'Siswa' => $this->monthlyCounts(Siswa::class, $months),
-            'Guru' => $this->monthlyCounts(Guru::class, $months),
-            'Karyawan' => $this->monthlyCounts(Karyawan::class, $months),
+            'Siswa' => $this->monthlyCounts(Siswa::class, $months, $lembagaId),
+            'Guru' => $this->monthlyCounts(Guru::class, $months, $lembagaId),
+            'Karyawan' => $this->monthlyCounts(Karyawan::class, $months, $lembagaId),
         ];
 
         return [
@@ -128,10 +167,11 @@ final class DashboardStats
      * @param  \Illuminate\Support\Collection<int, Carbon>  $months
      * @return list<int>
      */
-    private function monthlyCounts(string $model, $months): array
+    private function monthlyCounts(string $model, $months, string $lembagaId = ''): array
     {
         return $months
             ->map(fn (Carbon $month) => $model::query()
+                ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
                 ->whereBetween('created_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
                 ->count())
             ->values()
@@ -141,14 +181,26 @@ final class DashboardStats
     /**
      * @return array<string, int>
      */
-    private function siswaStatusSummary(): array
+    private function siswaStatusSummary(string $lembagaId = ''): array
     {
         return [
-            SiswaStatus::AKTIF => Siswa::query()->where('status_siswa', SiswaStatus::AKTIF)->count(),
-            SiswaStatus::MUTASI_MASUK => $this->siswaMutasiMasukCount(),
-            SiswaStatus::MUTASI_KELUAR => Siswa::query()->where('status_siswa', SiswaStatus::MUTASI_KELUAR)->count(),
-            SiswaStatus::LULUS => Siswa::query()->where('status_siswa', SiswaStatus::LULUS)->count(),
-            SiswaStatus::CALON => Siswa::query()->where('status_siswa', SiswaStatus::CALON)->count(),
+            SiswaStatus::AKTIF => Siswa::query()
+                ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
+                ->where('status_siswa', SiswaStatus::AKTIF)
+                ->count(),
+            SiswaStatus::MUTASI_MASUK => $this->siswaMutasiMasukCount($lembagaId),
+            SiswaStatus::MUTASI_KELUAR => Siswa::query()
+                ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
+                ->where('status_siswa', SiswaStatus::MUTASI_KELUAR)
+                ->count(),
+            SiswaStatus::LULUS => Siswa::query()
+                ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
+                ->where('status_siswa', SiswaStatus::LULUS)
+                ->count(),
+            SiswaStatus::CALON => Siswa::query()
+                ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
+                ->where('status_siswa', SiswaStatus::CALON)
+                ->count(),
         ];
     }
 
@@ -230,6 +282,7 @@ final class DashboardStats
                     ->orWhereHas('penempatans', fn (Builder $placement) => $placement->where('tahun_ajaran_id', $year->id))
                     ->orWhere(function (Builder $inner) use ($year): void {
                         $inner->whereIn('status_siswa', [SiswaStatus::MUTASI_KELUAR, SiswaStatus::LULUS])
+                            ->where('lembaga_id', $year->lembaga_id)
                             ->whereBetween('status_at', [$year->tanggal_mulai, $year->tanggal_selesai]);
                     });
             })
@@ -241,15 +294,19 @@ final class DashboardStats
         return Siswa::query()
             ->where('status_siswa', $status)
             ->where(function (Builder $query) use ($year): void {
-                $query->whereBetween('status_at', [$year->tanggal_mulai, $year->tanggal_selesai])
+                $query->where(function (Builder $inner) use ($year): void {
+                    $inner->where('lembaga_id', $year->lembaga_id)
+                        ->whereBetween('status_at', [$year->tanggal_mulai, $year->tanggal_selesai]);
+                })
                     ->orWhereHas('penempatans', fn (Builder $placement) => $placement->where('tahun_ajaran_id', $year->id));
             })
             ->count();
     }
 
-    private function siswaMutasiMasukCount(): int
+    private function siswaMutasiMasukCount(string $lembagaId = ''): int
     {
         return Siswa::query()
+            ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
             ->where(function (Builder $query): void {
                 $query->where('status_siswa', SiswaStatus::MUTASI_MASUK)
                     ->orWhereHas('penempatans', fn (Builder $placement) => $placement->where('jenis', PenempatanJenis::MUTASI_MASUK));

@@ -13,7 +13,11 @@ class DashboardController extends Controller
     {
         return view('admin.dashboard', [
             'user' => $request->user(),
-            'stats' => $stats->for($request->user(), (string) $request->query('tahun_ajaran_id', '')),
+            'stats' => $stats->for(
+                $request->user(),
+                (string) $request->query('tahun_ajaran_id', ''),
+                (string) $request->query('lembaga_id', ''),
+            ),
         ]);
     }
 }

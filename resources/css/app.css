@@ -639,6 +639,15 @@ body {
     flex-wrap: wrap;
 }
 
+.dashboard-filter--super {
+    justify-content: flex-start;
+    margin-top: -0.25rem;
+    padding: 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--border) 78%, white);
+    border-radius: 0.5rem;
+    background: color-mix(in srgb, var(--surface-elevated) 75%, var(--surface));
+}
+
 .dashboard-filter .field-control {
     min-width: min(18rem, 100%);
 }

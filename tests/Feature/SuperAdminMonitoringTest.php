@@ -122,6 +122,47 @@ class SuperAdminMonitoringTest extends TestCase
             ->assertSee('title="Total: 1"', false);
     }
 
+    public function test_super_admin_dashboard_filter_lembaga_limits_cards_and_charts(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin', 'lembaga_id' => null]);
+        $lembagaA = Lembaga::factory()->create(['nama' => 'SMP Filter A']);
+        $lembagaB = Lembaga::factory()->create(['nama' => 'SMP Filter B']);
+        $tahunA = TahunAjaran::factory()->create([
+            'lembaga_id' => $lembagaA->id,
+            'nama' => '2026/2027',
+            'tanggal_mulai' => '2026-07-01',
+            'tanggal_selesai' => '2027-06-30',
+        ]);
+        TahunAjaran::factory()->create([
+            'lembaga_id' => $lembagaB->id,
+            'nama' => '2027/2028',
+            'tanggal_mulai' => '2027-07-01',
+            'tanggal_selesai' => '2028-06-30',
+        ]);
+        $kelasA = Kelas::factory()->create([
+            'lembaga_id' => $lembagaA->id,
+            'tahun_ajaran_id' => $tahunA->id,
+        ]);
+
+        Guru::factory()->create(['lembaga_id' => $lembagaA->id]);
+        Guru::factory()->count(3)->create(['lembaga_id' => $lembagaB->id]);
+        Karyawan::factory()->create(['lembaga_id' => $lembagaA->id]);
+        Karyawan::factory()->count(2)->create(['lembaga_id' => $lembagaB->id]);
+        Siswa::factory()->inKelas($kelasA)->create();
+        Siswa::factory()->count(4)->create(['lembaga_id' => $lembagaB->id]);
+
+        $this->actingAs($superAdmin)
+            ->get(route('admin.dashboard', ['lembaga_id' => $lembagaA->id]))
+            ->assertOk()
+            ->assertSee('value="'.$lembagaA->id.'" selected', false)
+            ->assertSee('1 total data siswa tercatat.')
+            ->assertSee('title="Siswa: 1"', false)
+            ->assertSee('title="Guru: 1"', false)
+            ->assertSee('title="Karyawan: 1"', false)
+            ->assertSee('2026/2027')
+            ->assertDontSee('2027/2028');
+    }
+
     public function test_super_admin_can_filter_siswa_monitoring_by_lembaga_and_tahun_ajaran(): void
     {
         $superAdmin = User::factory()->create(['role' => 'super_admin', 'lembaga_id' => null]);
