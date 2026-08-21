@@ -53,7 +53,7 @@ class ApiResourceCatalogTest extends TestCase
         $this->assertSame('guru:read', $entry['scope']);
         $this->assertSame('is_active', $entry['active_column']);
 
-        $minimal = ['id', 'lembaga_id', 'niy', 'nama', 'is_active', 'created_at', 'updated_at'];
+        $minimal = ['id', 'lembaga_id', 'niy', 'nama', 'foto_path', 'is_active', 'created_at', 'updated_at'];
         $this->assertSame($minimal, $entry['fields']['minimal']);
 
         foreach ($minimal as $field) {

@@ -29,6 +29,8 @@ class UpdateGuruRequest extends FormRequest
             'status_inpasing' => ['nullable', Rule::in(['Sudah', 'Belum'])],
             'mapel_sertifikasi' => ['nullable', 'string', 'max:100'],
             'status_menikah' => ['nullable', Rule::in(['Sudah Menikah', 'Belum Menikah'])],
+            'foto' => ['nullable', 'image', 'max:2048'],
+            'hapus_foto' => ['nullable', 'boolean'],
             'tempat_lahir' => ['nullable', 'string', 'max:100'],
             'tanggal_lahir' => ['nullable', 'date'],
             'email' => ['nullable', 'email', 'max:150'],

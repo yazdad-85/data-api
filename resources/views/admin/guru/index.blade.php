@@ -73,6 +73,7 @@
         <x-ui.table>
             <x-slot:thead>
                 <tr>
+                    <th>Foto</th>
                     <th>Nama</th>
                     <th>NIY</th>
                     <th>NIK</th>
@@ -83,6 +84,13 @@
             </x-slot:thead>
             @foreach ($gurus as $guru)
                 <tr>
+                    <td>
+                        @if ($guru->fotoUrl())
+                            <img src="{{ $guru->fotoUrl() }}" alt="Foto {{ $guru->nama }}" class="guru-photo guru-photo--table">
+                        @else
+                            <span class="guru-photo guru-photo--table guru-photo--empty">{{ mb_substr($guru->nama, 0, 1) }}</span>
+                        @endif
+                    </td>
                     <td>{{ $guru->nama }}</td>
                     <td>{{ $guru->niy ?? '—' }}</td>
                     <td>{{ $guru->nik ?? '—' }}</td>

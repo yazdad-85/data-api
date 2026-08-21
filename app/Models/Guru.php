@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 
 class Guru extends Model
 {
@@ -30,6 +31,7 @@ class Guru extends Model
         'status_inpasing',
         'mapel_sertifikasi',
         'status_menikah',
+        'foto_path',
         'peg_id',
         'nama',
         'jenis_kelamin',
@@ -59,5 +61,10 @@ class Guru extends Model
     public function kelasWali(): HasMany
     {
         return $this->hasMany(Kelas::class, 'wali_kelas_guru_id');
+    }
+
+    public function fotoUrl(): ?string
+    {
+        return $this->foto_path ? Storage::disk('public')->url($this->foto_path) : null;
     }
 }

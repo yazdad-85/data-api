@@ -14,17 +14,24 @@
 
     <div class="card">
         <div class="card__header">
-            <div>
-                <h1 class="card__title font-display">{{ $guru->nama }}</h1>
-                <p class="card__meta">
-                    NIY <strong>{{ $guru->niy ?? '—' }}</strong>
-                    &middot;
-                    @if ($guru->is_active)
-                        <x-ui.badge tone="ok">Aktif</x-ui.badge>
-                    @else
-                        <x-ui.badge tone="neutral">Nonaktif</x-ui.badge>
-                    @endif
-                </p>
+            <div class="guru-profile-heading">
+                @if ($guru->fotoUrl())
+                    <img src="{{ $guru->fotoUrl() }}" alt="Foto {{ $guru->nama }}" class="guru-photo guru-photo--detail">
+                @else
+                    <span class="guru-photo guru-photo--detail guru-photo--empty">{{ mb_substr($guru->nama, 0, 1) }}</span>
+                @endif
+                <div>
+                    <h1 class="card__title font-display">{{ $guru->nama }}</h1>
+                    <p class="card__meta">
+                        NIY <strong>{{ $guru->niy ?? '—' }}</strong>
+                        &middot;
+                        @if ($guru->is_active)
+                            <x-ui.badge tone="ok">Aktif</x-ui.badge>
+                        @else
+                            <x-ui.badge tone="neutral">Nonaktif</x-ui.badge>
+                        @endif
+                    </p>
+                </div>
             </div>
             <div class="card__actions">
                 <x-ui.button href="{{ route('admin.guru.edit', $guru) }}" variant="secondary">Ubah</x-ui.button>

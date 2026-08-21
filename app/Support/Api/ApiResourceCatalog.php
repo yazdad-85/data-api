@@ -52,16 +52,16 @@ final class ApiResourceCatalog
                 'active_column' => 'is_active',
                 'fields' => [
                     'minimal' => [
-                        'id', 'lembaga_id', 'niy', 'nama', 'is_active', 'created_at', 'updated_at',
+                        'id', 'lembaga_id', 'niy', 'nama', 'foto_path', 'is_active', 'created_at', 'updated_at',
                     ],
                     'academic' => [
-                        'id', 'lembaga_id', 'niy', 'nama', 'is_active', 'created_at', 'updated_at',
+                        'id', 'lembaga_id', 'niy', 'nama', 'foto_path', 'is_active', 'created_at', 'updated_at',
                         'peg_id', 'tahun_masuk', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
                         'status_kepegawaian', 'pendidikan_terakhir', 'instansi_pendidikan', 'jurusan',
                         'status_sertifikasi', 'status_inpasing', 'mapel_sertifikasi',
                     ],
                     'contact' => [
-                        'id', 'lembaga_id', 'niy', 'nama', 'is_active', 'created_at', 'updated_at',
+                        'id', 'lembaga_id', 'niy', 'nama', 'foto_path', 'is_active', 'created_at', 'updated_at',
                         'peg_id', 'tahun_masuk', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir',
                         'status_kepegawaian', 'nik', 'pendidikan_terakhir', 'instansi_pendidikan',
                         'jurusan', 'status_sertifikasi', 'status_inpasing', 'mapel_sertifikasi',

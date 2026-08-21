@@ -18,7 +18,7 @@
     </div>
 
     <div class="form-card">
-        <form method="POST" action="{{ route('admin.guru.update', $guru) }}">
+        <form method="POST" action="{{ route('admin.guru.update', $guru) }}" enctype="multipart/form-data">
             @csrf
             @method('PUT')
 
@@ -115,6 +115,23 @@
                     <option value="Sudah Menikah" @selected(old('status_menikah', $guru->status_menikah) === 'Sudah Menikah')>Sudah Menikah</option>
                     <option value="Belum Menikah" @selected(old('status_menikah', $guru->status_menikah) === 'Belum Menikah')>Belum Menikah</option>
                 </x-ui.select>
+                <div class="field">
+                    <label for="foto" class="field-label">Foto</label>
+                    @if ($guru->fotoUrl())
+                        <img src="{{ $guru->fotoUrl() }}" alt="Foto {{ $guru->nama }}" class="guru-photo guru-photo--form">
+                    @endif
+                    <input id="foto" type="file" name="foto" accept="image/*" class="field-control" @if ($errors->has('foto')) aria-invalid="true" @endif>
+                    <p class="field-hint">Unggah foto baru untuk mengganti foto saat ini. Format gambar, maksimal 2MB.</p>
+                    @if ($guru->foto_path)
+                        <label class="field-check">
+                            <input type="checkbox" name="hapus_foto" value="1" @checked(old('hapus_foto'))>
+                            <span>Hapus foto saat ini</span>
+                        </label>
+                    @endif
+                    @error('foto')
+                        <p class="field-error">{{ $message }}</p>
+                    @enderror
+                </div>
                 <x-ui.input
                     name="tempat_lahir"
                     label="Tempat lahir"

@@ -7,6 +7,8 @@ use App\Models\Guru;
 use App\Models\Lembaga;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class MasterGuruTest extends TestCase
@@ -145,6 +147,48 @@ class MasterGuruTest extends TestCase
         $this->assertSame('Sudah', $guru->status_inpasing);
         $this->assertSame('Belum Menikah', $guru->status_menikah);
         $this->assertNotNull($guru->niy);
+    }
+
+    public function test_admin_lembaga_can_upload_replace_and_remove_guru_foto(): void
+    {
+        Storage::fake('public');
+
+        config(['master.niy.npyp' => '0488']);
+
+        $lembaga = Lembaga::factory()->create(['niy_kode' => '01']);
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $this->actingAs($admin)->post(route('admin.guru.store'), [
+            'nama' => 'Guru Foto',
+            'jenis_kelamin' => 'P',
+            'tahun_masuk' => 2024,
+            'foto' => UploadedFile::fake()->image('guru-awal.jpg', 400, 400),
+        ])->assertRedirect(route('admin.guru.index'));
+
+        $guru = Guru::query()->where('nama', 'Guru Foto')->firstOrFail();
+        $this->assertNotNull($guru->foto_path);
+        Storage::disk('public')->assertExists($guru->foto_path);
+        $oldPath = $guru->foto_path;
+
+        $this->actingAs($admin)->put(route('admin.guru.update', $guru), [
+            'nama' => 'Guru Foto Baru',
+            'foto' => UploadedFile::fake()->image('guru-baru.png', 500, 500),
+        ])->assertRedirect(route('admin.guru.index'));
+
+        $guru->refresh();
+        $this->assertNotSame($oldPath, $guru->foto_path);
+        Storage::disk('public')->assertMissing($oldPath);
+        Storage::disk('public')->assertExists($guru->foto_path);
+        $newPath = $guru->foto_path;
+
+        $this->actingAs($admin)->put(route('admin.guru.update', $guru), [
+            'nama' => 'Guru Foto Baru',
+            'hapus_foto' => '1',
+        ])->assertRedirect(route('admin.guru.index'));
+
+        $guru->refresh();
+        $this->assertNull($guru->foto_path);
+        Storage::disk('public')->assertMissing($newPath);
     }
 
     public function test_index_search_matches_nama_niy_nik_or_peg_id(): void

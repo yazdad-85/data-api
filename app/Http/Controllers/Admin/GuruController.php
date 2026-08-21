@@ -16,6 +16,7 @@ use App\Support\Master\GuruNiyGenerator;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use InvalidArgumentException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -75,7 +76,9 @@ class GuruController extends Controller
         $lembaga = Lembaga::query()->findOrFail($user->lembaga_id);
 
         try {
-            $guru = DB::transaction(function () use ($request, $lembaga, $user) {
+            $fotoPath = $this->storeFoto($request);
+
+            $guru = DB::transaction(function () use ($request, $lembaga, $user, $fotoPath) {
                 $niy = $this->niyGenerator->generate(
                     $lembaga,
                     $request->validated('jenis_kelamin'),
@@ -83,17 +86,28 @@ class GuruController extends Controller
                 );
 
                 return Guru::query()->create([
-                    ...collect($request->validated())->except(['niy'])->all(),
+                    ...collect($request->validated())->except(['niy', 'foto'])->all(),
                     'lembaga_id' => $user->lembaga_id,
                     'niy' => $niy,
+                    'foto_path' => $fotoPath,
                     'is_active' => true,
                 ]);
             });
         } catch (InvalidArgumentException $exception) {
+            if (isset($fotoPath)) {
+                $this->deleteFoto($fotoPath);
+            }
+
             return redirect()
                 ->back()
                 ->withInput()
                 ->withErrors(['tahun_masuk' => $exception->getMessage()]);
+        } catch (\Throwable $exception) {
+            if (isset($fotoPath)) {
+                $this->deleteFoto($fotoPath);
+            }
+
+            throw $exception;
         }
 
         $this->auditLogger->record('guru.create', 'success', [
@@ -169,7 +183,32 @@ class GuruController extends Controller
         $user = $this->adminLembaga();
         abort_unless(hash_equals((string) $guru->lembaga_id, (string) $user->lembaga_id), 404);
 
-        $guru->update($request->validated());
+        $payload = collect($request->validated())->except(['foto', 'hapus_foto'])->all();
+        $oldFotoPath = $guru->foto_path;
+        $newFotoPath = $this->storeFoto($request);
+        $shouldDeleteOldFoto = false;
+
+        if ($newFotoPath !== null) {
+            $payload['foto_path'] = $newFotoPath;
+            $shouldDeleteOldFoto = $oldFotoPath !== null;
+        } elseif ($request->boolean('hapus_foto')) {
+            $payload['foto_path'] = null;
+            $shouldDeleteOldFoto = $oldFotoPath !== null;
+        }
+
+        try {
+            $guru->update($payload);
+        } catch (\Throwable $exception) {
+            if ($newFotoPath !== null) {
+                $this->deleteFoto($newFotoPath);
+            }
+
+            throw $exception;
+        }
+
+        if ($shouldDeleteOldFoto) {
+            $this->deleteFoto($oldFotoPath);
+        }
 
         $this->auditLogger->record('guru.update', 'success', [
             'nama' => $guru->nama,
@@ -217,7 +256,13 @@ class GuruController extends Controller
         $user = $this->adminLembaga();
         abort_unless(hash_equals((string) $guru->lembaga_id, (string) $user->lembaga_id), 404);
 
+        $oldFotoPath = $guru->foto_path;
+        $guru->update(['foto_path' => null]);
         $guru->delete();
+
+        if ($oldFotoPath !== null) {
+            $this->deleteFoto($oldFotoPath);
+        }
 
         $this->auditLogger->record('guru.delete', 'success', [
             'nama' => $guru->nama,
@@ -226,5 +271,21 @@ class GuruController extends Controller
         return redirect()
             ->route('admin.guru.index')
             ->with('status', "Guru {$guru->nama} dihapus.");
+    }
+
+    private function storeFoto(Request $request): ?string
+    {
+        if (! $request->hasFile('foto')) {
+            return null;
+        }
+
+        return $request->file('foto')->store('guru/foto', 'public');
+    }
+
+    private function deleteFoto(?string $path): void
+    {
+        if ($path !== null && $path !== '') {
+            Storage::disk('public')->delete($path);
+        }
     }
 }

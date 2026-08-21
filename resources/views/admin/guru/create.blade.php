@@ -27,7 +27,7 @@
     @endif
 
     <div class="form-card">
-        <form method="POST" action="{{ route('admin.guru.store') }}">
+        <form method="POST" action="{{ route('admin.guru.store') }}" enctype="multipart/form-data">
             @csrf
 
             <div class="form-grid">
@@ -118,6 +118,14 @@
                     <option value="Sudah Menikah" @selected(old('status_menikah') === 'Sudah Menikah')>Sudah Menikah</option>
                     <option value="Belum Menikah" @selected(old('status_menikah') === 'Belum Menikah')>Belum Menikah</option>
                 </x-ui.select>
+                <div class="field">
+                    <label for="foto" class="field-label">Foto</label>
+                    <input id="foto" type="file" name="foto" accept="image/*" class="field-control" @if ($errors->has('foto')) aria-invalid="true" @endif>
+                    <p class="field-hint">Format gambar, maksimal 2MB.</p>
+                    @error('foto')
+                        <p class="field-error">{{ $message }}</p>
+                    @enderror
+                </div>
                 <x-ui.input
                     name="peg_id"
                     label="Peg-ID"
