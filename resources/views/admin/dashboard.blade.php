@@ -1,20 +1,46 @@
 @extends('layouts.admin')
 
+@php
+    use App\Support\Master\SiswaStatus;
+
+    $trend = $stats['trend_master'];
+    $trendColors = ['Siswa' => 'brand', 'Guru' => 'ok', 'Karyawan' => 'warn'];
+    $statusTotal = max(1, array_sum($stats['siswa_status']));
+    $statusItems = [
+        SiswaStatus::AKTIF,
+        SiswaStatus::MUTASI_MASUK,
+        SiswaStatus::MUTASI_KELUAR,
+        SiswaStatus::LULUS,
+        SiswaStatus::CALON,
+    ];
+@endphp
+
 @section('title', 'Dashboard')
 @section('breadcrumb', 'Dashboard')
 
 @section('content')
     <div class="dashboard">
-        <header class="dashboard__intro">
-            <h1 class="font-display">Dashboard</h1>
-            @if ($stats['role'] === 'super_admin')
-                <p>Ringkasan lembaga, API client, dan master data di seluruh sistem.</p>
-            @else
-                <p>
-                    Urutan pengisian data untuk
-                    <strong>{{ $stats['lembaga_nama'] ?? 'lembaga Anda' }}</strong>.
+        <header class="dashboard-hero">
+            <div>
+                <p class="dashboard-hero__eyebrow">{{ $stats['role'] === 'super_admin' ? 'Super admin overview' : 'Ringkasan lembaga' }}</p>
+                <h1 class="dashboard-hero__title font-display">
+                    {{ $stats['role'] === 'super_admin' ? 'Pusat kendali data lembaga' : ($stats['lembaga_nama'] ?? 'Dashboard lembaga') }}
+                </h1>
+                <p class="dashboard-hero__body">
+                    {{ $stats['role'] === 'super_admin'
+                        ? 'Pantau kesiapan data seluruh lembaga, tren master data, dan riwayat siswa dalam satu layar.'
+                        : 'Pantau data aktif, riwayat siswa, dan perkembangan master data lembaga Anda.' }}
                 </p>
-            @endif
+            </div>
+            <div class="dashboard-hero__actions">
+                @if ($stats['role'] === 'super_admin')
+                    <x-ui.button href="{{ route('admin.laporan.siswa') }}">Laporan siswa</x-ui.button>
+                    <x-ui.button href="{{ route('admin.monitoring.siswa') }}" variant="secondary">Monitoring</x-ui.button>
+                @else
+                    <x-ui.button href="{{ route('admin.siswa.create') }}">Tambah siswa</x-ui.button>
+                    <x-ui.button href="{{ route('admin.laporan.siswa') }}" variant="secondary">Laporan siswa</x-ui.button>
+                @endif
+            </div>
         </header>
 
         @if ($stats['role'] === 'super_admin')
@@ -24,22 +50,6 @@
                     description="Dashboard siap. Kelola lembaga dari menu Lembaga. API client menyusul di Milestone 5b."
                 />
             @endif
-
-            <section class="dashboard-command">
-                <div>
-                    <p class="dashboard-command__eyebrow">Super admin overview</p>
-                    <h2 class="dashboard-command__title font-display">Pantau kesiapan data semua lembaga</h2>
-                    <p class="dashboard-command__body">
-                        Lihat total master data, temukan lembaga yang belum lengkap, dan buka monitoring read-only untuk guru, siswa, atau karyawan.
-                    </p>
-                </div>
-                <div class="dashboard-command__actions">
-                    <x-ui.button href="{{ route('admin.laporan.siswa') }}">Laporan siswa</x-ui.button>
-                    <x-ui.button href="{{ route('admin.monitoring.siswa') }}" variant="secondary">Monitoring siswa</x-ui.button>
-                    <x-ui.button href="{{ route('admin.monitoring.guru') }}" variant="secondary">Guru</x-ui.button>
-                    <x-ui.button href="{{ route('admin.monitoring.karyawan') }}" variant="secondary">Karyawan</x-ui.button>
-                </div>
-            </section>
 
             <div class="dashboard-metrics dashboard-metrics--super" role="list">
                 <div class="dashboard-metric" role="listitem">
@@ -68,8 +78,8 @@
                     <span class="dashboard-metric__hint">{{ $stats['total_siswa'] }} total data</span>
                 </div>
                 <div class="dashboard-metric" role="listitem">
-                    <span class="dashboard-metric__label">Karyawan</span>
-                    <span class="dashboard-metric__value font-display">{{ $stats['karyawan'] }}</span>
+                    <span class="dashboard-metric__label">Karyawan aktif</span>
+                    <span class="dashboard-metric__value font-display">{{ $stats['karyawan_aktif'] }}</span>
                     <span class="dashboard-metric__hint">{{ $stats['karyawan_aktif'] }} aktif</span>
                 </div>
                 <div class="dashboard-metric dashboard-metric--attention" role="listitem">
@@ -80,7 +90,102 @@
                     </x-ui.badge>
                 </div>
             </div>
+        @else
+            <div class="dashboard-metrics" role="list">
+                <a class="dashboard-metric" href="{{ route('admin.siswa.index', ['status_siswa' => SiswaStatus::AKTIF]) }}" role="listitem">
+                    <span class="dashboard-metric__label">Siswa aktif</span>
+                    <span class="dashboard-metric__value font-display">{{ $stats['siswa'] }}</span>
+                    <span class="dashboard-metric__hint">{{ $stats['total_siswa'] }} total data siswa</span>
+                </a>
+                <a class="dashboard-metric" href="{{ route('admin.guru.index') }}" role="listitem">
+                    <span class="dashboard-metric__label">Guru</span>
+                    <span class="dashboard-metric__value font-display">{{ $stats['guru'] }}</span>
+                    <span class="dashboard-metric__hint">Data tenaga pendidik</span>
+                </a>
+                <a class="dashboard-metric" href="{{ route('admin.karyawan.index') }}" role="listitem">
+                    <span class="dashboard-metric__label">Karyawan</span>
+                    <span class="dashboard-metric__value font-display">{{ $stats['karyawan_aktif'] }}</span>
+                    <span class="dashboard-metric__hint">{{ $stats['karyawan'] }} total data</span>
+                </a>
+                <a class="dashboard-metric" href="{{ route('admin.kelas.index') }}" role="listitem">
+                    <span class="dashboard-metric__label">Kelas</span>
+                    <span class="dashboard-metric__value font-display">{{ $stats['kelas'] }}</span>
+                    <span class="dashboard-metric__hint">{{ $stats['tahun_ajaran'] }} tahun ajaran</span>
+                </a>
+                <a class="dashboard-metric dashboard-metric--attention" href="{{ route('admin.laporan.siswa', ['status_siswa' => SiswaStatus::MUTASI_KELUAR]) }}" role="listitem">
+                    <span class="dashboard-metric__label">Mutasi keluar</span>
+                    <span class="dashboard-metric__value font-display">{{ $stats['siswa_mutasi_keluar'] }}</span>
+                    <span class="dashboard-metric__hint">{{ $stats['siswa_lulus'] }} lulus</span>
+                </a>
+            </div>
+        @endif
 
+        <section class="dashboard-grid">
+            <div class="dashboard-panel dashboard-panel--wide">
+                <div class="dashboard-panel__header">
+                    <div>
+                        <h2 class="dashboard-panel__title font-display">Perkembangan data</h2>
+                        <p class="dashboard-panel__description">Penambahan siswa, guru, dan karyawan dalam 6 bulan terakhir.</p>
+                    </div>
+                    <div class="dashboard-chart__legend">
+                        @foreach ($trend['series'] as $name => $values)
+                            <span class="dashboard-chart__legend-item dashboard-chart__legend-item--{{ $trendColors[$name] }}">{{ $name }}</span>
+                        @endforeach
+                    </div>
+                </div>
+
+                <div class="dashboard-chart" aria-label="Grafik perkembangan master data">
+                    @foreach ($trend['labels'] as $index => $label)
+                        <div class="dashboard-chart__group">
+                            <div class="dashboard-chart__bars">
+                                @foreach ($trend['series'] as $name => $values)
+                                    @php
+                                        $value = $values[$index] ?? 0;
+                                        $height = max(4, (int) round(($value / $trend['max']) * 100));
+                                    @endphp
+                                    <div
+                                        class="dashboard-chart__bar dashboard-chart__bar--{{ $trendColors[$name] }}"
+                                        style="--bar-height: {{ $height }}%;"
+                                        title="{{ $name }}: {{ $value }}"
+                                    >
+                                        <span>{{ $value }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                            <span class="dashboard-chart__label">{{ $label }}</span>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            <div class="dashboard-panel">
+                <div class="dashboard-panel__header">
+                    <div>
+                        <h2 class="dashboard-panel__title font-display">Status siswa</h2>
+                        <p class="dashboard-panel__description">{{ $stats['total_siswa'] }} total data siswa tercatat.</p>
+                    </div>
+                </div>
+                <div class="dashboard-status-list">
+                    @foreach ($statusItems as $status)
+                        @php
+                            $count = $stats['siswa_status'][$status] ?? 0;
+                            $width = (int) round(($count / $statusTotal) * 100);
+                        @endphp
+                        <a class="dashboard-status" href="{{ route('admin.laporan.siswa', ['status_siswa' => $status]) }}">
+                            <span class="dashboard-status__top">
+                                <span>{{ SiswaStatus::label($status) }}</span>
+                                <strong>{{ $count }}</strong>
+                            </span>
+                            <span class="dashboard-status__track">
+                                <span class="dashboard-status__bar" style="width: {{ $width }}%;"></span>
+                            </span>
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+        </section>
+
+        @if ($stats['role'] === 'super_admin')
             @if ($stats['lembaga_rows']->isNotEmpty())
                 <section class="dashboard-section">
                     <div class="dashboard-section__header">
@@ -146,8 +251,16 @@
                 </section>
             @endif
         @else
-            <ol class="dashboard-checklist">
-                @foreach ($stats['urutan'] as $item)
+            <section class="dashboard-section">
+                <div class="dashboard-section__header">
+                    <div>
+                        <h2 class="dashboard-section__title font-display">Kelengkapan data</h2>
+                        <p class="dashboard-section__description">Ringkasan modul master yang dipakai operasional lembaga.</p>
+                    </div>
+                </div>
+
+                <div class="dashboard-progress-list">
+                    @foreach ($stats['urutan'] as $item)
                     @php
                         $count = $stats[$item['count_key']] ?? 0;
                         $route = match ($item['count_key']) {
@@ -159,38 +272,23 @@
                             default => 'admin.dashboard',
                         };
                     @endphp
-                    <li class="dashboard-checklist__item">
-                        <div class="dashboard-checklist__main">
-                            <span class="dashboard-checklist__step" aria-hidden="true">{{ $item['step'] }}</span>
-                            <div>
-                                <a
-                                    class="dashboard-checklist__label"
-                                    href="{{ route($route) }}"
-                                >{{ $item['label'] }}</a>
-                                <p class="dashboard-checklist__hint">
-                                    @if ($count === 0)
-                                        Belum ada data — mulai dari menu {{ $item['label'] }}.
-                                    @else
-                                        @if ($item['count_key'] === 'siswa')
-                                            {{ $count }} siswa aktif dari {{ $stats['total_siswa'] }} total data.
-                                        @else
-                                            {{ $count }} data tercatat.
-                                        @endif
-                                    @endif
-                                </p>
-                            </div>
-                        </div>
-                        <div class="dashboard-checklist__meta">
-                            <span class="dashboard-checklist__count font-display">{{ $count }}</span>
-                            @if ($count === 0)
-                                <x-ui.badge tone="warn">Kosong</x-ui.badge>
-                            @else
-                                <x-ui.badge tone="ok">Ada data</x-ui.badge>
-                            @endif
-                        </div>
-                    </li>
-                @endforeach
-            </ol>
+                    <a class="dashboard-progress" href="{{ route($route) }}">
+                        <span class="dashboard-progress__step">{{ $item['step'] }}</span>
+                        <span class="dashboard-progress__main">
+                            <span class="dashboard-progress__label">{{ $item['label'] }}</span>
+                            <span class="dashboard-progress__hint">
+                                @if ($item['count_key'] === 'siswa')
+                                    {{ $count }} aktif / {{ $stats['total_siswa'] }} total
+                                @else
+                                    {{ $count }} data
+                                @endif
+                            </span>
+                        </span>
+                        <span class="dashboard-progress__count font-display">{{ $count }}</span>
+                    </a>
+                    @endforeach
+                </div>
+            </section>
         @endif
     </div>
 @endsection

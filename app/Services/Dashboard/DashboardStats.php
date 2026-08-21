@@ -11,6 +11,8 @@ use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Master\SiswaStatus;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
 final class DashboardStats
 {
@@ -51,6 +53,8 @@ final class DashboardStats
                 'siswa_lulus' => Siswa::query()->where('status_siswa', SiswaStatus::LULUS)->count(),
                 'karyawan' => Karyawan::query()->count(),
                 'karyawan_aktif' => Karyawan::query()->where('is_active', true)->count(),
+                'trend_master' => $this->masterTrend(),
+                'siswa_status' => $this->siswaStatusSummary(),
                 'lembaga_rows' => $lembagas,
                 'lembaga_belum_lengkap' => $lembagas
                     ->filter(fn ($lembaga) => $lembaga->guru_count === 0 || $lembaga->siswa_count === 0 || $lembaga->karyawan_count === 0)
@@ -70,6 +74,9 @@ final class DashboardStats
             'siswa_mutasi_keluar' => Siswa::query()->where('status_siswa', SiswaStatus::MUTASI_KELUAR)->count(),
             'siswa_lulus' => Siswa::query()->where('status_siswa', SiswaStatus::LULUS)->count(),
             'karyawan' => Karyawan::query()->count(),
+            'karyawan_aktif' => Karyawan::query()->where('is_active', true)->count(),
+            'trend_master' => $this->masterTrend(),
+            'siswa_status' => $this->siswaStatusSummary(),
             'urutan' => [
                 ['step' => 1, 'label' => 'Tahun ajaran', 'count_key' => 'tahun_ajaran'],
                 ['step' => 2, 'label' => 'Guru', 'count_key' => 'guru'],
@@ -77,6 +84,56 @@ final class DashboardStats
                 ['step' => 4, 'label' => 'Siswa', 'count_key' => 'siswa'],
                 ['step' => 5, 'label' => 'Karyawan', 'count_key' => 'karyawan'],
             ],
+        ];
+    }
+
+    /**
+     * @return array{labels: list<string>, series: array<string, list<int>>, max: int}
+     */
+    private function masterTrend(): array
+    {
+        $months = collect(range(5, 0))
+            ->map(fn (int $offset) => Carbon::now()->startOfMonth()->subMonths($offset));
+
+        $series = [
+            'Siswa' => $this->monthlyCounts(Siswa::class, $months),
+            'Guru' => $this->monthlyCounts(Guru::class, $months),
+            'Karyawan' => $this->monthlyCounts(Karyawan::class, $months),
+        ];
+
+        return [
+            'labels' => $months->map(fn (Carbon $month) => $month->translatedFormat('M y'))->values()->all(),
+            'series' => $series,
+            'max' => max([1, ...collect($series)->flatten()->all()]),
+        ];
+    }
+
+    /**
+     * @param  class-string<Model>  $model
+     * @param  \Illuminate\Support\Collection<int, Carbon>  $months
+     * @return list<int>
+     */
+    private function monthlyCounts(string $model, $months): array
+    {
+        return $months
+            ->map(fn (Carbon $month) => $model::query()
+                ->whereBetween('created_at', [$month->copy()->startOfMonth(), $month->copy()->endOfMonth()])
+                ->count())
+            ->values()
+            ->all();
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function siswaStatusSummary(): array
+    {
+        return [
+            SiswaStatus::AKTIF => Siswa::query()->where('status_siswa', SiswaStatus::AKTIF)->count(),
+            SiswaStatus::MUTASI_MASUK => Siswa::query()->where('status_siswa', SiswaStatus::MUTASI_MASUK)->count(),
+            SiswaStatus::MUTASI_KELUAR => Siswa::query()->where('status_siswa', SiswaStatus::MUTASI_KELUAR)->count(),
+            SiswaStatus::LULUS => Siswa::query()->where('status_siswa', SiswaStatus::LULUS)->count(),
+            SiswaStatus::CALON => Siswa::query()->where('status_siswa', SiswaStatus::CALON)->count(),
         ];
     }
 }
