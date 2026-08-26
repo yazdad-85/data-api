@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\SettingsController;
 use App\Http\Controllers\Admin\SiswaController;
 use App\Http\Controllers\Admin\SiswaReportController;
+use App\Http\Controllers\Admin\SpmbDistribusiController;
 use App\Http\Controllers\Admin\SuperAdminMonitoringController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
@@ -125,6 +126,9 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
     Route::post('/siswa/{siswa}/lifecycle/luluskan', [SiswaController::class, 'luluskan'])->name('admin.siswa.lifecycle.lulus');
     Route::post('/siswa/{siswa}/lifecycle/set-status', [SiswaController::class, 'setStatus'])->name('admin.siswa.lifecycle.set_status');
     Route::delete('/siswa/{siswa}', [SiswaController::class, 'destroy'])->name('admin.siswa.destroy');
+
+    Route::get('/spmb/distribusi', [SpmbDistribusiController::class, 'create'])->name('admin.spmb-distribusi.create');
+    Route::post('/spmb/distribusi', [SpmbDistribusiController::class, 'store'])->name('admin.spmb-distribusi.store');
 
     Route::get('/lembaga', [LembagaController::class, 'index'])->name('admin.lembaga.index');
     Route::get('/lembaga/create', [LembagaController::class, 'create'])->name('admin.lembaga.create');

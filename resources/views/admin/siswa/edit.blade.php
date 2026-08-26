@@ -19,7 +19,7 @@
         </div>
     </div>
 
-    <div class="form-card">
+    <div class="form-card form-card--wide">
         <form method="POST" action="{{ route('admin.siswa.update', $siswa) }}">
             @csrf
             @method('PUT')
@@ -138,7 +138,7 @@
 
             <div class="field">
                 <label for="alamat" class="field-label">Alamat</label>
-                <textarea id="alamat" name="alamat" class="field-control" rows="3">{{ old('alamat', $siswa->alamat) }}</textarea>
+                <textarea id="alamat" name="alamat" class="field-control" rows="2">{{ old('alamat', $siswa->alamat) }}</textarea>
                 @error('alamat')
                     <p class="field-error">{{ $message }}</p>
                 @enderror

@@ -21,6 +21,7 @@
         <div class="page-header__actions">
             <x-ui.button href="{{ route('admin.siswa.create') }}">Tambah siswa</x-ui.button>
             <x-ui.button href="{{ route('admin.siswa.create', ['jenis_masuk' => 'mutasi_masuk']) }}" variant="secondary">Mutasi masuk</x-ui.button>
+            <x-ui.button href="{{ route('admin.spmb-distribusi.create') }}" variant="secondary">Distribusi SPMB</x-ui.button>
         </div>
     </div>
 

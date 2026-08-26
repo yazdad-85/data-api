@@ -104,6 +104,26 @@ class MasterSiswaTest extends TestCase
         $index->assertOk()->assertSee('Belum ada kelas');
     }
 
+    public function test_create_without_kelas_persists_tahun_ajaran_id_for_spmb_batching(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.siswa.store'), [
+            'nis' => 'NIS-003',
+            'nama' => 'Calon Murid SPMB',
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        $response->assertRedirect(route('admin.siswa.index'));
+
+        $siswa = Siswa::query()->where('nis', 'NIS-003')->firstOrFail();
+        $this->assertNull($siswa->kelas_id);
+        $this->assertSame($tahunAjaran->id, $siswa->tahun_ajaran_id);
+        $this->assertSame(SiswaStatus::CALON, $siswa->status_siswa);
+    }
+
     public function test_admin_lembaga_creates_mutasi_masuk_with_mutasi_placement(): void
     {
         $lembaga = Lembaga::factory()->create();

@@ -72,4 +72,19 @@ document.addEventListener('DOMContentLoaded', () => {
         mutasiSource.addEventListener('change', syncMutasiFields);
         syncMutasiFields();
     }
+
+    const selectAll = document.querySelector('[data-select-all]');
+    const selectItems = Array.from(document.querySelectorAll('[data-select-item]'));
+    if (selectAll && selectItems.length > 0) {
+        selectAll.addEventListener('change', () => {
+            selectItems.forEach((item) => {
+                item.checked = selectAll.checked;
+            });
+        });
+        selectItems.forEach((item) => {
+            item.addEventListener('change', () => {
+                selectAll.checked = selectItems.every((i) => i.checked);
+            });
+        });
+    }
 });

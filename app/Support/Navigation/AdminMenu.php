@@ -3,6 +3,7 @@
 namespace App\Support\Navigation;
 
 use App\Models\User;
+use App\Support\Master\SiswaStatus;
 use Illuminate\Support\Collection;
 
 final class AdminMenu
@@ -17,6 +18,7 @@ final class AdminMenu
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'available' => true],
                 ['label' => 'Monitoring', 'route' => 'admin.monitoring.siswa', 'available' => true],
                 ['label' => 'Laporan Siswa', 'route' => 'admin.laporan.siswa', 'available' => true],
+                ['label' => 'SPMB', 'route' => 'admin.laporan.siswa', 'params' => ['status_siswa' => SiswaStatus::CALON], 'available' => true],
                 ['label' => 'Lembaga', 'route' => 'admin.lembaga.index', 'available' => true],
                 ['label' => 'Pengaturan', 'route' => 'admin.settings.show', 'available' => true],
             ]);
@@ -30,6 +32,7 @@ final class AdminMenu
                 ['label' => 'Kelas', 'route' => 'admin.kelas.index', 'available' => true],
                 ['label' => 'Siswa', 'route' => 'admin.siswa.index', 'available' => true],
                 ['label' => 'Laporan Siswa', 'route' => 'admin.laporan.siswa', 'available' => true],
+                ['label' => 'SPMB', 'route' => 'admin.spmb-distribusi.create', 'available' => true],
                 ['label' => 'Karyawan', 'route' => 'admin.karyawan.index', 'available' => true],
                 ['label' => 'API client', 'route' => 'admin.api-clients.index', 'available' => true],
                 ['label' => 'Profil Lembaga', 'route' => 'admin.lembaga-profile.show', 'available' => true],

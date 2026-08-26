@@ -27,7 +27,6 @@ class StoreSiswaRequest extends FormRequest
 
         if (! $this->filled('kelas_id')) {
             $merge['kelas_id'] = null;
-            $merge['tahun_ajaran_id'] = null;
         }
 
         if ($merge !== []) {

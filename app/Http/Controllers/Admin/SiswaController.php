@@ -102,16 +102,19 @@ class SiswaController extends Controller
 
         $validated = $request->validated();
         $kelasId = $validated['kelas_id'] ?? null;
+        $tahunAjaranId = $validated['tahun_ajaran_id'] ?? null;
         $jenisMasuk = $validated['jenis_masuk'] ?? 'siswa_baru';
         $asalLembaga = $validated['asal_lembaga'] ?? null;
         $diterimaTanggal = $validated['diterima_tanggal'] ?? null;
         unset($validated['kelas_id'], $validated['tahun_ajaran_id'], $validated['jenis_masuk'], $validated['asal_lembaga'], $validated['diterima_tanggal']);
 
         // Penempatan + status aktif ditangani SiswaLifecycleService agar tidak
-        // ada baris penempatan terbuka ganda.
+        // ada baris penempatan terbuka ganda. Kalau belum ada kelas, tahun_ajaran_id
+        // tetap disimpan langsung supaya calon murid bisa ditandai per angkatan (SPMB).
         $siswa = Siswa::query()->create([
             ...$validated,
             'lembaga_id' => $user->lembaga_id,
+            'tahun_ajaran_id' => $kelasId === null ? $tahunAjaranId : null,
             'status_siswa' => $jenisMasuk === 'mutasi_masuk' ? SiswaStatus::MUTASI_MASUK : SiswaStatus::CALON,
             'status_at' => $jenisMasuk === 'mutasi_masuk' ? $diterimaTanggal : null,
             'status_asal' => $jenisMasuk === 'mutasi_masuk' ? $asalLembaga : null,
