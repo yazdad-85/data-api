@@ -57,6 +57,22 @@
         </div>
     </div>
 
+    <div class="callout-info">
+        <p><strong>Urutan kerja yang benar:</strong></p>
+        <ol style="margin: 0.35rem 0 0; padding-left: 1.2rem;">
+            <li>Pastikan <strong>Tahun Ajaran</strong> tujuan sudah dibuat —
+                <a href="{{ route('admin.tahun-ajaran.create') }}">Tambah tahun ajaran</a>.</li>
+            <li>Pastikan <strong>kelas tujuan</strong> untuk tahun ajaran itu sudah dibuat (mis. kelas 8A) —
+                <a href="{{ route('admin.kelas.create') }}">Tambah kelas</a>.</li>
+            <li>Baru pilih "Kelas tujuan default" di bawah, lalu proses.</li>
+        </ol>
+        <p style="margin: 0.5rem 0 0;">
+            Perlu memproses <strong>banyak kelas sekaligus</strong> (mis. semua kelas 7 naik ke kelas 8)?
+            Gunakan <a href="{{ route('admin.kenaikan-massal.create') }}">Kenaikan kelas massal</a> supaya tidak
+            perlu buka halaman ini satu per satu.
+        </p>
+    </div>
+
     @if ($siswa->isEmpty())
         <x-ui.empty-state
             title="Tidak ada siswa aktif"
@@ -79,7 +95,11 @@
                         @endforeach
                     </x-ui.select>
 
-                    <x-ui.select name="kelas_tujuan_default_id" label="Kelas tujuan default (untuk aksi naik)">
+                    <x-ui.select
+                        name="kelas_tujuan_default_id"
+                        label="Kelas tujuan default (untuk aksi naik)"
+                        :hint="$kelasTujuan->isEmpty() ? 'Belum ada kelas lain untuk dipilih — buat kelas tujuan dulu.' : null"
+                    >
                         <option value="">— Pilih kelas tujuan —</option>
                         @foreach ($kelasTujuan as $target)
                             <option value="{{ $target->id }}" @selected(old('kelas_tujuan_default_id') === $target->id)>

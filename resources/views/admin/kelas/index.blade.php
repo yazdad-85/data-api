@@ -19,6 +19,7 @@
             <x-ui.button href="{{ route('admin.kelas.template') }}" variant="secondary">Unduh template kelas</x-ui.button>
             <button type="button" class="btn btn-secondary" data-modal-open="import-kelas">Import kelas</button>
             <x-ui.button href="{{ route('admin.kelas.create') }}">Tambah kelas</x-ui.button>
+            <x-ui.button href="{{ route('admin.kenaikan-massal.create') }}" variant="secondary">Kenaikan kelas massal</x-ui.button>
         </div>
     </div>
 

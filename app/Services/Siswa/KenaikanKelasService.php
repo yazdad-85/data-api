@@ -18,6 +18,43 @@ final class KenaikanKelasService
     ) {}
 
     /**
+     * Memproses kenaikan kelas massal lintas kelas: setiap kelas asal dipetakan ke satu
+     * kelas tujuan, seluruh siswa aktif di kelas itu diproses sebagai "naik".
+     *
+     * Setiap kelas diproses lewat commit() miliknya sendiri (transaksi terpisah) sehingga
+     * kegagalan pada satu kelas tidak membatalkan kelas lain dalam batch yang sama.
+     *
+     * @param  list<array{kelas_asal: Kelas, kelas_tujuan: Kelas}>  $mappings
+     * @return list<array{kelas_asal_id: string, kelas_asal_nama: string, kelas_tujuan_id: string, kelas_tujuan_nama: string, success: int, failed: int, errors: list<array{row: int, message: string}>}>
+     */
+    public function commitBulk(array $mappings, TahunAjaran $tahunTujuan, CarbonInterface $efektifAt): array
+    {
+        $hasil = [];
+
+        foreach ($mappings as $mapping) {
+            $kelasAsal = $mapping['kelas_asal'];
+            $kelasTujuan = $mapping['kelas_tujuan'];
+
+            $rows = $this->eligibleSiswa($kelasAsal)
+                ->map(fn (Siswa $siswa): array => ['siswa_id' => $siswa->id, 'aksi' => 'naik'])
+                ->values()
+                ->all();
+
+            $result = $this->commit($kelasAsal, $tahunTujuan, $kelasTujuan, $rows, $efektifAt);
+
+            $hasil[] = [
+                'kelas_asal_id' => $kelasAsal->id,
+                'kelas_asal_nama' => $kelasAsal->nama,
+                'kelas_tujuan_id' => $kelasTujuan->id,
+                'kelas_tujuan_nama' => $kelasTujuan->nama,
+                ...$result,
+            ];
+        }
+
+        return $hasil;
+    }
+
+    /**
      * Memproses kenaikan/mutasi batch untuk siswa aktif di kelas asal.
      *
      * Bersifat atomik: seluruh baris divalidasi lebih dulu; hanya jika semua baris
