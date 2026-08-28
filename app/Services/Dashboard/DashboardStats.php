@@ -19,6 +19,15 @@ use Illuminate\Support\Carbon;
 
 final class DashboardStats
 {
+    private const FAMILY_STATUSES = [
+        'Yatim',
+        'Piatu',
+        'Yatim Piatu',
+        'Anak Guru, Staff, dan Karyawan',
+    ];
+
+    private const FAMILY_STATUS_EMPTY = 'Belum diisi';
+
     /** @return array<string, mixed> */
     public function for(User $user, string $tahunAjaranId = '', string $lembagaId = ''): array
     {
@@ -94,6 +103,9 @@ final class DashboardStats
                 'karyawan_aktif' => $karyawanAktifQuery->count(),
                 'trend_master' => $this->masterTrend($selectedLembagaId),
                 'siswa_status' => $this->siswaStatusSummary($selectedLembagaId),
+                'status_keluarga_labels' => [...self::FAMILY_STATUSES, self::FAMILY_STATUS_EMPTY],
+                'status_keluarga_summary' => $this->familyStatusSummary($selectedLembagaId),
+                'status_keluarga_per_kelas' => $this->familyStatusByClass($selectedLembagaId),
                 'tahun_ajaran_options' => $academicYears,
                 'tahun_ajaran_analysis' => $this->tahunAjaranAnalysis($academicYears, $selectedTahunAjaranId, true),
                 'lembaga_rows' => $lembagas,
@@ -123,6 +135,9 @@ final class DashboardStats
             'karyawan_aktif' => Karyawan::query()->where('is_active', true)->count(),
             'trend_master' => $this->masterTrend(),
             'siswa_status' => $this->siswaStatusSummary(),
+            'status_keluarga_labels' => [...self::FAMILY_STATUSES, self::FAMILY_STATUS_EMPTY],
+            'status_keluarga_summary' => $this->familyStatusSummary(),
+            'status_keluarga_per_kelas' => $this->familyStatusByClass(),
             'tahun_ajaran_options' => $academicYears,
             'tahun_ajaran_analysis' => $this->tahunAjaranAnalysis($academicYears, $selectedTahunAjaranId),
         ];
@@ -202,6 +217,100 @@ final class DashboardStats
                 ->where('status_siswa', SiswaStatus::CALON)
                 ->count(),
         ];
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    private function familyStatusSummary(string $lembagaId = ''): array
+    {
+        $summary = [];
+
+        foreach (self::FAMILY_STATUSES as $status) {
+            $summary[$status] = $this->activeStudentFamilyQuery($lembagaId)
+                ->where('status_keluarga', $status)
+                ->count();
+        }
+
+        $summary[self::FAMILY_STATUS_EMPTY] = $this->activeStudentFamilyQuery($lembagaId)
+            ->where(function (Builder $query): void {
+                $query->whereNull('status_keluarga')
+                    ->orWhere('status_keluarga', '');
+            })
+            ->count();
+
+        return $summary;
+    }
+
+    /**
+     * @return Collection<int, array{
+     *     lembaga_nama: string,
+     *     tahun_ajaran_nama: string,
+     *     kelas_nama: string,
+     *     total: int,
+     *     statuses: array<string, int>
+     * }>
+     */
+    private function familyStatusByClass(string $lembagaId = ''): Collection
+    {
+        return Kelas::query()
+            ->with(['lembaga', 'tahunAjaran'])
+            ->withCount([
+                'siswa as active_students_count' => fn (Builder $query) => $query
+                    ->where('status_siswa', SiswaStatus::AKTIF),
+                'siswa as yatim_count' => fn (Builder $query) => $this->familyStatusCountConstraint($query, 'Yatim'),
+                'siswa as piatu_count' => fn (Builder $query) => $this->familyStatusCountConstraint($query, 'Piatu'),
+                'siswa as yatim_piatu_count' => fn (Builder $query) => $this->familyStatusCountConstraint($query, 'Yatim Piatu'),
+                'siswa as anak_guru_count' => fn (Builder $query) => $this->familyStatusCountConstraint($query, 'Anak Guru, Staff, dan Karyawan'),
+                'siswa as family_empty_count' => fn (Builder $query) => $query
+                    ->where('status_siswa', SiswaStatus::AKTIF)
+                    ->where(function (Builder $inner): void {
+                        $inner->whereNull('status_keluarga')
+                            ->orWhere('status_keluarga', '');
+                    }),
+            ])
+            ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
+            ->orderBy(
+                Lembaga::query()
+                    ->select('nama')
+                    ->whereColumn('lembaga.id', 'kelas.lembaga_id')
+                    ->limit(1)
+            )
+            ->orderBy(
+                TahunAjaran::query()
+                    ->select('tanggal_mulai')
+                    ->whereColumn('tahun_ajaran.id', 'kelas.tahun_ajaran_id')
+                    ->limit(1)
+            )
+            ->orderBy('nama')
+            ->get()
+            ->map(fn (Kelas $kelas): array => [
+                'lembaga_nama' => $kelas->lembaga?->nama ?? '-',
+                'tahun_ajaran_nama' => $kelas->tahunAjaran?->nama ?? '-',
+                'kelas_nama' => $kelas->nama,
+                'total' => (int) $kelas->active_students_count,
+                'statuses' => [
+                    'Yatim' => (int) $kelas->yatim_count,
+                    'Piatu' => (int) $kelas->piatu_count,
+                    'Yatim Piatu' => (int) $kelas->yatim_piatu_count,
+                    'Anak Guru, Staff, dan Karyawan' => (int) $kelas->anak_guru_count,
+                    self::FAMILY_STATUS_EMPTY => (int) $kelas->family_empty_count,
+                ],
+            ]);
+    }
+
+    private function activeStudentFamilyQuery(string $lembagaId = ''): Builder
+    {
+        return Siswa::query()
+            ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
+            ->where('status_siswa', SiswaStatus::AKTIF);
+    }
+
+    private function familyStatusCountConstraint(Builder $query, string $status): Builder
+    {
+        return $query
+            ->where('status_siswa', SiswaStatus::AKTIF)
+            ->where('status_keluarga', $status);
     }
 
     /**

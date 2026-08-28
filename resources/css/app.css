@@ -683,6 +683,110 @@ body {
     font-size: 1.35rem;
 }
 
+.dashboard-family-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+    gap: 0.65rem;
+    margin-bottom: 0.85rem;
+}
+
+.dashboard-family-card {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    min-width: 0;
+    padding: 0.75rem;
+    border: 1px solid color-mix(in srgb, var(--brand) 12%, white);
+    border-radius: 0.45rem;
+    background: color-mix(in srgb, var(--brand-soft) 36%, white);
+}
+
+.dashboard-family-card span {
+    min-width: 0;
+    color: var(--muted);
+    font-weight: 600;
+}
+
+.dashboard-family-card strong {
+    color: var(--brand-deep);
+    font-size: 1.35rem;
+}
+
+.dashboard-family-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin-bottom: 0.65rem;
+    color: var(--ink);
+}
+
+.dashboard-family-toolbar span {
+    color: var(--muted);
+    font-size: 0.86rem;
+}
+
+.dashboard-family-table .data-table {
+    min-width: 54rem;
+}
+
+.dashboard-family-table__count {
+    text-align: center;
+}
+
+.dashboard-family-table__text {
+    text-align: left;
+    min-width: 10rem;
+}
+
+.dashboard-disclosure {
+    margin-top: 0.85rem;
+}
+
+.dashboard-disclosure summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.75rem 0.85rem;
+    border: 1px solid color-mix(in srgb, var(--border) 75%, white);
+    border-radius: 0.45rem;
+    color: var(--brand-deep);
+    cursor: pointer;
+    font-weight: 700;
+    background: color-mix(in srgb, var(--surface) 65%, white);
+}
+
+.dashboard-disclosure summary::-webkit-details-marker {
+    display: none;
+}
+
+.dashboard-disclosure summary::after {
+    content: "+";
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.45rem;
+    height: 1.45rem;
+    border-radius: 0.35rem;
+    background: var(--brand-soft);
+}
+
+.dashboard-disclosure[open] summary {
+    margin-bottom: 0.65rem;
+}
+
+.dashboard-disclosure[open] summary::after {
+    content: "-";
+}
+
+.dashboard-disclosure summary strong {
+    margin-left: auto;
+    color: var(--muted);
+    font-size: 0.86rem;
+}
+
 .dashboard-progress-list {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));

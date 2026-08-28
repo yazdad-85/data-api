@@ -28,6 +28,17 @@
         SiswaStatus::LULUS,
         SiswaStatus::CALON,
     ];
+    $familyLabels = $stats['status_keluarga_labels'];
+    $familyShortLabels = [
+        'Yatim' => 'Yatim',
+        'Piatu' => 'Piatu',
+        'Yatim Piatu' => 'Yatim Piatu',
+        'Anak Guru, Staff, dan Karyawan' => 'Anak guru/staff/karyawan',
+        'Belum diisi' => 'Belum diisi',
+    ];
+    $familyRows = $stats['status_keluarga_per_kelas'];
+    $familyRowsWithStudents = $familyRows->filter(fn (array $row): bool => $row['total'] > 0)->values();
+    $familyEmptyRowsCount = $familyRows->count() - $familyRowsWithStudents->count();
 @endphp
 
 @section('title', 'Dashboard')
@@ -223,6 +234,56 @@
                     @endforeach
                 </div>
             </div>
+        </section>
+
+        <section class="dashboard-panel dashboard-panel--wide">
+            <div class="dashboard-panel__header">
+                <div>
+                    <h2 class="dashboard-panel__title font-display">Status keluarga per kelas</h2>
+                    <p class="dashboard-panel__description">
+                        Rekap siswa aktif berdasarkan status keluarga pada setiap kelas.
+                    </p>
+                </div>
+            </div>
+
+            <div class="dashboard-family-summary" role="list">
+                @foreach ($familyLabels as $status)
+                    <div class="dashboard-family-card" role="listitem">
+                        <span>{{ $familyShortLabels[$status] }}</span>
+                        <strong class="font-display">{{ $stats['status_keluarga_summary'][$status] ?? 0 }}</strong>
+                    </div>
+                @endforeach
+            </div>
+
+            @if ($stats['status_keluarga_per_kelas']->isEmpty())
+                <p class="dashboard-panel__description">Belum ada kelas untuk direkap.</p>
+            @else
+                <div class="dashboard-family-toolbar">
+                    <strong>Kelas dengan siswa aktif</strong>
+                    <span>
+                        {{ $familyRowsWithStudents->count() }} kelas ditampilkan
+                        @if ($familyEmptyRowsCount > 0)
+                            · {{ $familyEmptyRowsCount }} kelas kosong disembunyikan
+                        @endif
+                    </span>
+                </div>
+
+                @if ($familyRowsWithStudents->isEmpty())
+                    <p class="dashboard-panel__description">Belum ada kelas dengan siswa aktif.</p>
+                @else
+                    @include('admin.dashboard.family-status-table', ['rows' => $familyRowsWithStudents])
+                @endif
+
+                @if ($familyEmptyRowsCount > 0)
+                    <details class="dashboard-disclosure">
+                        <summary>
+                            <span>Lihat semua kelas</span>
+                            <strong>{{ $familyRows->count() }} kelas</strong>
+                        </summary>
+                        @include('admin.dashboard.family-status-table', ['rows' => $familyRows])
+                    </details>
+                @endif
+            @endif
         </section>
 
         <section class="dashboard-panel dashboard-panel--wide">

@@ -11,6 +11,7 @@ use App\Models\SiswaPenempatan;
 use App\Models\TahunAjaran;
 use App\Models\User;
 use App\Support\Master\PenempatanJenis;
+use App\Support\Master\SiswaStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
@@ -161,6 +162,86 @@ class SuperAdminMonitoringTest extends TestCase
             ->assertSee('title="Karyawan: 1"', false)
             ->assertSee('2026/2027')
             ->assertDontSee('2027/2028');
+    }
+
+    public function test_admin_dashboard_shows_family_status_summary_per_class(): void
+    {
+        $lembaga = Lembaga::factory()->create(['nama' => 'MTs Keluarga']);
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'nama' => '2026/2027',
+        ]);
+        $kelas = Kelas::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'nama' => 'VII Keluarga',
+        ]);
+
+        Siswa::factory()->inKelas($kelas)->create(['status_keluarga' => 'Yatim']);
+        Siswa::factory()->inKelas($kelas)->create(['status_keluarga' => 'Piatu']);
+        Siswa::factory()->inKelas($kelas)->create(['status_keluarga' => 'Anak Guru, Staff, dan Karyawan']);
+        Siswa::factory()->inKelas($kelas)->create([
+            'status_siswa' => SiswaStatus::MUTASI_KELUAR,
+            'is_active' => false,
+            'status_keluarga' => 'Yatim Piatu',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.dashboard'));
+
+        $response
+            ->assertOk()
+            ->assertSee('Status keluarga per kelas')
+            ->assertSee('Anak guru/staff/karyawan')
+            ->assertSee('VII Keluarga');
+
+        $this->assertMatchesRegularExpression(
+            '/<tr>\s*<td[^>]*>2026\/2027<\/td>\s*<td[^>]*>VII Keluarga<\/td>\s*<td[^>]*>3<\/td>\s*<td[^>]*>1<\/td>\s*<td[^>]*>1<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>1<\/td>\s*<td[^>]*>0<\/td>\s*<\/tr>/s',
+            $response->getContent()
+        );
+    }
+
+    public function test_super_admin_family_status_per_class_respects_lembaga_filter(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin', 'lembaga_id' => null]);
+        $lembagaA = Lembaga::factory()->create(['nama' => 'SMP Keluarga A']);
+        $lembagaB = Lembaga::factory()->create(['nama' => 'SMP Keluarga B']);
+        $tahunA = TahunAjaran::factory()->create([
+            'lembaga_id' => $lembagaA->id,
+            'nama' => '2026/2027',
+        ]);
+        $tahunB = TahunAjaran::factory()->create([
+            'lembaga_id' => $lembagaB->id,
+            'nama' => '2026/2027',
+        ]);
+        $kelasA = Kelas::factory()->create([
+            'lembaga_id' => $lembagaA->id,
+            'tahun_ajaran_id' => $tahunA->id,
+            'nama' => 'VII Filter A',
+        ]);
+        $kelasB = Kelas::factory()->create([
+            'lembaga_id' => $lembagaB->id,
+            'tahun_ajaran_id' => $tahunB->id,
+            'nama' => 'VII Filter B',
+        ]);
+
+        Siswa::factory()->inKelas($kelasA)->create(['status_keluarga' => 'Yatim']);
+        Siswa::factory()->inKelas($kelasA)->create(['status_keluarga' => null]);
+        Siswa::factory()->inKelas($kelasB)->create(['status_keluarga' => 'Yatim Piatu']);
+
+        $response = $this->actingAs($superAdmin)
+            ->get(route('admin.dashboard', ['lembaga_id' => $lembagaA->id]));
+
+        $response
+            ->assertOk()
+            ->assertSee('SMP Keluarga A')
+            ->assertSee('VII Filter A')
+            ->assertDontSee('VII Filter B');
+
+        $this->assertMatchesRegularExpression(
+            '/<tr>\s*<td[^>]*>SMP Keluarga A<\/td>\s*<td[^>]*>2026\/2027<\/td>\s*<td[^>]*>VII Filter A<\/td>\s*<td[^>]*>2<\/td>\s*<td[^>]*>1<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>1<\/td>\s*<\/tr>/s',
+            $response->getContent()
+        );
     }
 
     public function test_super_admin_can_filter_siswa_monitoring_by_lembaga_and_tahun_ajaran(): void
