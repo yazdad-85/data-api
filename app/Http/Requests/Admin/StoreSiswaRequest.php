@@ -51,7 +51,7 @@ class StoreSiswaRequest extends FormRequest
             'email' => ['nullable', 'email', 'max:150'],
             'telepon' => ['nullable', 'string', 'max:30'],
             'alamat' => ['nullable', 'string'],
-            'status_keluarga' => ['nullable', Rule::in(['Yatim', 'Piatu', 'Yatim Piatu'])],
+            'status_keluarga' => ['nullable', Rule::in(['Yatim', 'Piatu', 'Yatim Piatu', 'Anak Guru, Staff, dan Karyawan'])],
             'nama_ayah' => ['nullable', 'string', 'max:150'],
             'pekerjaan_ayah' => ['nullable', 'string', 'max:100'],
             'nama_ibu' => ['nullable', 'string', 'max:150'],

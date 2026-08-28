@@ -24,7 +24,7 @@ class SiswaFactory extends Factory
             'lembaga_id' => Lembaga::factory(),
             'nama' => fake()->name(),
             'nis' => fake()->unique()->numerify('NIS#####'),
-            'status_keluarga' => fake()->optional()->randomElement(['Yatim', 'Piatu', 'Yatim Piatu']),
+            'status_keluarga' => fake()->optional()->randomElement(['Yatim', 'Piatu', 'Yatim Piatu', 'Anak Guru, Staff, dan Karyawan']),
             'is_active' => true,
             'status_siswa' => SiswaStatus::AKTIF,
         ];

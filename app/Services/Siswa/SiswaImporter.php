@@ -87,8 +87,8 @@ final class SiswaImporter
         $lembagaId = (string) $kelas->lembaga_id;
         $seenNis = [];
 
-        foreach ($rows as $rowNumber => $row) {
-            $excelRow = (int) $rowNumber;
+        foreach (array_values($rows) as $rowIndex => $row) {
+            $excelRow = $rowIndex + 2;
             $payload = $this->extractRow($row, $columnMap);
 
             if ($this->isEmptyRow($payload)) {
@@ -335,17 +335,24 @@ final class SiswaImporter
     {
         $string = trim((string) ($value ?? ''));
 
-        if ($string === '') {
+        if ($string === '' || in_array($string, ['-', '—'], true)) {
             return null;
         }
 
         $normalized = strtolower(preg_replace('/\s+/', ' ', $string) ?? $string);
+        $normalized = str_replace(['&'], ['dan'], $normalized);
+        $normalized = str_replace([' - ', '_'], [' ', ' '], $normalized);
+        $normalized = preg_replace('/\s*,\s*/', ', ', $normalized) ?? $normalized;
 
         return match ($normalized) {
             'yatim' => 'Yatim',
             'piatu' => 'Piatu',
             'yatim piatu', 'yatim_piatu' => 'Yatim Piatu',
-            default => throw new InvalidArgumentException('Status keluarga harus Yatim, Piatu, atau Yatim Piatu.'),
+            'anak guru, staff, dan karyawan',
+            'anak guru staff dan karyawan',
+            'anak guru, staf, dan karyawan',
+            'anak guru staf dan karyawan' => 'Anak Guru, Staff, dan Karyawan',
+            default => throw new InvalidArgumentException('Status keluarga harus kosong, Yatim, Piatu, Yatim Piatu, atau Anak Guru, Staff, dan Karyawan.'),
         };
     }
 

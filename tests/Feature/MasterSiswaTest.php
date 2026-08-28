@@ -51,7 +51,7 @@ class MasterSiswaTest extends TestCase
             'email' => 'andi@example.com',
             'telepon' => '08123456789',
             'alamat' => 'Jl. Merdeka No. 1',
-            'status_keluarga' => 'Yatim',
+            'status_keluarga' => 'Anak Guru, Staff, dan Karyawan',
             'nama_ayah' => 'Ayah Andi',
             'pekerjaan_ayah' => 'Wiraswasta',
             'nama_ibu' => 'Ibu Andi',
@@ -70,7 +70,7 @@ class MasterSiswaTest extends TestCase
         $this->assertSame('Andi Pratama', $siswa->nama);
         $this->assertSame($kelas->id, $siswa->kelas_id);
         $this->assertSame($tahunAjaran->id, $siswa->tahun_ajaran_id);
-        $this->assertSame('Yatim', $siswa->status_keluarga);
+        $this->assertSame('Anak Guru, Staff, dan Karyawan', $siswa->status_keluarga);
         $this->assertSame('Ayah Andi', $siswa->nama_ayah);
         $this->assertSame('Wiraswasta', $siswa->pekerjaan_ayah);
         $this->assertSame('Ibu Andi', $siswa->nama_ibu);

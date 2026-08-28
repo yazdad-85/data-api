@@ -90,6 +90,7 @@
                     <option value="Yatim" @selected(old('status_keluarga', $siswa->status_keluarga) === 'Yatim')>Yatim</option>
                     <option value="Piatu" @selected(old('status_keluarga', $siswa->status_keluarga) === 'Piatu')>Piatu</option>
                     <option value="Yatim Piatu" @selected(old('status_keluarga', $siswa->status_keluarga) === 'Yatim Piatu')>Yatim Piatu</option>
+                    <option value="Anak Guru, Staff, dan Karyawan" @selected(old('status_keluarga', $siswa->status_keluarga) === 'Anak Guru, Staff, dan Karyawan')>Anak Guru, Staff, dan Karyawan</option>
                 </x-ui.select>
                 <x-ui.input
                     name="nama_ayah"

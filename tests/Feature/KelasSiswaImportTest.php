@@ -75,6 +75,8 @@ class KelasSiswaImportTest extends TestCase
                 'diterima_tanggal' => '2026-07-15',
             ],
             ['nis' => 'NIS-102', 'nama' => 'Siti Rahma'],
+            ['nis' => 'NIS-103', 'nama' => 'Siswa Anak Guru', 'status_keluarga' => 'Anak Guru, Staff, dan Karyawan'],
+            ['nis' => 'NIS-104', 'nama' => 'Siswa Status Kosong', 'status_keluarga' => '-'],
         ]);
 
         $response = $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelas), [
@@ -84,7 +86,7 @@ class KelasSiswaImportTest extends TestCase
         $response->assertRedirect(route('admin.kelas.show', $kelas));
         $response->assertSessionHas('status');
 
-        $this->assertSame(2, Siswa::query()->count());
+        $this->assertSame(4, Siswa::query()->count());
 
         $siswaA = Siswa::query()->where('nis', 'NIS-101')->firstOrFail();
         $this->assertSame('Andi Pratama', $siswaA->nama);
@@ -112,8 +114,15 @@ class KelasSiswaImportTest extends TestCase
 
         $siswaB = Siswa::query()->where('nis', 'NIS-102')->firstOrFail();
         $this->assertSame('Siti Rahma', $siswaB->nama);
+        $this->assertNull($siswaB->status_keluarga);
         $this->assertSame($kelas->id, $siswaB->kelas_id);
         $this->assertSame($tahunAjaran->id, $siswaB->tahun_ajaran_id);
+
+        $siswaC = Siswa::query()->where('nis', 'NIS-103')->firstOrFail();
+        $this->assertSame('Anak Guru, Staff, dan Karyawan', $siswaC->status_keluarga);
+
+        $siswaD = Siswa::query()->where('nis', 'NIS-104')->firstOrFail();
+        $this->assertNull($siswaD->status_keluarga);
     }
 
     public function test_imported_siswa_visible_on_admin_siswa_index(): void
