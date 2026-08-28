@@ -13,6 +13,7 @@ use App\Support\Master\PenempatanJenis;
 use App\Support\Master\SiswaStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Tests\TestCase;
@@ -49,6 +50,11 @@ class KelasSiswaImportTest extends TestCase
             'template-import-siswa.xlsx',
             (string) $response->headers->get('content-disposition')
         );
+
+        $rows = $this->xlsxRows($response->streamedContent());
+        $this->assertStringContainsString('1=Yatim', (string) $rows['Petunjuk'][5][0]);
+        $this->assertSame('status_keluarga', $rows['Data Siswa'][0][9]);
+        $this->assertSame('4', $rows['Data Siswa'][1][9]);
     }
 
     public function test_import_creates_siswa_attached_to_kelas_with_correct_tahun_ajaran_id(): void
@@ -75,7 +81,7 @@ class KelasSiswaImportTest extends TestCase
                 'diterima_tanggal' => '2026-07-15',
             ],
             ['nis' => 'NIS-102', 'nama' => 'Siti Rahma'],
-            ['nis' => 'NIS-103', 'nama' => 'Siswa Anak Guru', 'status_keluarga' => 'Anak Guru, Staff, dan Karyawan'],
+            ['nis' => 'NIS-103', 'nama' => 'Siswa Anak Guru', 'status_keluarga' => '4'],
             ['nis' => 'NIS-104', 'nama' => 'Siswa Status Kosong', 'status_keluarga' => '-'],
         ]);
 
@@ -459,5 +465,27 @@ class KelasSiswaImportTest extends TestCase
         (new Xlsx($spreadsheet))->save($path);
 
         return new UploadedFile($path, 'import-siswa.xlsx', null, null, true);
+    }
+
+    /**
+     * @return array<string, list<list<mixed>>>
+     */
+    private function xlsxRows(string $content): array
+    {
+        $path = tempnam(sys_get_temp_dir(), 'siswa-template-').'.xlsx';
+        file_put_contents($path, $content);
+
+        try {
+            $spreadsheet = IOFactory::load($path);
+            $sheets = [];
+
+            foreach ($spreadsheet->getWorksheetIterator() as $sheet) {
+                $sheets[$sheet->getTitle()] = $sheet->toArray();
+            }
+
+            return $sheets;
+        } finally {
+            @unlink($path);
+        }
     }
 }

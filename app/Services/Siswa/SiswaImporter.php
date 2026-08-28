@@ -345,6 +345,10 @@ final class SiswaImporter
         $normalized = preg_replace('/\s*,\s*/', ', ', $normalized) ?? $normalized;
 
         return match ($normalized) {
+            '1' => 'Yatim',
+            '2' => 'Piatu',
+            '3' => 'Yatim Piatu',
+            '4' => 'Anak Guru, Staff, dan Karyawan',
             'yatim' => 'Yatim',
             'piatu' => 'Piatu',
             'yatim piatu', 'yatim_piatu' => 'Yatim Piatu',
@@ -352,7 +356,7 @@ final class SiswaImporter
             'anak guru staff dan karyawan',
             'anak guru, staf, dan karyawan',
             'anak guru staf dan karyawan' => 'Anak Guru, Staff, dan Karyawan',
-            default => throw new InvalidArgumentException('Status keluarga harus kosong, Yatim, Piatu, Yatim Piatu, atau Anak Guru, Staff, dan Karyawan.'),
+            default => throw new InvalidArgumentException('Status keluarga harus kosong atau kode 1, 2, 3, 4.'),
         };
     }
 
