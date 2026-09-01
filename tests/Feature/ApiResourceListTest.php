@@ -155,6 +155,29 @@ class ApiResourceListTest extends TestCase
         $this->assertCount(2, $row['riwayat_penempatan']);
         $this->assertSame('Ayah API', $row['nama_ayah']);
         $this->assertSame('Ibu API', $row['nama_ibu']);
+        $this->assertNull($row['nama_wali']);
+        $this->assertSame('Ayah API', $row['nama_kontak_wali']);
+    }
+
+    public function test_siswa_contact_nama_kontak_wali_falls_back_to_ibu(): void
+    {
+        ['plain' => $plain, 'lembaga' => $lembaga] = $this->makeClient([
+            'field_profile' => 'contact',
+            'scopes' => ['siswa:read'],
+        ]);
+        Siswa::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'nama' => 'Siswa Kontak Ibu',
+            'nama_wali' => null,
+            'nama_ayah' => null,
+            'nama_ibu' => 'Ibu API Cadangan',
+        ]);
+
+        $row = $this->getJson('/api/v1/siswa', ['X-API-Key' => $plain])->assertOk()->json('data.0');
+
+        $this->assertNull($row['nama_wali']);
+        $this->assertNull($row['nama_ayah']);
+        $this->assertSame('Ibu API Cadangan', $row['nama_kontak_wali']);
     }
 
     public function test_per_page_clamped_to_200(): void

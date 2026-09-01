@@ -26,6 +26,12 @@ final class ApiResourceTransformer
         $out = [];
 
         foreach ($allowedFields as $field) {
+            if ($field === 'nama_kontak_wali') {
+                $out[$field] = $this->waliContactName($model);
+
+                continue;
+            }
+
             $out[$field] = $this->formatValue($model, $field, $model->getAttribute($field));
         }
 
@@ -81,6 +87,24 @@ final class ApiResourceTransformer
         }
 
         return $value;
+    }
+
+    private function waliContactName(Model $model): ?string
+    {
+        return $this->filledString($model->getAttribute('nama_wali'))
+            ?? $this->filledString($model->getAttribute('nama_ayah'))
+            ?? $this->filledString($model->getAttribute('nama_ibu'));
+    }
+
+    private function filledString(mixed $value): ?string
+    {
+        if (! is_string($value)) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? null : $value;
     }
 
     private function isDateOnly(Model $model, string $field): bool

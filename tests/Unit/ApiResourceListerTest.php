@@ -171,10 +171,31 @@ class ApiResourceListerTest extends TestCase
         $this->assertCount(2, $row['riwayat_penempatan']);
         $this->assertSame('Ayah Unit', $row['nama_ayah']);
         $this->assertSame('Ibu Unit', $row['nama_ibu']);
+        $this->assertNull($row['nama_wali']);
+        $this->assertSame('Ayah Unit', $row['nama_kontak_wali']);
         $this->assertSame(
             ['id', 'kelas_id', 'tahun_ajaran_id', 'mulai_at', 'selesai_at', 'jenis'],
             array_keys($row['riwayat_penempatan'][0])
         );
+    }
+
+    public function test_siswa_contact_falls_back_to_ibu_when_wali_and_ayah_empty(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        Siswa::factory()->create([
+            'lembaga_id' => $lembaga->id,
+            'nama' => 'Siswa Kontak Ibu',
+            'nama_wali' => null,
+            'nama_ayah' => ' ',
+            'nama_ibu' => 'Ibu Pengganti',
+        ]);
+
+        $result = $this->lister()->list($this->client($lembaga, 'contact'), 'siswa', ['fields' => 'contact']);
+
+        $row = $result['data'][0];
+        $this->assertNull($row['nama_wali']);
+        $this->assertSame(' ', $row['nama_ayah']);
+        $this->assertSame('Ibu Pengganti', $row['nama_kontak_wali']);
     }
 
     private function makeSiswaWithPenempatan(Lembaga $lembaga): Siswa

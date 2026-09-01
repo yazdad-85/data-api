@@ -113,7 +113,7 @@ final class ApiResourceCatalog
                         'status_at', 'status_alasan', 'status_asal', 'status_tujuan',
                         'status_keluarga', 'email', 'telepon', 'alamat',
                         'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu',
-                        'nama_wali', 'telepon_wali',
+                        'nama_wali', 'nama_kontak_wali', 'telepon_wali',
                     ],
                 ],
                 'embeds' => [
