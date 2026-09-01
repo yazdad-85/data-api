@@ -57,6 +57,7 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
         ->name('admin.settings.backup');
 
     Route::get('/api-clients', [ApiClientController::class, 'index'])->name('admin.api-clients.index');
+    Route::post('/api-clients', [ApiClientController::class, 'store'])->name('admin.api-clients.store');
 
     Route::get('/monitoring/guru', [SuperAdminMonitoringController::class, 'guru'])->name('admin.monitoring.guru');
     Route::get('/monitoring/guru/export', [SuperAdminMonitoringController::class, 'guruExport'])->name('admin.monitoring.guru.export');

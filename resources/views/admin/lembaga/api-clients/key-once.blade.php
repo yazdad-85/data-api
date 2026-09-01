@@ -4,8 +4,12 @@
 
 @section('breadcrumb')
     <a href="{{ route('admin.dashboard') }}">Dashboard</a> /
-    <a href="{{ route('admin.lembaga.index') }}">Lembaga</a> /
-    <a href="{{ route('admin.lembaga.show', $lembaga) }}">{{ $lembaga->nama }}</a> / API key
+    @if (auth()->user()?->isSuperAdmin())
+        <a href="{{ route('admin.lembaga.index') }}">Lembaga</a> /
+        <a href="{{ route('admin.lembaga.show', $lembaga) }}">{{ $lembaga->nama }}</a> / API key
+    @else
+        <a href="{{ route('admin.api-clients.index') }}">API client</a> / API key
+    @endif
 @endsection
 
 @section('content')
@@ -55,7 +59,7 @@
         </div>
 
         <div class="form-actions">
-            <x-ui.button href="{{ route('admin.lembaga.show', $lembaga) }}">Kembali ke detail lembaga</x-ui.button>
+            <x-ui.button href="{{ $backUrl }}">{{ $backLabel }}</x-ui.button>
         </div>
     </div>
 @endsection

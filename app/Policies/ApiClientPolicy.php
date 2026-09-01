@@ -25,7 +25,7 @@ class ApiClientPolicy
 
     public function create(User $user): bool
     {
-        return $user->isSuperAdmin();
+        return $user->isSuperAdmin() || $user->isAdminLembaga();
     }
 
     public function update(User $user, ApiClient $apiClient): bool

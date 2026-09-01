@@ -268,16 +268,43 @@ class ApiClientAdminTest extends TestCase
             ->assertForbidden();
     }
 
-    public function test_admin_lembaga_cannot_create_api_client(): void
+    public function test_admin_lembaga_creates_own_api_client_and_sees_plain_key_once(): void
     {
         $lembaga = Lembaga::factory()->create();
         $admin = User::factory()->adminLembaga($lembaga->id)->create();
 
-        $this->actingAs($admin)->post(route('admin.lembaga.api-clients.store', $lembaga), [
+        $response = $this->actingAs($admin)->followingRedirects()->post(route('admin.api-clients.store'), [
+            'nama' => 'Client Lembaga',
+            'scopes' => ['guru:read'],
+            'field_profile' => 'minimal',
+        ]);
+
+        $response->assertOk();
+
+        $client = ApiClient::query()->where('nama', 'Client Lembaga')->firstOrFail();
+        $this->assertSame($lembaga->id, $client->lembaga_id);
+
+        $plain = $this->extractApiKeyFromHtml($response->getContent());
+        $this->assertNotNull($plain);
+        $this->assertStringStartsWith('dc_live_'.$client->api_key_prefix.'_', $plain);
+        $this->assertTrue(app(ApiKeyVerifier::class)->matches($plain, $client->api_key_digest));
+        $response->assertSee('Kembali ke API client');
+        $response->assertDontSee('Kembali ke detail lembaga');
+    }
+
+    public function test_admin_lembaga_cannot_create_api_client_for_other_lembaga(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $otherLembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $this->actingAs($admin)->post(route('admin.lembaga.api-clients.store', $otherLembaga), [
             'nama' => 'Coba Buat',
             'scopes' => ['guru:read'],
             'field_profile' => 'minimal',
         ])->assertForbidden();
+
+        $this->assertFalse(ApiClient::query()->where('nama', 'Coba Buat')->exists());
     }
 
     public function test_generated_key_flash_does_not_leak_to_other_client_when_key_once_skipped(): void
@@ -331,12 +358,50 @@ class ApiClientAdminTest extends TestCase
         $this->assertNotNull($otherClient);
     }
 
-    public function test_super_admin_cannot_access_admin_lembaga_api_clients_index(): void
+    public function test_super_admin_sees_all_api_clients_and_can_filter_by_lembaga(): void
     {
         $sa = $this->superAdmin();
+        $lembagaA = Lembaga::factory()->create(['nama' => 'Lembaga API A']);
+        $lembagaB = Lembaga::factory()->create(['nama' => 'Lembaga API B']);
 
-        $this->actingAs($sa)->get(route('admin.api-clients.index'))
-            ->assertForbidden();
+        ApiClient::factory()->for($lembagaA)->create(['nama' => 'Client A']);
+        ApiClient::factory()->for($lembagaB)->create(['nama' => 'Client B']);
+
+        $this->actingAs($sa)
+            ->get(route('admin.api-clients.index'))
+            ->assertOk()
+            ->assertSee('Tambah API client')
+            ->assertSee('Lembaga API A')
+            ->assertSee('Lembaga API B')
+            ->assertSee('Client A')
+            ->assertSee('Client B');
+
+        $this->actingAs($sa)
+            ->get(route('admin.api-clients.index', ['lembaga_id' => $lembagaA->id]))
+            ->assertOk()
+            ->assertSee('value="'.$lembagaA->id.'" selected', false)
+            ->assertSee('Client A')
+            ->assertDontSee('Client B');
+    }
+
+    public function test_super_admin_creates_api_client_from_global_index_for_selected_lembaga(): void
+    {
+        $sa = $this->superAdmin();
+        $lembaga = Lembaga::factory()->create(['nama' => 'Lembaga Terpilih']);
+
+        $response = $this->actingAs($sa)->followingRedirects()->post(route('admin.api-clients.store'), [
+            'lembaga_id' => $lembaga->id,
+            'nama' => 'Client Pusat',
+            'scopes' => ['siswa:read', 'kelas:read'],
+            'field_profile' => 'academic',
+        ]);
+
+        $response->assertOk();
+
+        $client = ApiClient::query()->where('nama', 'Client Pusat')->firstOrFail();
+        $this->assertSame($lembaga->id, $client->lembaga_id);
+        $this->assertSame(['siswa:read', 'kelas:read'], $client->scopes);
+        $response->assertSee('Kembali ke detail lembaga');
     }
 
     private function extractApiKeyFromHtml(string $html): ?string
