@@ -2,30 +2,28 @@
 
 namespace App\Services\Siswa;
 
-use App\Models\Kelas;
 use App\Models\Siswa;
-use App\Models\SiswaPenempatan;
 use App\Services\Siswa\Concerns\ParsesSiswaImportRow;
-use App\Support\Master\PenempatanJenis;
 use App\Support\Master\SiswaStatus;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 
-final class SiswaImporter
+/**
+ * Import calon murid (SPMB). Sengaja terpisah dari SiswaImporter karena
+ * aturannya berbeda: calon belum resmi diterima, jadi NIS boleh kosong dan
+ * tidak ada kelas/tanggal diterima — itu ditentukan belakangan lewat
+ * Distribusi SPMB.
+ */
+final class SiswaCalonImporter
 {
     use ParsesSiswaImportRow;
-
-    public function __construct(
-        private readonly SiswaLifecycleService $lifecycle,
-    ) {}
 
     /**
      * @return array{success: int, failed: int, errors: list<array{row: int, message: string}>}
      */
-    public function import(UploadedFile $file, Kelas $kelas): array
+    public function import(UploadedFile $file, string $lembagaId, ?string $tahunAjaranId = null): array
     {
         $spreadsheet = IOFactory::load($file->getRealPath());
         $sheet = $spreadsheet->getSheetByName('Data Siswa');
@@ -37,7 +35,7 @@ final class SiswaImporter
                     'failed' => 0,
                     'errors' => [[
                         'row' => 1,
-                        'message' => 'File ini tampak template import kelas. Untuk siswa, unduh "template siswa" dari halaman detail kelas ini.',
+                        'message' => 'File ini tampak template import kelas. Untuk calon murid, unduh "template calon murid" dari halaman SPMB.',
                     ]],
                 ];
             }
@@ -59,34 +57,18 @@ final class SiswaImporter
         }
 
         $columnMap = $this->mapHeaders($headerRow);
-        $required = ['nis', 'nama'];
 
-        $headerValues = array_values($columnMap);
-        if (in_array('tahun_ajaran', $headerValues, true) && ! in_array('nis', $headerValues, true)) {
+        if (! in_array('nama', $columnMap, true)) {
             return [
                 'success' => 0,
                 'failed' => 0,
-                'errors' => [[
-                    'row' => 1,
-                    'message' => 'File ini tampak template import kelas. Untuk siswa, unduh "template siswa" dari halaman detail kelas ini.',
-                ]],
+                'errors' => [['row' => 1, 'message' => 'Kolom wajib "nama" tidak ditemukan. Gunakan template calon murid dari halaman SPMB.']],
             ];
-        }
-
-        foreach ($required as $column) {
-            if (! in_array($column, $columnMap, true)) {
-                return [
-                    'success' => 0,
-                    'failed' => 0,
-                    'errors' => [['row' => 1, 'message' => "Kolom wajib \"{$column}\" tidak ditemukan. Gunakan template import siswa (kolom: nis, nama, …). Tahun ajaran diisi otomatis dari kelas."]],
-                ];
-            }
         }
 
         $success = 0;
         $failed = 0;
         $errors = [];
-        $lembagaId = (string) $kelas->lembaga_id;
         $seenNis = [];
 
         foreach (array_values($rows) as $rowIndex => $row) {
@@ -106,24 +88,29 @@ final class SiswaImporter
                 continue;
             }
 
-            if (isset($seenNis[$validated['nis']])) {
-                $failed++;
-                $errors[] = [
-                    'row' => $excelRow,
-                    'message' => "NIS {$validated['nis']} muncul lebih dari sekali di file import.",
-                ];
+            // NIS opsional untuk calon: baris tanpa NIS tidak dicek duplikat
+            // dan tidak pernah dicocokkan ke siswa lama (selalu jadi baris baru).
+            if ($validated['nis'] !== null) {
+                if (isset($seenNis[$validated['nis']])) {
+                    $failed++;
+                    $errors[] = [
+                        'row' => $excelRow,
+                        'message' => "NIS {$validated['nis']} muncul lebih dari sekali di file import.",
+                    ];
 
-                continue;
+                    continue;
+                }
+
+                $seenNis[$validated['nis']] = true;
             }
 
-            $seenNis[$validated['nis']] = true;
             $existing = $this->findExistingSiswa($lembagaId, $validated['nis']);
 
-            if ($existing !== null && ! hash_equals((string) $existing->kelas_id, (string) $kelas->id)) {
+            if ($existing !== null && $existing->kelas_id !== null) {
                 $failed++;
                 $errors[] = [
                     'row' => $excelRow,
-                    'message' => "NIS {$validated['nis']} sudah terdaftar di kelas lain. Update lewat import hanya untuk siswa di kelas ini.",
+                    'message' => "NIS {$validated['nis']} sudah ditempatkan di kelas. Gunakan menu Siswa untuk mengubah datanya.",
                 ];
 
                 continue;
@@ -138,14 +125,14 @@ final class SiswaImporter
                 continue;
             }
 
-            DB::transaction(function () use ($kelas, $lembagaId, $validated, $existing) {
+            DB::transaction(function () use ($lembagaId, $tahunAjaranId, $validated, $existing) {
                 if ($existing !== null) {
                     $this->updateExisting($existing, $validated);
 
                     return;
                 }
 
-                $this->createAndPlace($kelas, $lembagaId, $validated);
+                $this->createAsCalon($lembagaId, $tahunAjaranId, $validated);
             });
 
             $success++;
@@ -160,13 +147,7 @@ final class SiswaImporter
      */
     private function validateRow(array $payload): array
     {
-        $nis = trim((string) ($payload['nis'] ?? ''));
-        if ($nis === '') {
-            throw new InvalidArgumentException('NIS wajib diisi.');
-        }
-        if (strlen($nis) > 30) {
-            throw new InvalidArgumentException('NIS maksimal 30 karakter.');
-        }
+        $nis = $this->nullableString($payload['nis'] ?? null, 30);
 
         $nama = trim((string) ($payload['nama'] ?? ''));
         if ($nama === '') {
@@ -184,7 +165,6 @@ final class SiswaImporter
         $tanggalLahir = $this->parseDate($payload['tanggal_lahir'] ?? null);
         $asalLembaga = $this->nullableString($payload['asal_lembaga'] ?? null, 150);
         $jenisMasuk = $this->normalizeJenisMasuk($payload['jenis_masuk'] ?? null, $asalLembaga);
-        $diterimaTanggal = $this->parseDiterimaTanggal($payload, $jenisMasuk);
 
         $email = trim((string) ($payload['email'] ?? ''));
         if ($email !== '' && ! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -210,35 +190,15 @@ final class SiswaImporter
             'telepon_wali' => $this->nullableString($payload['telepon_wali'] ?? null, 30),
             'status_asal' => $asalLembaga,
             'jenis_masuk' => $jenisMasuk,
-            'diterima_tanggal' => $diterimaTanggal,
         ];
     }
 
-    /**
-     * @param  array<string, mixed>  $payload
-     */
-    private function parseDiterimaTanggal(array $payload, string $jenisMasuk): ?string
+    private function findExistingSiswa(string $lembagaId, ?string $nis): ?Siswa
     {
-        $hasColumn = array_key_exists('diterima_tanggal', $payload);
-        $value = $payload['diterima_tanggal'] ?? null;
-
-        if ($jenisMasuk !== 'mutasi_masuk' && ($value === null || $value === '')) {
+        if ($nis === null) {
             return null;
         }
 
-        if ($value === null || $value === '') {
-            if ($hasColumn) {
-                throw new InvalidArgumentException('diterima_tanggal wajib diisi untuk mutasi masuk.');
-            }
-
-            return null;
-        }
-
-        return $this->parseDate($value);
-    }
-
-    private function findExistingSiswa(string $lembagaId, string $nis): ?Siswa
-    {
         return Siswa::withTrashed()
             ->where('lembaga_id', $lembagaId)
             ->where('nis', $nis)
@@ -255,88 +215,33 @@ final class SiswaImporter
             $siswa->refresh();
         }
 
-        $siswa->fill($this->updatePayload($validated));
-        $siswa->save();
-
-        if ($validated['jenis_masuk'] === 'mutasi_masuk') {
-            $this->markOpenPlacementAsMutasiMasuk($siswa, $validated['diterima_tanggal']);
-        }
-    }
-
-    /**
-     * @param  array<string, mixed>  $validated
-     * @return array<string, mixed>
-     */
-    private function updatePayload(array $validated): array
-    {
         $payload = ['nama' => $validated['nama']];
-
         foreach (['nisn', 'jenis_kelamin', 'tempat_lahir', 'tanggal_lahir', 'email', 'telepon', 'alamat', 'status_keluarga', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali', 'status_asal'] as $field) {
             if ($validated[$field] !== null) {
                 $payload[$field] = $validated[$field];
             }
         }
 
-        if ($validated['jenis_masuk'] === 'mutasi_masuk' && $validated['diterima_tanggal'] !== null) {
-            $payload['status_at'] = $validated['diterima_tanggal'];
-        }
-
-        return $payload;
+        $siswa->fill($payload);
+        $siswa->save();
     }
 
     /**
      * @param  array<string, mixed>  $validated
      */
-    private function createAndPlace(Kelas $kelas, string $lembagaId, array $validated): void
+    private function createAsCalon(string $lembagaId, ?string $tahunAjaranId, array $validated): void
     {
-        // Buat sebagai calon lalu tempatkan via service agar siswa berakhir
-        // "aktif" dengan tepat satu penempatan terbuka.
-        $siswa = Siswa::query()->create([
-            ...$this->studentPayload($validated),
+        $jenisMasuk = $validated['jenis_masuk'];
+        unset($validated['jenis_masuk']);
+
+        Siswa::query()->create([
+            ...$validated,
             'lembaga_id' => $lembagaId,
             'kelas_id' => null,
-            'tahun_ajaran_id' => null,
-            'status_siswa' => $validated['jenis_masuk'] === 'mutasi_masuk' ? SiswaStatus::MUTASI_MASUK : SiswaStatus::CALON,
-            'status_at' => $validated['diterima_tanggal'],
+            'tahun_ajaran_id' => $tahunAjaranId,
+            'status_siswa' => $jenisMasuk === 'mutasi_masuk' ? SiswaStatus::MUTASI_MASUK : SiswaStatus::CALON,
+            'status_at' => null,
             'is_active' => false,
         ]);
-
-        $this->lifecycle->tempatkan(
-            $siswa,
-            $kelas,
-            $validated['diterima_tanggal'] !== null ? Carbon::parse($validated['diterima_tanggal']) : null,
-            $validated['jenis_masuk'] === 'mutasi_masuk' ? PenempatanJenis::MUTASI_MASUK : PenempatanJenis::AWAL,
-        );
-    }
-
-    /**
-     * @param  array<string, mixed>  $validated
-     * @return array<string, mixed>
-     */
-    private function studentPayload(array $validated): array
-    {
-        $payload = $validated;
-        unset($payload['jenis_masuk'], $payload['diterima_tanggal']);
-
-        return $payload;
-    }
-
-    private function markOpenPlacementAsMutasiMasuk(Siswa $siswa, ?string $diterimaTanggal): void
-    {
-        $placement = SiswaPenempatan::withoutGlobalScopes()
-            ->where('lembaga_id', $siswa->lembaga_id)
-            ->where('siswa_id', $siswa->id)
-            ->whereNull('selesai_at')
-            ->first();
-
-        if ($placement === null) {
-            return;
-        }
-
-        $placement->jenis = PenempatanJenis::MUTASI_MASUK;
-        if ($diterimaTanggal !== null) {
-            $placement->mulai_at = $diterimaTanggal;
-        }
-        $placement->save();
     }
 }

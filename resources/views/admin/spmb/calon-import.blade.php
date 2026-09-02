@@ -37,12 +37,12 @@
             <h1 class="page-header__title font-display">Import calon murid</h1>
             <p class="page-header__description">
                 Upload data siswa hasil SPMB sebagai calon murid — belum ditempatkan ke kelas mana pun.
-                Setelah diimport, tempatkan mereka ke kelas lewat menu
-                <a href="{{ route('admin.spmb-distribusi.create') }}">Distribusi SPMB</a>.
+                NIS boleh dikosongkan karena calon murid belum resmi diterima. Setelah diimport, tempatkan
+                mereka ke kelas lewat menu <a href="{{ route('admin.spmb-distribusi.create') }}">Distribusi SPMB</a>.
             </p>
         </div>
         <div class="page-header__actions">
-            <x-ui.button href="{{ route('admin.spmb-calon.template') }}" variant="secondary">Unduh template siswa</x-ui.button>
+            <x-ui.button href="{{ route('admin.spmb-calon.template') }}" variant="secondary">Unduh template calon murid</x-ui.button>
         </div>
     </div>
 

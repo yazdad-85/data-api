@@ -7,8 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ImportSiswaCalonRequest;
 use App\Models\TahunAjaran;
 use App\Services\AuditLogger;
-use App\Services\Siswa\SiswaImporter;
-use App\Services\Siswa\SiswaTemplateExporter;
+use App\Services\Siswa\SiswaCalonImporter;
+use App\Services\Siswa\SiswaCalonTemplateExporter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -19,8 +19,8 @@ class SpmbCalonImportController extends Controller
 
     public function __construct(
         private readonly AuditLogger $auditLogger,
-        private readonly SiswaTemplateExporter $templateExporter,
-        private readonly SiswaImporter $importer,
+        private readonly SiswaCalonTemplateExporter $templateExporter,
+        private readonly SiswaCalonImporter $importer,
     ) {}
 
     public function create(): View
@@ -49,7 +49,7 @@ class SpmbCalonImportController extends Controller
         $validated = $request->validated();
         $tahunAjaranId = $validated['tahun_ajaran_id'] ?? null;
 
-        $result = $this->importer->importAsCalon(
+        $result = $this->importer->import(
             $request->file('file'),
             $user->lembaga_id,
             $tahunAjaranId,

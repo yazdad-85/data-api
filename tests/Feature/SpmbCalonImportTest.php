@@ -7,7 +7,7 @@ use App\Models\Lembaga;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Models\User;
-use App\Services\Siswa\SiswaTemplateExporter;
+use App\Services\Siswa\SiswaCalonTemplateExporter;
 use App\Support\Master\SiswaStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -40,7 +40,6 @@ class SpmbCalonImportTest extends TestCase
                 'nama' => 'Calon Dua',
                 'jenis_masuk' => 'Mutasi Masuk',
                 'asal_lembaga' => 'SMP Asal',
-                'diterima_tanggal' => '2026-07-15',
             ],
         ]);
 
@@ -64,7 +63,33 @@ class SpmbCalonImportTest extends TestCase
         $this->assertSame(SiswaStatus::MUTASI_MASUK, $s2->status_siswa);
         $this->assertNull($s2->kelas_id);
         $this->assertSame('SMP Asal', $s2->status_asal);
-        $this->assertSame('2026-07-15', $s2->status_at?->toDateString());
+        $this->assertNull($s2->status_at);
+    }
+
+    public function test_import_allows_blank_nis_for_calon_yang_belum_resmi_diterima(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $file = $this->makeImportFile([
+            ['nama' => 'Calon Tanpa NIS Satu'],
+            ['nama' => 'Calon Tanpa NIS Dua'],
+        ]);
+
+        $response = $this->actingAs($admin)->post(route('admin.spmb-calon.store'), [
+            'file' => $file,
+        ]);
+
+        $response->assertRedirect(route('admin.spmb-distribusi.create'));
+        $response->assertSessionHas('import_errors', []);
+
+        $this->assertSame(2, Siswa::query()->count());
+
+        $siswas = Siswa::query()->orderBy('nama')->get();
+        foreach ($siswas as $siswa) {
+            $this->assertNull($siswa->nis);
+            $this->assertSame(SiswaStatus::CALON, $siswa->status_siswa);
+        }
     }
 
     public function test_imported_calon_siswa_muncul_di_distribusi_spmb(): void
@@ -146,7 +171,7 @@ class SpmbCalonImportTest extends TestCase
      */
     private function makeImportFile(array $rows): UploadedFile
     {
-        $headers = SiswaTemplateExporter::dataHeaders();
+        $headers = SiswaCalonTemplateExporter::dataHeaders();
 
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
