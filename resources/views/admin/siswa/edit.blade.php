@@ -28,9 +28,10 @@
                 <x-ui.input
                     name="nis"
                     label="NIS"
-                    required
+                    :required="$siswa->kelas_id !== null"
                     :value="old('nis', $siswa->nis)"
                     :error="$errors->first('nis')"
+                    :hint="$siswa->kelas_id === null ? 'Boleh dikosongkan selama masih calon murid.' : null"
                 />
                 <x-ui.input
                     name="nisn"

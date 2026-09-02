@@ -124,6 +124,40 @@ class MasterSiswaTest extends TestCase
         $this->assertSame(SiswaStatus::CALON, $siswa->status_siswa);
     }
 
+    public function test_create_calon_murid_without_nis_is_allowed(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        $response = $this->actingAs($admin)->post(route('admin.siswa.store'), [
+            'nama' => 'Calon Tanpa NIS',
+        ]);
+
+        $response->assertRedirect(route('admin.siswa.index'));
+
+        $siswa = Siswa::query()->where('nama', 'Calon Tanpa NIS')->firstOrFail();
+        $this->assertNull($siswa->nis);
+        $this->assertNull($siswa->kelas_id);
+        $this->assertSame(SiswaStatus::CALON, $siswa->status_siswa);
+    }
+
+    public function test_create_langsung_ke_kelas_tanpa_nis_ditolak(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelas = Kelas::factory()->for($lembaga)->create(['tahun_ajaran_id' => $tahunAjaran->id]);
+
+        $response = $this->actingAs($admin)->post(route('admin.siswa.store'), [
+            'nama' => 'Tanpa NIS Ke Kelas',
+            'kelas_id' => $kelas->id,
+            'tahun_ajaran_id' => $tahunAjaran->id,
+        ]);
+
+        $response->assertSessionHasErrors('nis');
+        $this->assertSame(0, Siswa::query()->where('nama', 'Tanpa NIS Ke Kelas')->count());
+    }
+
     public function test_admin_lembaga_creates_mutasi_masuk_with_mutasi_placement(): void
     {
         $lembaga = Lembaga::factory()->create();
@@ -213,6 +247,40 @@ class MasterSiswaTest extends TestCase
 
         $response->assertSessionHasErrors('nis');
         $this->assertSame(1, Siswa::withTrashed()->count());
+    }
+
+    public function test_update_calon_murid_boleh_kosongkan_nis(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $siswa = Siswa::factory()->for($lembaga)->calon()->create(['nis' => 'CALON-NIS']);
+
+        $response = $this->actingAs($admin)->put(route('admin.siswa.update', $siswa), [
+            'nis' => '',
+            'nama' => 'Calon Tanpa NIS Lagi',
+        ]);
+
+        $response->assertRedirect(route('admin.siswa.index'));
+
+        $siswa->refresh();
+        $this->assertNull($siswa->nis);
+        $this->assertSame('Calon Tanpa NIS Lagi', $siswa->nama);
+    }
+
+    public function test_update_siswa_aktif_tetap_wajibkan_nis(): void
+    {
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create();
+        $kelas = Kelas::factory()->for($lembaga)->create(['tahun_ajaran_id' => $tahunAjaran->id]);
+        $siswa = Siswa::factory()->for($lembaga)->inKelas($kelas)->create(['nis' => 'NIS-AKTIF-UPD']);
+
+        $response = $this->actingAs($admin)->put(route('admin.siswa.update', $siswa), [
+            'nama' => 'Nama Baru',
+        ]);
+
+        $response->assertSessionHasErrors('nis');
+        $this->assertSame('NIS-AKTIF-UPD', $siswa->refresh()->nis);
     }
 
     public function test_update_cannot_change_kelas_id_penempatan_remains(): void

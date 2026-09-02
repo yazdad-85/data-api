@@ -12,8 +12,9 @@
         <div>
             <h1 class="page-header__title font-display">Tambah siswa</h1>
             <p class="page-header__description">
-                NIS wajib diisi. Pilih mutasi masuk untuk siswa pindahan; jika kelas dipilih, siswa langsung berstatus
-                <strong>aktif</strong> dengan riwayat penempatan yang sesuai.
+                Pilih mutasi masuk untuk siswa pindahan; jika kelas dipilih, siswa langsung berstatus
+                <strong>aktif</strong> dengan riwayat penempatan yang sesuai. NIS wajib diisi kalau kelas
+                langsung dipilih; boleh dikosongkan untuk calon murid (SPMB) yang belum resmi diterima.
             </p>
         </div>
     </div>
@@ -26,9 +27,9 @@
                 <x-ui.input
                     name="nis"
                     label="NIS"
-                    required
                     :value="old('nis')"
                     :error="$errors->first('nis')"
+                    hint="Wajib jika kelas langsung dipilih."
                 />
                 <x-ui.input
                     name="nisn"

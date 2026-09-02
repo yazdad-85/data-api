@@ -18,7 +18,7 @@ class UpdateSiswaRequest extends FormRequest
     {
         $merge = [];
 
-        foreach (['nisn', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'status_keluarga', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali'] as $field) {
+        foreach (['nis', 'nisn', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'status_keluarga', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali'] as $field) {
             if ($this->input($field) === '') {
                 $merge[$field] = null;
             }
@@ -38,8 +38,13 @@ class UpdateSiswaRequest extends FormRequest
         // siswa's kelas must go through SiswaLifecycleService (tempatkan/pindah)
         // so the siswa_penempatan snapshot stays in sync. Ordinary edit cannot
         // touch enrollment.
+        // NIS hanya wajib untuk siswa yang sudah ditempatkan ke kelas (aktif).
+        // Calon murid (kelas_id masih kosong) boleh belum punya NIS.
+        $siswa = $this->route('siswa');
+        $nisRequired = $siswa instanceof Siswa && $siswa->kelas_id !== null;
+
         return [
-            'nis' => ['required', 'string', 'max:30'],
+            'nis' => [Rule::requiredIf($nisRequired), 'nullable', 'string', 'max:30'],
             'nisn' => ['nullable', 'string', 'max:30'],
             'nama' => ['required', 'string', 'max:150'],
             'jenis_kelamin' => ['nullable', Rule::in(['L', 'P'])],

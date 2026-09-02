@@ -19,7 +19,7 @@ class StoreSiswaRequest extends FormRequest
     {
         $merge = [];
 
-        foreach (['nisn', 'kelas_id', 'tahun_ajaran_id', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'status_keluarga', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali', 'asal_lembaga', 'diterima_tanggal'] as $field) {
+        foreach (['nis', 'nisn', 'kelas_id', 'tahun_ajaran_id', 'jenis_kelamin', 'tempat_lahir', 'email', 'telepon', 'status_keluarga', 'nama_ayah', 'pekerjaan_ayah', 'nama_ibu', 'pekerjaan_ibu', 'nama_wali', 'telepon_wali', 'asal_lembaga', 'diterima_tanggal'] as $field) {
             if ($this->input($field) === '') {
                 $merge[$field] = null;
             }
@@ -42,7 +42,10 @@ class StoreSiswaRequest extends FormRequest
         $lembagaId = $this->user()?->lembaga_id;
 
         return [
-            'nis' => ['required', 'string', 'max:30'],
+            // NIS hanya wajib kalau siswa langsung ditempatkan ke kelas (aktif).
+            // Calon murid (SPMB, kelas_id kosong) belum resmi diterima jadi NIS
+            // boleh menyusul.
+            'nis' => [Rule::requiredIf(fn () => $this->filled('kelas_id')), 'nullable', 'string', 'max:30'],
             'nisn' => ['nullable', 'string', 'max:30'],
             'nama' => ['required', 'string', 'max:150'],
             'jenis_kelamin' => ['nullable', Rule::in(['L', 'P'])],
