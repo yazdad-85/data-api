@@ -43,6 +43,9 @@
                 jika ada satu siswa gagal, tidak ada perubahan yang disimpan.
             </p>
         </div>
+        <div class="page-header__actions">
+            <x-ui.button href="{{ route('admin.spmb-calon.create') }}" variant="secondary">Import calon murid (Excel)</x-ui.button>
+        </div>
     </div>
 
     <form method="GET" action="{{ route('admin.spmb-distribusi.create') }}" class="toolbar" role="search">
@@ -71,6 +74,7 @@
             description="Tidak ada calon murid (status CALON) yang cocok dengan filter saat ini."
         >
             <x-ui.button href="{{ route('admin.siswa.create') }}" variant="secondary">Tambah calon murid</x-ui.button>
+            <x-ui.button href="{{ route('admin.spmb-calon.create') }}" variant="secondary">Import calon murid (Excel)</x-ui.button>
         </x-ui.empty-state>
     @else
         <form method="POST" action="{{ route('admin.spmb-distribusi.store') }}">

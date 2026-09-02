@@ -7,16 +7,17 @@ use App\Http\Controllers\Admin\KaryawanController;
 use App\Http\Controllers\Admin\KelasController;
 use App\Http\Controllers\Admin\KenaikanKelasBulkController;
 use App\Http\Controllers\Admin\KenaikanKelasController;
-use App\Http\Controllers\Admin\ProfileController;
-use App\Http\Controllers\Admin\SettingsController;
-use App\Http\Controllers\Admin\SiswaController;
-use App\Http\Controllers\Admin\SiswaReportController;
-use App\Http\Controllers\Admin\SpmbDistribusiController;
-use App\Http\Controllers\Admin\SuperAdminMonitoringController;
 use App\Http\Controllers\Admin\LembagaAdminController;
 use App\Http\Controllers\Admin\LembagaApiClientController;
 use App\Http\Controllers\Admin\LembagaController;
 use App\Http\Controllers\Admin\LembagaProfileController;
+use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\SettingsController;
+use App\Http\Controllers\Admin\SiswaController;
+use App\Http\Controllers\Admin\SiswaReportController;
+use App\Http\Controllers\Admin\SpmbCalonImportController;
+use App\Http\Controllers\Admin\SpmbDistribusiController;
+use App\Http\Controllers\Admin\SuperAdminMonitoringController;
 use App\Http\Controllers\Admin\TahunAjaranController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\LogoutController;
@@ -134,6 +135,10 @@ Route::middleware(['auth', 'active', 'mfa'])->prefix('admin')->group(function ()
 
     Route::get('/spmb/distribusi', [SpmbDistribusiController::class, 'create'])->name('admin.spmb-distribusi.create');
     Route::post('/spmb/distribusi', [SpmbDistribusiController::class, 'store'])->name('admin.spmb-distribusi.store');
+
+    Route::get('/spmb/calon/import', [SpmbCalonImportController::class, 'create'])->name('admin.spmb-calon.create');
+    Route::get('/spmb/calon/template', [SpmbCalonImportController::class, 'template'])->name('admin.spmb-calon.template');
+    Route::post('/spmb/calon/import', [SpmbCalonImportController::class, 'store'])->name('admin.spmb-calon.store');
 
     Route::get('/lembaga', [LembagaController::class, 'index'])->name('admin.lembaga.index');
     Route::get('/lembaga/create', [LembagaController::class, 'create'])->name('admin.lembaga.create');
