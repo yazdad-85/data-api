@@ -15,13 +15,16 @@
         <div>
             <h1 class="page-header__title font-display">Siswa</h1>
             <p class="page-header__description">
-                Kelola data siswa lembaga Anda.
+                {{ $user->isSuperAdmin() ? 'Lihat dan export data siswa seluruh lembaga.' : 'Kelola data siswa lembaga Anda.' }}
             </p>
         </div>
         <div class="page-header__actions">
-            <x-ui.button href="{{ route('admin.siswa.create') }}">Tambah siswa</x-ui.button>
-            <x-ui.button href="{{ route('admin.siswa.create', ['jenis_masuk' => 'mutasi_masuk']) }}" variant="secondary">Mutasi masuk</x-ui.button>
-            <x-ui.button href="{{ route('admin.spmb-distribusi.create') }}" variant="secondary">Distribusi SPMB</x-ui.button>
+            <x-ui.button href="{{ route('admin.siswa.export', request()->except('page')) }}" variant="secondary">Export Excel</x-ui.button>
+            @if ($user->isAdminLembaga())
+                <x-ui.button href="{{ route('admin.siswa.create') }}">Tambah siswa</x-ui.button>
+                <x-ui.button href="{{ route('admin.siswa.create', ['jenis_masuk' => 'mutasi_masuk']) }}" variant="secondary">Mutasi masuk</x-ui.button>
+                <x-ui.button href="{{ route('admin.spmb-distribusi.create') }}" variant="secondary">Distribusi SPMB</x-ui.button>
+            @endif
         </div>
     </div>
 
@@ -43,7 +46,7 @@
             <option value="" @selected($tahunAjaranId === null || $tahunAjaranId === '')>Semua tahun ajaran</option>
             @foreach ($tahunAjarans as $tahunAjaran)
                 <option value="{{ $tahunAjaran->id }}" @selected($tahunAjaranId === $tahunAjaran->id)>
-                    {{ $tahunAjaran->nama }}
+                    {{ $tahunAjaran->nama }}@if ($user->isSuperAdmin() && $tahunAjaran->lembaga) · {{ $tahunAjaran->lembaga->nama }}@endif
                 </option>
             @endforeach
         </select>
@@ -51,7 +54,7 @@
             <option value="" @selected($kelasId === null || $kelasId === '')>Semua kelas</option>
             @foreach ($kelasList as $kelas)
                 <option value="{{ $kelas->id }}" @selected($kelasId === $kelas->id)>
-                    {{ $kelas->nama }}@if ($kelas->tahunAjaran) ({{ $kelas->tahunAjaran->nama }})@endif
+                    {{ $kelas->nama }}@if ($kelas->tahunAjaran) ({{ $kelas->tahunAjaran->nama }})@endif @if ($user->isSuperAdmin() && $kelas->lembaga) · {{ $kelas->lembaga->nama }}@endif
                 </option>
             @endforeach
         </select>
@@ -84,24 +87,34 @@
                 : 'Mulai dengan menambahkan siswa pertama.';
         @endphp
         <x-ui.empty-state title="Belum ada siswa" :description="$emptyDescription">
-            <x-ui.button href="{{ route('admin.siswa.create') }}">Tambah siswa</x-ui.button>
+            @if ($user->isAdminLembaga())
+                <x-ui.button href="{{ route('admin.siswa.create') }}">Tambah siswa</x-ui.button>
+            @endif
         </x-ui.empty-state>
     @else
         <x-ui.table>
             <x-slot:thead>
                 <tr>
                     <th>Nama</th>
+                    @if ($user->isSuperAdmin())
+                        <th>Lembaga</th>
+                    @endif
                     <th>NIS</th>
                     <th>NISN</th>
                     <th>Kelas</th>
                     <th>Status keluarga</th>
                     <th>Status</th>
-                    <th>Aksi</th>
+                    @if ($user->isAdminLembaga())
+                        <th>Aksi</th>
+                    @endif
                 </tr>
             </x-slot:thead>
             @foreach ($siswas as $siswa)
                 <tr>
                     <td>{{ $siswa->nama }}</td>
+                    @if ($user->isSuperAdmin())
+                        <td>{{ $siswa->lembaga->nama ?? '—' }}</td>
+                    @endif
                     <td>{{ $siswa->nis ?? '—' }}</td>
                     <td>{{ $siswa->nisn ?? '—' }}</td>
                     <td>
@@ -117,34 +130,36 @@
                             {{ SiswaStatus::label($siswa->status_siswa) }}
                         </x-ui.badge>
                     </td>
-                    <td>
-                        <div class="table-actions">
-                            <x-ui.button href="{{ route('admin.siswa.show', $siswa) }}" class="btn-sm">
-                                Detail
-                            </x-ui.button>
-                            <x-ui.button
-                                href="{{ route('admin.siswa.edit', $siswa) }}"
-                                variant="secondary"
-                                class="btn-sm"
-                            >
-                                Ubah
-                            </x-ui.button>
-                            @if ($siswa->is_active)
-                                <form method="POST" action="{{ route('admin.siswa.deactivate', $siswa) }}">
-                                    @csrf
-                                    <button type="submit" class="btn btn-secondary btn-sm">Nonaktifkan</button>
-                                </form>
-                            @else
-                                <form method="POST" action="{{ route('admin.siswa.activate', $siswa) }}">
-                                    @csrf
-                                    <button type="submit" class="btn btn-primary btn-sm">Aktifkan</button>
-                                </form>
-                            @endif
-                            <button type="button" class="btn btn-danger btn-sm" data-modal-open="delete-siswa-{{ $siswa->id }}">
-                                Hapus
-                            </button>
-                        </div>
-                    </td>
+                    @if ($user->isAdminLembaga())
+                        <td>
+                            <div class="table-actions">
+                                <x-ui.button href="{{ route('admin.siswa.show', $siswa) }}" class="btn-sm">
+                                    Detail
+                                </x-ui.button>
+                                <x-ui.button
+                                    href="{{ route('admin.siswa.edit', $siswa) }}"
+                                    variant="secondary"
+                                    class="btn-sm"
+                                >
+                                    Ubah
+                                </x-ui.button>
+                                @if ($siswa->is_active)
+                                    <form method="POST" action="{{ route('admin.siswa.deactivate', $siswa) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-secondary btn-sm">Nonaktifkan</button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="{{ route('admin.siswa.activate', $siswa) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary btn-sm">Aktifkan</button>
+                                    </form>
+                                @endif
+                                <button type="button" class="btn btn-danger btn-sm" data-modal-open="delete-siswa-{{ $siswa->id }}">
+                                    Hapus
+                                </button>
+                            </div>
+                        </td>
+                    @endif
                 </tr>
             @endforeach
         </x-ui.table>
@@ -152,26 +167,28 @@
         <x-ui.pagination :paginator="$siswas" />
     @endif
 
-    @foreach ($siswas as $siswa)
-        <x-ui.modal id="delete-siswa-{{ $siswa->id }}" title="Hapus siswa?">
-            <p>
-                Menghapus <strong>{{ $siswa->nama }}</strong> akan berdampak:
-            </p>
-            <ul>
-                <li>Siswa tidak lagi muncul pada daftar dan pencarian.</li>
-                <li>Data tetap tersimpan (soft delete) dan NIS/NISN tetap terdaftar.</li>
-            </ul>
+    @if ($user->isAdminLembaga())
+        @foreach ($siswas as $siswa)
+            <x-ui.modal id="delete-siswa-{{ $siswa->id }}" title="Hapus siswa?">
+                <p>
+                    Menghapus <strong>{{ $siswa->nama }}</strong> akan berdampak:
+                </p>
+                <ul>
+                    <li>Siswa tidak lagi muncul pada daftar dan pencarian.</li>
+                    <li>Data tetap tersimpan (soft delete) dan NIS/NISN tetap terdaftar.</li>
+                </ul>
 
-            <x-slot:actions>
-                <form method="dialog">
-                    <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
-                </form>
-                <form method="POST" action="{{ route('admin.siswa.destroy', $siswa) }}">
-                    @csrf
-                    @method('DELETE')
-                    <x-ui.button variant="danger" type="submit">Hapus siswa</x-ui.button>
-                </form>
-            </x-slot:actions>
-        </x-ui.modal>
-    @endforeach
+                <x-slot:actions>
+                    <form method="dialog">
+                        <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.siswa.destroy', $siswa) }}">
+                        @csrf
+                        @method('DELETE')
+                        <x-ui.button variant="danger" type="submit">Hapus siswa</x-ui.button>
+                    </form>
+                </x-slot:actions>
+            </x-ui.modal>
+        @endforeach
+    @endif
 @endsection

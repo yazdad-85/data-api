@@ -4,8 +4,8 @@ namespace Tests\Feature;
 
 use App\Models\Guru;
 use App\Models\Karyawan;
-use App\Models\Lembaga;
 use App\Models\Kelas;
+use App\Models\Lembaga;
 use App\Models\Siswa;
 use App\Models\SiswaPenempatan;
 use App\Models\TahunAjaran;
@@ -13,7 +13,6 @@ use App\Models\User;
 use App\Support\Master\PenempatanJenis;
 use App\Support\Master\SiswaStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use PhpOffice\PhpSpreadsheet\IOFactory;
 use Tests\TestCase;
 
 class SuperAdminMonitoringTest extends TestCase
@@ -410,22 +409,5 @@ class SuperAdminMonitoringTest extends TestCase
         $this->actingAs($admin)->get(route('admin.monitoring.guru.export'))->assertForbidden();
         $this->actingAs($admin)->get(route('admin.monitoring.siswa.export'))->assertForbidden();
         $this->actingAs($admin)->get(route('admin.monitoring.karyawan.export'))->assertForbidden();
-    }
-
-    /**
-     * @return list<list<mixed>>
-     */
-    private function xlsxRows(string $content): array
-    {
-        $path = tempnam(sys_get_temp_dir(), 'monitoring-export-').'.xlsx';
-        file_put_contents($path, $content);
-
-        try {
-            $spreadsheet = IOFactory::load($path);
-
-            return $spreadsheet->getActiveSheet()->toArray();
-        } finally {
-            @unlink($path);
-        }
     }
 }

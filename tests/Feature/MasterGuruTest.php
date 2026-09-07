@@ -226,6 +226,37 @@ class MasterGuruTest extends TestCase
         $byPegId->assertOk()->assertSee('Joko Susilo')->assertDontSee('Siti Aminah');
     }
 
+    public function test_admin_lembaga_exports_filtered_guru_to_excel_scoped_to_own_lembaga(): void
+    {
+        $lembaga = Lembaga::factory()->create(['nama' => 'MI Export Guru']);
+        $otherLembaga = Lembaga::factory()->create(['nama' => 'MI Lain']);
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        Guru::factory()->for($lembaga)->create([
+            'nama' => 'Guru Export Menu',
+            'niy' => 'NIY-MENU',
+            'nik' => 'NIK-MENU',
+            'peg_id' => 'PEG-MENU',
+            'tahun_masuk' => 2026,
+            'pendidikan_terakhir' => 'S1',
+        ]);
+        Guru::factory()->for($lembaga)->create(['nama' => 'Guru Tidak Cocok', 'niy' => 'NIY-NO']);
+        Guru::factory()->for($otherLembaga)->create(['nama' => 'Guru Export Lembaga Lain', 'niy' => 'NIY-OTHER']);
+
+        $response = $this->actingAs($admin)->get(route('admin.guru.export', ['q' => 'Export']));
+
+        $response->assertOk();
+        $this->assertStringContainsString('master-guru-', (string) $response->headers->get('content-disposition'));
+
+        $rows = $this->xlsxRows($response->streamedContent());
+        $this->assertSame('Nama', $rows[0][0]);
+        $this->assertSame('Lembaga', $rows[0][1]);
+        $this->assertSame('Guru Export Menu', $rows[1][0]);
+        $this->assertSame('MI Export Guru', $rows[1][1]);
+        $this->assertSame('NIY-MENU', $rows[1][2]);
+        $this->assertCount(2, $rows);
+    }
+
     public function test_destroy_soft_deletes_guru(): void
     {
         $lembaga = Lembaga::factory()->create();
@@ -279,13 +310,18 @@ class MasterGuruTest extends TestCase
         $this->assertArrayNotHasKey('email', $log->metadata);
     }
 
-    public function test_super_admin_is_forbidden_from_guru_routes(): void
+    public function test_super_admin_can_read_and_export_guru_menu_but_not_mutate(): void
     {
         $sa = $this->superAdmin();
         $lembaga = Lembaga::factory()->create();
         $guru = Guru::withoutGlobalScopes()->create(['lembaga_id' => $lembaga->id, 'nama' => 'Guru SA']);
 
-        $this->actingAs($sa)->get(route('admin.guru.index'))->assertForbidden();
+        $this->actingAs($sa)->get(route('admin.guru.index'))
+            ->assertOk()
+            ->assertSee('Guru SA')
+            ->assertSee('Export Excel')
+            ->assertDontSee('Tambah guru');
+        $this->actingAs($sa)->get(route('admin.guru.export'))->assertOk();
         $this->actingAs($sa)->get(route('admin.guru.create'))->assertForbidden();
         $this->actingAs($sa)->post(route('admin.guru.store'), ['nama' => 'X'])->assertForbidden();
         $this->actingAs($sa)->get(route('admin.guru.show', $guru))->assertForbidden();

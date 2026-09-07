@@ -20,4 +20,20 @@ trait EnsuresAdminLembaga
 
         return $user;
     }
+
+    /**
+     * Read-only master data pages can be opened by Super Admin or Admin Lembaga.
+     * Mutating actions should keep using adminLembaga().
+     */
+    protected function masterDataReader(): User
+    {
+        $user = request()->user();
+
+        abort_unless(
+            $user?->isSuperAdmin() || ($user?->isAdminLembaga() && $user->lembaga_id),
+            403
+        );
+
+        return $user;
+    }
 }

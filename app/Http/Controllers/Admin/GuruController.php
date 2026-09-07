@@ -12,7 +12,9 @@ use App\Models\Lembaga;
 use App\Services\AuditLogger;
 use App\Services\Guru\GuruImporter;
 use App\Services\Guru\GuruTemplateExporter;
+use App\Services\Master\MasterDataExcelExporter;
 use App\Support\Master\GuruNiyGenerator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -30,36 +32,34 @@ class GuruController extends Controller
         private readonly GuruNiyGenerator $niyGenerator,
         private readonly GuruTemplateExporter $templateExporter,
         private readonly GuruImporter $importer,
+        private readonly MasterDataExcelExporter $excelExporter,
     ) {}
 
     public function index(Request $request): View
     {
-        $this->adminLembaga();
+        $user = $this->masterDataReader();
 
         $q = trim((string) $request->query('q', ''));
 
-        $gurus = Guru::query()
-            ->when($q !== '', function ($query) use ($q) {
-                $like = '%'.$q.'%';
-                $query->where(function ($inner) use ($like) {
-                    if ($inner->getConnection()->getDriverName() === 'pgsql') {
-                        $inner->where('nama', 'ilike', $like)
-                            ->orWhere('niy', 'ilike', $like)
-                            ->orWhere('nik', 'ilike', $like)
-                            ->orWhere('peg_id', 'ilike', $like);
-                    } else {
-                        $inner->whereRaw('lower(nama) like lower(?)', [$like])
-                            ->orWhereRaw('lower(niy) like lower(?)', [$like])
-                            ->orWhereRaw('lower(nik) like lower(?)', [$like])
-                            ->orWhereRaw('lower(peg_id) like lower(?)', [$like]);
-                    }
-                });
-            })
+        $gurus = $this->indexQuery($q)
             ->orderBy('nama')
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.guru.index', compact('gurus', 'q'));
+        return view('admin.guru.index', compact('gurus', 'q', 'user'));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $this->masterDataReader();
+
+        $q = trim((string) $request->query('q', ''));
+
+        $rows = $this->indexQuery($q)
+            ->orderBy('nama')
+            ->get();
+
+        return $this->excelExporter->downloadResponse('guru', $rows);
     }
 
     public function create(): View
@@ -287,5 +287,27 @@ class GuruController extends Controller
         if ($path !== null && $path !== '') {
             Storage::disk('public')->delete($path);
         }
+    }
+
+    private function indexQuery(string $q): Builder
+    {
+        return Guru::query()
+            ->with('lembaga')
+            ->when($q !== '', function (Builder $query) use ($q): void {
+                $like = '%'.$q.'%';
+                $query->where(function (Builder $inner) use ($like): void {
+                    if ($inner->getConnection()->getDriverName() === 'pgsql') {
+                        $inner->where('nama', 'ilike', $like)
+                            ->orWhere('niy', 'ilike', $like)
+                            ->orWhere('nik', 'ilike', $like)
+                            ->orWhere('peg_id', 'ilike', $like);
+                    } else {
+                        $inner->whereRaw('lower(nama) like lower(?)', [$like])
+                            ->orWhereRaw('lower(niy) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nik) like lower(?)', [$like])
+                            ->orWhereRaw('lower(peg_id) like lower(?)', [$like]);
+                    }
+                });
+            });
     }
 }

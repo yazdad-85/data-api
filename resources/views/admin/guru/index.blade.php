@@ -11,13 +11,16 @@
         <div>
             <h1 class="page-header__title font-display">Guru</h1>
             <p class="page-header__description">
-                Kelola data guru lembaga Anda.
+                {{ $user->isSuperAdmin() ? 'Lihat dan export data guru seluruh lembaga.' : 'Kelola data guru lembaga Anda.' }}
             </p>
         </div>
         <div class="page-header__actions">
-            <x-ui.button href="{{ route('admin.guru.template') }}" variant="secondary">Unduh template</x-ui.button>
-            <button type="button" class="btn btn-secondary" data-modal-open="import-guru">Import Excel</button>
-            <x-ui.button href="{{ route('admin.guru.create') }}">Tambah guru</x-ui.button>
+            <x-ui.button href="{{ route('admin.guru.export', request()->except('page')) }}" variant="secondary">Export Excel</x-ui.button>
+            @if ($user->isAdminLembaga())
+                <x-ui.button href="{{ route('admin.guru.template') }}" variant="secondary">Unduh template</x-ui.button>
+                <button type="button" class="btn btn-secondary" data-modal-open="import-guru">Import Excel</button>
+                <x-ui.button href="{{ route('admin.guru.create') }}">Tambah guru</x-ui.button>
+            @endif
         </div>
     </div>
 
@@ -67,7 +70,9 @@
                 : 'Mulai dengan menambahkan guru pertama.';
         @endphp
         <x-ui.empty-state title="Belum ada guru" :description="$emptyDescription">
-            <x-ui.button href="{{ route('admin.guru.create') }}">Tambah guru</x-ui.button>
+            @if ($user->isAdminLembaga())
+                <x-ui.button href="{{ route('admin.guru.create') }}">Tambah guru</x-ui.button>
+            @endif
         </x-ui.empty-state>
     @else
         <x-ui.table>
@@ -75,11 +80,16 @@
                 <tr>
                     <th>Foto</th>
                     <th>Nama</th>
+                    @if ($user->isSuperAdmin())
+                        <th>Lembaga</th>
+                    @endif
                     <th>NIY</th>
                     <th>NIK</th>
                     <th>Status kepegawaian</th>
                     <th>Status</th>
-                    <th>Aksi</th>
+                    @if ($user->isAdminLembaga())
+                        <th>Aksi</th>
+                    @endif
                 </tr>
             </x-slot:thead>
             @foreach ($gurus as $guru)
@@ -92,6 +102,9 @@
                         @endif
                     </td>
                     <td>{{ $guru->nama }}</td>
+                    @if ($user->isSuperAdmin())
+                        <td>{{ $guru->lembaga->nama ?? '—' }}</td>
+                    @endif
                     <td>{{ $guru->niy ?? '—' }}</td>
                     <td>{{ $guru->nik ?? '—' }}</td>
                     <td>{{ $guru->status_kepegawaian ?? '—' }}</td>
@@ -102,34 +115,36 @@
                             <x-ui.badge tone="neutral">Nonaktif</x-ui.badge>
                         @endif
                     </td>
-                    <td>
-                        <div class="table-actions">
-                            <x-ui.button href="{{ route('admin.guru.show', $guru) }}" class="btn-sm">
-                                Detail
-                            </x-ui.button>
-                            <x-ui.button
-                                href="{{ route('admin.guru.edit', $guru) }}"
-                                variant="secondary"
-                                class="btn-sm"
-                            >
-                                Ubah
-                            </x-ui.button>
-                            @if ($guru->is_active)
-                                <form method="POST" action="{{ route('admin.guru.deactivate', $guru) }}">
-                                    @csrf
-                                    <button type="submit" class="btn btn-secondary btn-sm">Nonaktifkan</button>
-                                </form>
-                            @else
-                                <form method="POST" action="{{ route('admin.guru.activate', $guru) }}">
-                                    @csrf
-                                    <button type="submit" class="btn btn-primary btn-sm">Aktifkan</button>
-                                </form>
-                            @endif
-                            <button type="button" class="btn btn-danger btn-sm" data-modal-open="delete-guru-{{ $guru->id }}">
-                                Hapus
-                            </button>
-                        </div>
-                    </td>
+                    @if ($user->isAdminLembaga())
+                        <td>
+                            <div class="table-actions">
+                                <x-ui.button href="{{ route('admin.guru.show', $guru) }}" class="btn-sm">
+                                    Detail
+                                </x-ui.button>
+                                <x-ui.button
+                                    href="{{ route('admin.guru.edit', $guru) }}"
+                                    variant="secondary"
+                                    class="btn-sm"
+                                >
+                                    Ubah
+                                </x-ui.button>
+                                @if ($guru->is_active)
+                                    <form method="POST" action="{{ route('admin.guru.deactivate', $guru) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-secondary btn-sm">Nonaktifkan</button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="{{ route('admin.guru.activate', $guru) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary btn-sm">Aktifkan</button>
+                                    </form>
+                                @endif
+                                <button type="button" class="btn btn-danger btn-sm" data-modal-open="delete-guru-{{ $guru->id }}">
+                                    Hapus
+                                </button>
+                            </div>
+                        </td>
+                    @endif
                 </tr>
             @endforeach
         </x-ui.table>
@@ -137,45 +152,47 @@
         <x-ui.pagination :paginator="$gurus" />
     @endif
 
-    @foreach ($gurus as $guru)
-        <x-ui.modal id="delete-guru-{{ $guru->id }}" title="Hapus guru?">
-            <p>
-                Menghapus <strong>{{ $guru->nama }}</strong> akan berdampak:
-            </p>
-            <ul>
-                <li>Guru tidak lagi muncul pada daftar dan pencarian.</li>
-                <li>Data tetap tersimpan (soft delete) dan dapat dipulihkan oleh operator jika diperlukan.</li>
-            </ul>
+    @if ($user->isAdminLembaga())
+        @foreach ($gurus as $guru)
+            <x-ui.modal id="delete-guru-{{ $guru->id }}" title="Hapus guru?">
+                <p>
+                    Menghapus <strong>{{ $guru->nama }}</strong> akan berdampak:
+                </p>
+                <ul>
+                    <li>Guru tidak lagi muncul pada daftar dan pencarian.</li>
+                    <li>Data tetap tersimpan (soft delete) dan dapat dipulihkan oleh operator jika diperlukan.</li>
+                </ul>
+
+                <x-slot:actions>
+                    <form method="dialog">
+                        <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.guru.destroy', $guru) }}">
+                        @csrf
+                        @method('DELETE')
+                        <x-ui.button variant="danger" type="submit">Hapus guru</x-ui.button>
+                    </form>
+                </x-slot:actions>
+            </x-ui.modal>
+        @endforeach
+
+        <x-ui.modal id="import-guru" title="Import data guru">
+            <p>Unggah file Excel (.xlsx) sesuai template. NIY akan digenerate otomatis.</p>
+
+            <form id="import-guru-form" method="POST" action="{{ route('admin.guru.import') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="field">
+                    <label for="import-file" class="field-label">File Excel</label>
+                    <input id="import-file" type="file" name="file" accept=".xlsx,.xls" class="field-control" required>
+                </div>
+            </form>
 
             <x-slot:actions>
                 <form method="dialog">
                     <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
                 </form>
-                <form method="POST" action="{{ route('admin.guru.destroy', $guru) }}">
-                    @csrf
-                    @method('DELETE')
-                    <x-ui.button variant="danger" type="submit">Hapus guru</x-ui.button>
-                </form>
+                <x-ui.button type="submit" form="import-guru-form">Import</x-ui.button>
             </x-slot:actions>
         </x-ui.modal>
-    @endforeach
-
-    <x-ui.modal id="import-guru" title="Import data guru">
-        <p>Unggah file Excel (.xlsx) sesuai template. NIY akan digenerate otomatis.</p>
-
-        <form id="import-guru-form" method="POST" action="{{ route('admin.guru.import') }}" enctype="multipart/form-data">
-            @csrf
-            <div class="field">
-                <label for="import-file" class="field-label">File Excel</label>
-                <input id="import-file" type="file" name="file" accept=".xlsx,.xls" class="field-control" required>
-            </div>
-        </form>
-
-        <x-slot:actions>
-            <form method="dialog">
-                <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
-            </form>
-            <x-ui.button type="submit" form="import-guru-form">Import</x-ui.button>
-        </x-slot:actions>
-    </x-ui.modal>
+    @endif
 @endsection

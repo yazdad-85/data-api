@@ -418,7 +418,7 @@ class MasterSiswaTest extends TestCase
         $this->assertArrayNotHasKey('email', $log->metadata);
     }
 
-    public function test_super_admin_is_forbidden_from_siswa_routes(): void
+    public function test_super_admin_can_read_and_export_siswa_menu_but_not_mutate(): void
     {
         $sa = $this->superAdmin();
         $lembaga = Lembaga::factory()->create();
@@ -429,7 +429,12 @@ class MasterSiswaTest extends TestCase
             'is_active' => true,
         ]);
 
-        $this->actingAs($sa)->get(route('admin.siswa.index'))->assertForbidden();
+        $this->actingAs($sa)->get(route('admin.siswa.index'))
+            ->assertOk()
+            ->assertSee('Siswa SA')
+            ->assertSee('Export Excel')
+            ->assertDontSee('Tambah siswa');
+        $this->actingAs($sa)->get(route('admin.siswa.export'))->assertOk();
         $this->actingAs($sa)->get(route('admin.siswa.create'))->assertForbidden();
         $this->actingAs($sa)->post(route('admin.siswa.store'), ['nama' => 'X', 'nis' => 'NIS-X'])->assertForbidden();
         $this->actingAs($sa)->get(route('admin.siswa.show', $siswa))->assertForbidden();
@@ -481,6 +486,53 @@ class MasterSiswaTest extends TestCase
 
         $byNis = $this->actingAs($admin)->get(route('admin.siswa.index', ['q' => 'NIS-200']));
         $byNis->assertOk()->assertSee('Joko Susilo')->assertDontSee('Siti Aminah');
+    }
+
+    public function test_admin_lembaga_exports_filtered_siswa_to_excel_scoped_to_own_lembaga(): void
+    {
+        $lembaga = Lembaga::factory()->create(['nama' => 'MTs Export Siswa']);
+        $otherLembaga = Lembaga::factory()->create(['nama' => 'MTs Lain']);
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $tahunAjaran = TahunAjaran::factory()->for($lembaga)->create(['nama' => '2026/2027']);
+        $kelas = Kelas::factory()->for($lembaga)->create([
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'nama' => 'VII Export',
+        ]);
+
+        Siswa::factory()->inKelas($kelas)->create([
+            'nama' => 'Siswa Export Menu',
+            'nis' => 'NIS-MENU',
+            'nisn' => 'NISN-MENU',
+            'status_keluarga' => 'Yatim',
+            'nama_ayah' => 'Ayah Menu',
+            'pekerjaan_ayah' => 'Petani',
+            'nama_ibu' => 'Ibu Menu',
+            'pekerjaan_ibu' => 'Pedagang',
+        ]);
+        Siswa::factory()->inKelas($kelas)->create(['nama' => 'Siswa Tidak Cocok', 'nis' => 'NIS-NO']);
+        Siswa::factory()->for($otherLembaga)->create(['nama' => 'Siswa Export Lembaga Lain', 'nis' => 'NIS-OTHER']);
+
+        $response = $this->actingAs($admin)->get(route('admin.siswa.export', [
+            'q' => 'Export',
+            'kelas_id' => $kelas->id,
+            'tahun_ajaran_id' => $tahunAjaran->id,
+            'status_siswa' => SiswaStatus::AKTIF,
+        ]));
+
+        $response->assertOk();
+        $this->assertStringContainsString('master-siswa-', (string) $response->headers->get('content-disposition'));
+
+        $rows = $this->xlsxRows($response->streamedContent());
+        $this->assertSame('Nama', $rows[0][0]);
+        $this->assertSame('Lembaga', $rows[0][1]);
+        $this->assertSame('Status Keluarga', $rows[0][8]);
+        $this->assertSame('Siswa Export Menu', $rows[1][0]);
+        $this->assertSame('MTs Export Siswa', $rows[1][1]);
+        $this->assertSame('NIS-MENU', $rows[1][2]);
+        $this->assertSame('2026/2027', $rows[1][4]);
+        $this->assertSame('VII Export', $rows[1][5]);
+        $this->assertSame('Yatim', $rows[1][8]);
+        $this->assertCount(2, $rows);
     }
 
     public function test_index_filter_status_lulus(): void

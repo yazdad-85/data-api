@@ -132,6 +132,35 @@ class MasterKaryawanTest extends TestCase
         $byNik->assertOk()->assertSee('Agus Setiawan')->assertDontSee('Rina Marlina');
     }
 
+    public function test_admin_lembaga_exports_filtered_karyawan_to_excel_scoped_to_own_lembaga(): void
+    {
+        $lembaga = Lembaga::factory()->create(['nama' => 'MA Export Karyawan']);
+        $otherLembaga = Lembaga::factory()->create(['nama' => 'MA Lain']);
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+
+        Karyawan::factory()->for($lembaga)->create([
+            'nama' => 'Karyawan Export Menu',
+            'nik_pegawai' => 'NIK-MENU',
+            'tahun_masuk' => 2026,
+            'jabatan' => 'TU',
+        ]);
+        Karyawan::factory()->for($lembaga)->create(['nama' => 'Karyawan Tidak Cocok', 'nik_pegawai' => 'NIK-NO']);
+        Karyawan::factory()->for($otherLembaga)->create(['nama' => 'Karyawan Export Lembaga Lain', 'nik_pegawai' => 'NIK-OTHER']);
+
+        $response = $this->actingAs($admin)->get(route('admin.karyawan.export', ['q' => 'Export']));
+
+        $response->assertOk();
+        $this->assertStringContainsString('master-karyawan-', (string) $response->headers->get('content-disposition'));
+
+        $rows = $this->xlsxRows($response->streamedContent());
+        $this->assertSame('Nama', $rows[0][0]);
+        $this->assertSame('Lembaga', $rows[0][1]);
+        $this->assertSame('Karyawan Export Menu', $rows[1][0]);
+        $this->assertSame('MA Export Karyawan', $rows[1][1]);
+        $this->assertSame('NIK-MENU', $rows[1][2]);
+        $this->assertCount(2, $rows);
+    }
+
     public function test_destroy_soft_deletes_karyawan(): void
     {
         $lembaga = Lembaga::factory()->create();
@@ -185,13 +214,18 @@ class MasterKaryawanTest extends TestCase
         $this->assertArrayNotHasKey('email', $log->metadata);
     }
 
-    public function test_super_admin_is_forbidden_from_karyawan_routes(): void
+    public function test_super_admin_can_read_and_export_karyawan_menu_but_not_mutate(): void
     {
         $sa = $this->superAdmin();
         $lembaga = Lembaga::factory()->create();
         $karyawan = Karyawan::withoutGlobalScopes()->create(['lembaga_id' => $lembaga->id, 'nama' => 'Karyawan SA']);
 
-        $this->actingAs($sa)->get(route('admin.karyawan.index'))->assertForbidden();
+        $this->actingAs($sa)->get(route('admin.karyawan.index'))
+            ->assertOk()
+            ->assertSee('Karyawan SA')
+            ->assertSee('Export Excel')
+            ->assertDontSee('Tambah karyawan');
+        $this->actingAs($sa)->get(route('admin.karyawan.export'))->assertOk();
         $this->actingAs($sa)->get(route('admin.karyawan.create'))->assertForbidden();
         $this->actingAs($sa)->post(route('admin.karyawan.store'), ['nama' => 'X'])->assertForbidden();
         $this->actingAs($sa)->get(route('admin.karyawan.show', $karyawan))->assertForbidden();

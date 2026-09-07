@@ -17,8 +17,11 @@ final class AdminMenu
             return collect([
                 ['label' => 'Dashboard', 'route' => 'admin.dashboard', 'available' => true],
                 ['label' => 'Monitoring', 'route' => 'admin.monitoring.siswa', 'available' => true],
+                ['label' => 'Guru', 'route' => 'admin.guru.index', 'available' => true],
+                ['label' => 'Siswa', 'route' => 'admin.siswa.index', 'available' => true],
                 ['label' => 'Laporan Siswa', 'route' => 'admin.laporan.siswa', 'available' => true],
                 ['label' => 'SPMB', 'route' => 'admin.laporan.siswa', 'params' => ['status_siswa' => SiswaStatus::CALON], 'available' => true],
+                ['label' => 'Karyawan', 'route' => 'admin.karyawan.index', 'available' => true],
                 ['label' => 'API client', 'route' => 'admin.api-clients.index', 'available' => true],
                 ['label' => 'Lembaga', 'route' => 'admin.lembaga.index', 'available' => true],
                 ['label' => 'Pengaturan', 'route' => 'admin.settings.show', 'available' => true],

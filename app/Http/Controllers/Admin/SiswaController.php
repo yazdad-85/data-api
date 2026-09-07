@@ -11,14 +11,17 @@ use App\Models\Kelas;
 use App\Models\Siswa;
 use App\Models\TahunAjaran;
 use App\Services\AuditLogger;
+use App\Services\Master\MasterDataExcelExporter;
 use App\Services\Siswa\SiswaLifecycleService;
 use App\Support\Master\PenempatanJenis;
 use App\Support\Master\SiswaStatus;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\View\View;
 use InvalidArgumentException;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class SiswaController extends Controller
 {
@@ -27,57 +30,46 @@ class SiswaController extends Controller
     public function __construct(
         private readonly AuditLogger $auditLogger,
         private readonly SiswaLifecycleService $lifecycle,
+        private readonly MasterDataExcelExporter $excelExporter,
     ) {}
 
     public function index(Request $request): View
     {
-        $this->adminLembaga();
+        $user = $this->masterDataReader();
 
-        $q = trim((string) $request->query('q', ''));
-        $kelasId = $request->query('kelas_id');
-        $tahunAjaranId = $request->query('tahun_ajaran_id');
-        $statusSiswa = $request->query('status_siswa');
-        if (! is_string($statusSiswa) || ! in_array($statusSiswa, SiswaStatus::ALL, true)) {
-            $statusSiswa = '';
-        }
+        $filters = $this->filters($request);
+        $q = $filters['q'];
+        $kelasId = $filters['kelas_id'];
+        $tahunAjaranId = $filters['tahun_ajaran_id'];
+        $statusSiswa = $filters['status_siswa'];
 
-        $siswas = Siswa::query()
-            ->with(['kelas', 'tahunAjaran'])
-            ->when(is_string($kelasId) && $kelasId !== '', fn ($query) => $query->where('kelas_id', $kelasId))
-            ->when(is_string($tahunAjaranId) && $tahunAjaranId !== '', fn ($query) => $query->where('tahun_ajaran_id', $tahunAjaranId))
-            ->when($statusSiswa !== '', fn ($query) => $query->where('status_siswa', $statusSiswa))
-            ->when($q !== '', function ($query) use ($q) {
-                $like = '%'.$q.'%';
-                $query->where(function ($inner) use ($like) {
-                    if ($inner->getConnection()->getDriverName() === 'pgsql') {
-                        $inner->where('nama', 'ilike', $like)
-                            ->orWhere('nis', 'ilike', $like)
-                            ->orWhere('nisn', 'ilike', $like)
-                            ->orWhere('nama_ayah', 'ilike', $like)
-                            ->orWhere('nama_ibu', 'ilike', $like);
-                    } else {
-                        $inner->whereRaw('lower(nama) like lower(?)', [$like])
-                            ->orWhereRaw('lower(nis) like lower(?)', [$like])
-                            ->orWhereRaw('lower(nisn) like lower(?)', [$like])
-                            ->orWhereRaw('lower(nama_ayah) like lower(?)', [$like])
-                            ->orWhereRaw('lower(nama_ibu) like lower(?)', [$like]);
-                    }
-                });
-            })
+        $siswas = $this->indexQuery($filters)
             ->orderBy('nama')
             ->paginate(15)
             ->withQueryString();
 
         $kelasList = Kelas::query()
-            ->with('tahunAjaran')
+            ->with(['tahunAjaran', 'lembaga'])
             ->orderBy('nama')
             ->get();
 
         $tahunAjarans = TahunAjaran::query()
+            ->with('lembaga')
             ->orderByDesc('nama')
             ->get();
 
-        return view('admin.siswa.index', compact('siswas', 'q', 'kelasId', 'tahunAjaranId', 'statusSiswa', 'kelasList', 'tahunAjarans'));
+        return view('admin.siswa.index', compact('siswas', 'q', 'kelasId', 'tahunAjaranId', 'statusSiswa', 'kelasList', 'tahunAjarans', 'user'));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $this->masterDataReader();
+
+        $rows = $this->indexQuery($this->filters($request))
+            ->orderBy('nama')
+            ->get();
+
+        return $this->excelExporter->downloadResponse('siswa', $rows);
     }
 
     public function create(): View
@@ -403,5 +395,53 @@ class SiswaController extends Controller
         return redirect()
             ->route('admin.siswa.show', $siswa)
             ->with('status', $successMessage);
+    }
+
+    /**
+     * @return array{q: string, kelas_id: string, tahun_ajaran_id: string, status_siswa: string}
+     */
+    private function filters(Request $request): array
+    {
+        $statusSiswa = (string) $request->query('status_siswa', '');
+        if (! in_array($statusSiswa, SiswaStatus::ALL, true)) {
+            $statusSiswa = '';
+        }
+
+        return [
+            'q' => trim((string) $request->query('q', '')),
+            'kelas_id' => (string) $request->query('kelas_id', ''),
+            'tahun_ajaran_id' => (string) $request->query('tahun_ajaran_id', ''),
+            'status_siswa' => $statusSiswa,
+        ];
+    }
+
+    /**
+     * @param  array{q: string, kelas_id: string, tahun_ajaran_id: string, status_siswa: string}  $filters
+     */
+    private function indexQuery(array $filters): Builder
+    {
+        return Siswa::query()
+            ->with(['lembaga', 'kelas', 'tahunAjaran'])
+            ->when($filters['kelas_id'] !== '', fn (Builder $query) => $query->where('kelas_id', $filters['kelas_id']))
+            ->when($filters['tahun_ajaran_id'] !== '', fn (Builder $query) => $query->where('tahun_ajaran_id', $filters['tahun_ajaran_id']))
+            ->when($filters['status_siswa'] !== '', fn (Builder $query) => $query->where('status_siswa', $filters['status_siswa']))
+            ->when($filters['q'] !== '', function (Builder $query) use ($filters): void {
+                $like = '%'.$filters['q'].'%';
+                $query->where(function (Builder $inner) use ($like): void {
+                    if ($inner->getConnection()->getDriverName() === 'pgsql') {
+                        $inner->where('nama', 'ilike', $like)
+                            ->orWhere('nis', 'ilike', $like)
+                            ->orWhere('nisn', 'ilike', $like)
+                            ->orWhere('nama_ayah', 'ilike', $like)
+                            ->orWhere('nama_ibu', 'ilike', $like);
+                    } else {
+                        $inner->whereRaw('lower(nama) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nis) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nisn) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nama_ayah) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nama_ibu) like lower(?)', [$like]);
+                    }
+                });
+            });
     }
 }

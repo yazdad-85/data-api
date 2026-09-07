@@ -12,7 +12,9 @@ use App\Models\Lembaga;
 use App\Services\AuditLogger;
 use App\Services\Karyawan\KaryawanImporter;
 use App\Services\Karyawan\KaryawanTemplateExporter;
+use App\Services\Master\MasterDataExcelExporter;
 use App\Support\Master\GuruNiyGenerator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,31 +31,34 @@ class KaryawanController extends Controller
         private readonly GuruNiyGenerator $niyGenerator,
         private readonly KaryawanTemplateExporter $templateExporter,
         private readonly KaryawanImporter $importer,
+        private readonly MasterDataExcelExporter $excelExporter,
     ) {}
 
     public function index(Request $request): View
     {
-        $this->adminLembaga();
+        $user = $this->masterDataReader();
 
         $q = trim((string) $request->query('q', ''));
 
-        $karyawans = Karyawan::query()
-            ->when($q !== '', function ($query) use ($q) {
-                $like = '%'.$q.'%';
-                $query->where(function ($inner) use ($like) {
-                    if ($inner->getConnection()->getDriverName() === 'pgsql') {
-                        $inner->where('nama', 'ilike', $like)->orWhere('nik_pegawai', 'ilike', $like);
-                    } else {
-                        $inner->whereRaw('lower(nama) like lower(?)', [$like])
-                            ->orWhereRaw('lower(nik_pegawai) like lower(?)', [$like]);
-                    }
-                });
-            })
+        $karyawans = $this->indexQuery($q)
             ->orderBy('nama')
             ->paginate(15)
             ->withQueryString();
 
-        return view('admin.karyawan.index', compact('karyawans', 'q'));
+        return view('admin.karyawan.index', compact('karyawans', 'q', 'user'));
+    }
+
+    public function export(Request $request): StreamedResponse
+    {
+        $this->masterDataReader();
+
+        $q = trim((string) $request->query('q', ''));
+
+        $rows = $this->indexQuery($q)
+            ->orderBy('nama')
+            ->get();
+
+        return $this->excelExporter->downloadResponse('karyawan', $rows);
     }
 
     public function create(): View
@@ -221,5 +226,22 @@ class KaryawanController extends Controller
         return redirect()
             ->route('admin.karyawan.index')
             ->with('status', "Karyawan {$karyawan->nama} dihapus.");
+    }
+
+    private function indexQuery(string $q): Builder
+    {
+        return Karyawan::query()
+            ->with('lembaga')
+            ->when($q !== '', function (Builder $query) use ($q): void {
+                $like = '%'.$q.'%';
+                $query->where(function (Builder $inner) use ($like): void {
+                    if ($inner->getConnection()->getDriverName() === 'pgsql') {
+                        $inner->where('nama', 'ilike', $like)->orWhere('nik_pegawai', 'ilike', $like);
+                    } else {
+                        $inner->whereRaw('lower(nama) like lower(?)', [$like])
+                            ->orWhereRaw('lower(nik_pegawai) like lower(?)', [$like]);
+                    }
+                });
+            });
     }
 }

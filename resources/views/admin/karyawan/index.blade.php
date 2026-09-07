@@ -11,13 +11,16 @@
         <div>
             <h1 class="page-header__title font-display">Karyawan</h1>
             <p class="page-header__description">
-                Kelola data karyawan lembaga Anda.
+                {{ $user->isSuperAdmin() ? 'Lihat dan export data karyawan seluruh lembaga.' : 'Kelola data karyawan lembaga Anda.' }}
             </p>
         </div>
         <div class="page-header__actions">
-            <x-ui.button href="{{ route('admin.karyawan.template') }}" variant="secondary">Unduh template</x-ui.button>
-            <button type="button" class="btn btn-secondary" data-modal-open="import-karyawan">Import Excel</button>
-            <x-ui.button href="{{ route('admin.karyawan.create') }}">Tambah karyawan</x-ui.button>
+            <x-ui.button href="{{ route('admin.karyawan.export', request()->except('page')) }}" variant="secondary">Export Excel</x-ui.button>
+            @if ($user->isAdminLembaga())
+                <x-ui.button href="{{ route('admin.karyawan.template') }}" variant="secondary">Unduh template</x-ui.button>
+                <button type="button" class="btn btn-secondary" data-modal-open="import-karyawan">Import Excel</button>
+                <x-ui.button href="{{ route('admin.karyawan.create') }}">Tambah karyawan</x-ui.button>
+            @endif
         </div>
     </div>
 
@@ -67,22 +70,32 @@
                 : 'Mulai dengan menambahkan karyawan pertama.';
         @endphp
         <x-ui.empty-state title="Belum ada karyawan" :description="$emptyDescription">
-            <x-ui.button href="{{ route('admin.karyawan.create') }}">Tambah karyawan</x-ui.button>
+            @if ($user->isAdminLembaga())
+                <x-ui.button href="{{ route('admin.karyawan.create') }}">Tambah karyawan</x-ui.button>
+            @endif
         </x-ui.empty-state>
     @else
         <x-ui.table>
             <x-slot:thead>
                 <tr>
                     <th>Nama</th>
+                    @if ($user->isSuperAdmin())
+                        <th>Lembaga</th>
+                    @endif
                     <th>NIK pegawai</th>
                     <th>Jabatan</th>
                     <th>Status</th>
-                    <th>Aksi</th>
+                    @if ($user->isAdminLembaga())
+                        <th>Aksi</th>
+                    @endif
                 </tr>
             </x-slot:thead>
             @foreach ($karyawans as $karyawan)
                 <tr>
                     <td>{{ $karyawan->nama }}</td>
+                    @if ($user->isSuperAdmin())
+                        <td>{{ $karyawan->lembaga->nama ?? '—' }}</td>
+                    @endif
                     <td>{{ $karyawan->nik_pegawai ?? '—' }}</td>
                     <td>{{ $karyawan->jabatan ?? '—' }}</td>
                     <td>
@@ -92,34 +105,36 @@
                             <x-ui.badge tone="neutral">Nonaktif</x-ui.badge>
                         @endif
                     </td>
-                    <td>
-                        <div class="table-actions">
-                            <x-ui.button href="{{ route('admin.karyawan.show', $karyawan) }}" class="btn-sm">
-                                Detail
-                            </x-ui.button>
-                            <x-ui.button
-                                href="{{ route('admin.karyawan.edit', $karyawan) }}"
-                                variant="secondary"
-                                class="btn-sm"
-                            >
-                                Ubah
-                            </x-ui.button>
-                            @if ($karyawan->is_active)
-                                <form method="POST" action="{{ route('admin.karyawan.deactivate', $karyawan) }}">
-                                    @csrf
-                                    <button type="submit" class="btn btn-secondary btn-sm">Nonaktifkan</button>
-                                </form>
-                            @else
-                                <form method="POST" action="{{ route('admin.karyawan.activate', $karyawan) }}">
-                                    @csrf
-                                    <button type="submit" class="btn btn-primary btn-sm">Aktifkan</button>
-                                </form>
-                            @endif
-                            <button type="button" class="btn btn-danger btn-sm" data-modal-open="delete-karyawan-{{ $karyawan->id }}">
-                                Hapus
-                            </button>
-                        </div>
-                    </td>
+                    @if ($user->isAdminLembaga())
+                        <td>
+                            <div class="table-actions">
+                                <x-ui.button href="{{ route('admin.karyawan.show', $karyawan) }}" class="btn-sm">
+                                    Detail
+                                </x-ui.button>
+                                <x-ui.button
+                                    href="{{ route('admin.karyawan.edit', $karyawan) }}"
+                                    variant="secondary"
+                                    class="btn-sm"
+                                >
+                                    Ubah
+                                </x-ui.button>
+                                @if ($karyawan->is_active)
+                                    <form method="POST" action="{{ route('admin.karyawan.deactivate', $karyawan) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-secondary btn-sm">Nonaktifkan</button>
+                                    </form>
+                                @else
+                                    <form method="POST" action="{{ route('admin.karyawan.activate', $karyawan) }}">
+                                        @csrf
+                                        <button type="submit" class="btn btn-primary btn-sm">Aktifkan</button>
+                                    </form>
+                                @endif
+                                <button type="button" class="btn btn-danger btn-sm" data-modal-open="delete-karyawan-{{ $karyawan->id }}">
+                                    Hapus
+                                </button>
+                            </div>
+                        </td>
+                    @endif
                 </tr>
             @endforeach
         </x-ui.table>
@@ -127,45 +142,47 @@
         <x-ui.pagination :paginator="$karyawans" />
     @endif
 
-    @foreach ($karyawans as $karyawan)
-        <x-ui.modal id="delete-karyawan-{{ $karyawan->id }}" title="Hapus karyawan?">
-            <p>
-                Menghapus <strong>{{ $karyawan->nama }}</strong> akan berdampak:
-            </p>
-            <ul>
-                <li>Karyawan tidak lagi muncul pada daftar dan pencarian.</li>
-                <li>Data tetap tersimpan (soft delete) dan dapat dipulihkan oleh operator jika diperlukan.</li>
-            </ul>
+    @if ($user->isAdminLembaga())
+        @foreach ($karyawans as $karyawan)
+            <x-ui.modal id="delete-karyawan-{{ $karyawan->id }}" title="Hapus karyawan?">
+                <p>
+                    Menghapus <strong>{{ $karyawan->nama }}</strong> akan berdampak:
+                </p>
+                <ul>
+                    <li>Karyawan tidak lagi muncul pada daftar dan pencarian.</li>
+                    <li>Data tetap tersimpan (soft delete) dan dapat dipulihkan oleh operator jika diperlukan.</li>
+                </ul>
+
+                <x-slot:actions>
+                    <form method="dialog">
+                        <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
+                    </form>
+                    <form method="POST" action="{{ route('admin.karyawan.destroy', $karyawan) }}">
+                        @csrf
+                        @method('DELETE')
+                        <x-ui.button variant="danger" type="submit">Hapus karyawan</x-ui.button>
+                    </form>
+                </x-slot:actions>
+            </x-ui.modal>
+        @endforeach
+
+        <x-ui.modal id="import-karyawan" title="Import data karyawan">
+            <p>Unggah file Excel (.xlsx) sesuai template. NIK pegawai (format NIY) akan digenerate otomatis.</p>
+
+            <form id="import-karyawan-form" method="POST" action="{{ route('admin.karyawan.import') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="field">
+                    <label for="import-file" class="field-label">File Excel</label>
+                    <input id="import-file" type="file" name="file" accept=".xlsx,.xls" class="field-control" required>
+                </div>
+            </form>
 
             <x-slot:actions>
                 <form method="dialog">
                     <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
                 </form>
-                <form method="POST" action="{{ route('admin.karyawan.destroy', $karyawan) }}">
-                    @csrf
-                    @method('DELETE')
-                    <x-ui.button variant="danger" type="submit">Hapus karyawan</x-ui.button>
-                </form>
+                <x-ui.button type="submit" form="import-karyawan-form">Import</x-ui.button>
             </x-slot:actions>
         </x-ui.modal>
-    @endforeach
-
-    <x-ui.modal id="import-karyawan" title="Import data karyawan">
-        <p>Unggah file Excel (.xlsx) sesuai template. NIK pegawai (format NIY) akan digenerate otomatis.</p>
-
-        <form id="import-karyawan-form" method="POST" action="{{ route('admin.karyawan.import') }}" enctype="multipart/form-data">
-            @csrf
-            <div class="field">
-                <label for="import-file" class="field-label">File Excel</label>
-                <input id="import-file" type="file" name="file" accept=".xlsx,.xls" class="field-control" required>
-            </div>
-        </form>
-
-        <x-slot:actions>
-            <form method="dialog">
-                <x-ui.button variant="secondary" type="submit">Batal</x-ui.button>
-            </form>
-            <x-ui.button type="submit" form="import-karyawan-form">Import</x-ui.button>
-        </x-slot:actions>
-    </x-ui.modal>
+    @endif
 @endsection
