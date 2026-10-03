@@ -124,6 +124,7 @@ trait ParsesSiswaImportRow
         $normalized = preg_replace('/\s*,\s*/', ', ', $normalized) ?? $normalized;
 
         return match ($normalized) {
+            '5', 'lengkap' => 'Lengkap',
             '1' => 'Yatim',
             '2' => 'Piatu',
             '3' => 'Yatim Piatu',
@@ -135,7 +136,7 @@ trait ParsesSiswaImportRow
             'anak guru staff dan karyawan',
             'anak guru, staf, dan karyawan',
             'anak guru staf dan karyawan' => 'Anak Guru, Staff, dan Karyawan',
-            default => throw new InvalidArgumentException('Status keluarga harus kosong atau kode 1, 2, 3, 4.'),
+            default => throw new InvalidArgumentException('Status keluarga harus kosong, kode 1–5, atau teks Lengkap/Yatim/Piatu/Yatim Piatu/Anak Guru, Staff, dan Karyawan.'),
         };
     }
 

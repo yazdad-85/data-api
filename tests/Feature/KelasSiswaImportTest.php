@@ -51,7 +51,7 @@ class KelasSiswaImportTest extends TestCase
             (string) $response->headers->get('content-disposition')
         );
 
-        $rows = $this->xlsxRows($response->streamedContent());
+        $rows = $this->xlsxSheets($response->streamedContent());
         $this->assertStringContainsString('1=Yatim', (string) $rows['Petunjuk'][5][0]);
         $this->assertSame('status_keluarga', $rows['Data Siswa'][0][9]);
         $this->assertSame('4', $rows['Data Siswa'][1][9]);
@@ -83,6 +83,8 @@ class KelasSiswaImportTest extends TestCase
             ['nis' => 'NIS-102', 'nama' => 'Siti Rahma'],
             ['nis' => 'NIS-103', 'nama' => 'Siswa Anak Guru', 'status_keluarga' => '4'],
             ['nis' => 'NIS-104', 'nama' => 'Siswa Status Kosong', 'status_keluarga' => '-'],
+            ['nis' => 'NIS-105', 'nama' => 'Siswa Lengkap', 'status_keluarga' => 'lengkap'],
+            ['nis' => 'NIS-106', 'nama' => 'Siswa Kode Lengkap', 'status_keluarga' => '5'],
         ]);
 
         $response = $this->actingAs($admin)->post(route('admin.kelas.siswa.import', $kelas), [
@@ -92,7 +94,7 @@ class KelasSiswaImportTest extends TestCase
         $response->assertRedirect(route('admin.kelas.show', $kelas));
         $response->assertSessionHas('status');
 
-        $this->assertSame(4, Siswa::query()->count());
+        $this->assertSame(6, Siswa::query()->count());
 
         $siswaA = Siswa::query()->where('nis', 'NIS-101')->firstOrFail();
         $this->assertSame('Andi Pratama', $siswaA->nama);
@@ -120,7 +122,7 @@ class KelasSiswaImportTest extends TestCase
 
         $siswaB = Siswa::query()->where('nis', 'NIS-102')->firstOrFail();
         $this->assertSame('Siti Rahma', $siswaB->nama);
-        $this->assertNull($siswaB->status_keluarga);
+        $this->assertSame('Lengkap', $siswaB->status_keluarga);
         $this->assertSame($kelas->id, $siswaB->kelas_id);
         $this->assertSame($tahunAjaran->id, $siswaB->tahun_ajaran_id);
 
@@ -128,7 +130,9 @@ class KelasSiswaImportTest extends TestCase
         $this->assertSame('Anak Guru, Staff, dan Karyawan', $siswaC->status_keluarga);
 
         $siswaD = Siswa::query()->where('nis', 'NIS-104')->firstOrFail();
-        $this->assertNull($siswaD->status_keluarga);
+        $this->assertSame('Lengkap', $siswaD->status_keluarga);
+        $this->assertSame('Lengkap', Siswa::query()->where('nis', 'NIS-105')->firstOrFail()->status_keluarga);
+        $this->assertSame('Lengkap', Siswa::query()->where('nis', 'NIS-106')->firstOrFail()->status_keluarga);
     }
 
     public function test_imported_siswa_visible_on_admin_siswa_index(): void
@@ -470,7 +474,7 @@ class KelasSiswaImportTest extends TestCase
     /**
      * @return array<string, list<list<mixed>>>
      */
-    private function xlsxRows(string $content): array
+    private function xlsxSheets(string $content): array
     {
         $path = tempnam(sys_get_temp_dir(), 'siswa-template-').'.xlsx';
         file_put_contents($path, $content);

@@ -34,7 +34,7 @@
         'Piatu' => 'Piatu',
         'Yatim Piatu' => 'Yatim Piatu',
         'Anak Guru, Staff, dan Karyawan' => 'Anak guru/staff/karyawan',
-        'Belum diisi' => 'Belum diisi',
+        'Lengkap' => 'Lengkap',
     ];
     $familyRows = $stats['status_keluarga_per_kelas'];
     $familyRowsWithStudents = $familyRows->filter(fn (array $row): bool => $row['total'] > 0)->values();
@@ -241,7 +241,7 @@
                 <div>
                     <h2 class="dashboard-panel__title font-display">Status keluarga per kelas</h2>
                     <p class="dashboard-panel__description">
-                        Rekap siswa aktif berdasarkan status keluarga pada setiap kelas.
+                        Rekap siswa aktif berdasarkan status keluarga pada setiap kelas. Lengkap: ayah dan ibu masih hidup.
                     </p>
                 </div>
             </div>

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToLembaga;
 use Database\Factories\SiswaFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -18,6 +19,10 @@ class Siswa extends Model
     use BelongsToLembaga, HasFactory, HasUuids, SoftDeletes;
 
     protected $table = 'siswa';
+
+    protected $attributes = [
+        'status_keluarga' => 'Lengkap',
+    ];
 
     protected $fillable = [
         'lembaga_id',
@@ -46,6 +51,13 @@ class Siswa extends Model
         'status_asal',
         'status_tujuan',
     ];
+
+    protected function statusKeluarga(): Attribute
+    {
+        return Attribute::make(
+            set: fn (?string $value): string => trim($value ?? '') === '' ? 'Lengkap' : $value,
+        );
+    }
 
     protected function casts(): array
     {

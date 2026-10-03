@@ -55,6 +55,7 @@ class SpmbCalonImportTest extends TestCase
 
         $s1 = Siswa::query()->where('nis', 'CALON-001')->firstOrFail();
         $this->assertSame(SiswaStatus::CALON, $s1->status_siswa);
+        $this->assertSame('Lengkap', $s1->status_keluarga);
         $this->assertNull($s1->kelas_id);
         $this->assertSame($ta->id, $s1->tahun_ajaran_id);
         $this->assertFalse($s1->is_active);

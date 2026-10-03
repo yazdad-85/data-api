@@ -45,7 +45,7 @@ final class SiswaCalonTemplateExporter
         $petunjuk->setCellValue('A3', '1. Isi data pada sheet "Data Siswa". Baris pertama adalah header — jangan diubah.');
         $petunjuk->setCellValue('A4', '2. Kolom wajib: nama. NIS boleh dikosongkan karena calon murid belum resmi diterima.');
         $petunjuk->setCellValue('A5', '3. Kolom opsional: nis, nisn, jenis_kelamin (L atau P), tempat_lahir, tanggal_lahir, email, telepon, alamat, status_keluarga, nama_ayah, pekerjaan_ayah, nama_ibu, pekerjaan_ibu, nama_wali, telepon_wali, jenis_masuk, asal_lembaga.');
-        $petunjuk->setCellValue('A6', '4. status_keluarga boleh kosong. Jika diisi gunakan ID: 1=Yatim, 2=Piatu, 3=Yatim Piatu, 4=Anak Guru/Staff/Karyawan.');
+        $petunjuk->setCellValue('A6', '4. status_keluarga: 1=Yatim, 2=Piatu, 3=Yatim Piatu, 4=Anak Guru/Staff/Karyawan, 5=Lengkap (ayah dan ibu masih hidup). Teks status juga diterima. Kosong: siswa baru menjadi Lengkap; pembaruan mempertahankan status sebelumnya.');
         $petunjuk->setCellValue('A7', '5. jenis_masuk: Siswa Baru atau Mutasi Masuk. Jika asal_lembaga terisi dan jenis_masuk kosong, baris dianggap Mutasi Masuk.');
         $petunjuk->setCellValue('A8', '6. Hasil import berstatus Calon (atau Mutasi Masuk jika jenis_masuk diisi), belum masuk kelas mana pun.');
         $petunjuk->setCellValue('A9', '7. Tempatkan calon murid ke kelas belakangan lewat menu Distribusi SPMB.');

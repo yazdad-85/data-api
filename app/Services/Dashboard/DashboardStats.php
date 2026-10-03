@@ -14,8 +14,8 @@ use App\Support\Master\PenempatanJenis;
 use App\Support\Master\SiswaStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 
 final class DashboardStats
 {
@@ -24,9 +24,8 @@ final class DashboardStats
         'Piatu',
         'Yatim Piatu',
         'Anak Guru, Staff, dan Karyawan',
+        'Lengkap',
     ];
-
-    private const FAMILY_STATUS_EMPTY = 'Belum diisi';
 
     /** @return array<string, mixed> */
     public function for(User $user, string $tahunAjaranId = '', string $lembagaId = ''): array
@@ -103,7 +102,7 @@ final class DashboardStats
                 'karyawan_aktif' => $karyawanAktifQuery->count(),
                 'trend_master' => $this->masterTrend($selectedLembagaId),
                 'siswa_status' => $this->siswaStatusSummary($selectedLembagaId),
-                'status_keluarga_labels' => [...self::FAMILY_STATUSES, self::FAMILY_STATUS_EMPTY],
+                'status_keluarga_labels' => self::FAMILY_STATUSES,
                 'status_keluarga_summary' => $this->familyStatusSummary($selectedLembagaId),
                 'status_keluarga_per_kelas' => $this->familyStatusByClass($selectedLembagaId),
                 'tahun_ajaran_options' => $academicYears,
@@ -135,7 +134,7 @@ final class DashboardStats
             'karyawan_aktif' => Karyawan::query()->where('is_active', true)->count(),
             'trend_master' => $this->masterTrend(),
             'siswa_status' => $this->siswaStatusSummary(),
-            'status_keluarga_labels' => [...self::FAMILY_STATUSES, self::FAMILY_STATUS_EMPTY],
+            'status_keluarga_labels' => self::FAMILY_STATUSES,
             'status_keluarga_summary' => $this->familyStatusSummary(),
             'status_keluarga_per_kelas' => $this->familyStatusByClass(),
             'tahun_ajaran_options' => $academicYears,
@@ -179,7 +178,7 @@ final class DashboardStats
 
     /**
      * @param  class-string<Model>  $model
-     * @param  \Illuminate\Support\Collection<int, Carbon>  $months
+     * @param  Collection<int, Carbon>  $months
      * @return list<int>
      */
     private function monthlyCounts(string $model, $months, string $lembagaId = ''): array
@@ -232,13 +231,6 @@ final class DashboardStats
                 ->count();
         }
 
-        $summary[self::FAMILY_STATUS_EMPTY] = $this->activeStudentFamilyQuery($lembagaId)
-            ->where(function (Builder $query): void {
-                $query->whereNull('status_keluarga')
-                    ->orWhere('status_keluarga', '');
-            })
-            ->count();
-
         return $summary;
     }
 
@@ -262,12 +254,7 @@ final class DashboardStats
                 'siswa as piatu_count' => fn (Builder $query) => $this->familyStatusCountConstraint($query, 'Piatu'),
                 'siswa as yatim_piatu_count' => fn (Builder $query) => $this->familyStatusCountConstraint($query, 'Yatim Piatu'),
                 'siswa as anak_guru_count' => fn (Builder $query) => $this->familyStatusCountConstraint($query, 'Anak Guru, Staff, dan Karyawan'),
-                'siswa as family_empty_count' => fn (Builder $query) => $query
-                    ->where('status_siswa', SiswaStatus::AKTIF)
-                    ->where(function (Builder $inner): void {
-                        $inner->whereNull('status_keluarga')
-                            ->orWhere('status_keluarga', '');
-                    }),
+                'siswa as lengkap_count' => fn (Builder $query) => $this->familyStatusCountConstraint($query, 'Lengkap'),
             ])
             ->when($lembagaId !== '', fn (Builder $query) => $query->where('lembaga_id', $lembagaId))
             ->orderBy(
@@ -294,7 +281,7 @@ final class DashboardStats
                     'Piatu' => (int) $kelas->piatu_count,
                     'Yatim Piatu' => (int) $kelas->yatim_piatu_count,
                     'Anak Guru, Staff, dan Karyawan' => (int) $kelas->anak_guru_count,
-                    self::FAMILY_STATUS_EMPTY => (int) $kelas->family_empty_count,
+                    'Lengkap' => (int) $kelas->lengkap_count,
                 ],
             ]);
     }

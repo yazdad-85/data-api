@@ -83,9 +83,10 @@
                 <x-ui.select
                     name="status_keluarga"
                     label="Status keluarga"
+                    hint="Lengkap: ayah dan ibu masih hidup."
                     :error="$errors->first('status_keluarga')"
                 >
-                    <option value="" @selected(old('status_keluarga') === null || old('status_keluarga') === '')>— Pilih —</option>
+                    <option value="Lengkap" @selected((old('status_keluarga') ?: 'Lengkap') === 'Lengkap')>Lengkap</option>
                     <option value="Yatim" @selected(old('status_keluarga') === 'Yatim')>Yatim</option>
                     <option value="Piatu" @selected(old('status_keluarga') === 'Piatu')>Piatu</option>
                     <option value="Yatim Piatu" @selected(old('status_keluarga') === 'Yatim Piatu')>Yatim Piatu</option>

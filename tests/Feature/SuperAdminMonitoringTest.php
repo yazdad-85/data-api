@@ -192,6 +192,8 @@ class SuperAdminMonitoringTest extends TestCase
             ->assertOk()
             ->assertSee('Status keluarga per kelas')
             ->assertSee('Anak guru/staff/karyawan')
+            ->assertSee('Lengkap')
+            ->assertDontSee('Belum diisi')
             ->assertSee('VII Keluarga');
 
         $this->assertMatchesRegularExpression(
@@ -235,7 +237,8 @@ class SuperAdminMonitoringTest extends TestCase
             ->assertOk()
             ->assertSee('SMP Keluarga A')
             ->assertSee('VII Filter A')
-            ->assertDontSee('VII Filter B');
+            ->assertDontSee('VII Filter B')
+            ->assertViewHas('stats', fn (array $stats) => $stats['status_keluarga_summary']['Lengkap'] === 1);
 
         $this->assertMatchesRegularExpression(
             '/<tr>\s*<td[^>]*>SMP Keluarga A<\/td>\s*<td[^>]*>2026\/2027<\/td>\s*<td[^>]*>VII Filter A<\/td>\s*<td[^>]*>2<\/td>\s*<td[^>]*>1<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>1<\/td>\s*<\/tr>/s',
