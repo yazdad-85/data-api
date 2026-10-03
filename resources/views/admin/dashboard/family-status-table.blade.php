@@ -6,7 +6,7 @@
             @endif
             <th class="dashboard-family-table__text">Tahun ajaran</th>
             <th class="dashboard-family-table__text">Kelas</th>
-            <th class="dashboard-family-table__count">Total aktif</th>
+            <th class="dashboard-family-table__count">Total siswa aktif</th>
             @foreach ($familyLabels as $status)
                 <th class="dashboard-family-table__count">{{ $familyShortLabels[$status] }}</th>
             @endforeach
@@ -19,9 +19,9 @@
             @endif
             <td class="dashboard-family-table__text">{{ $row['tahun_ajaran_nama'] }}</td>
             <td class="dashboard-family-table__text">{{ $row['kelas_nama'] }}</td>
-            <td class="dashboard-family-table__count">{{ $row['total'] }}</td>
+            <td class="dashboard-family-table__count">{{ $row['total'] }} siswa</td>
             @foreach ($familyLabels as $status)
-                <td class="dashboard-family-table__count">{{ $row['statuses'][$status] ?? 0 }}</td>
+                <td class="dashboard-family-table__count">{{ $row['statuses'][$status] ?? 0 }} siswa</td>
             @endforeach
         </tr>
     @endforeach

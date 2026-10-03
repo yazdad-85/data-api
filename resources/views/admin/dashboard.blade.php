@@ -34,7 +34,7 @@
         'Piatu' => 'Piatu',
         'Yatim Piatu' => 'Yatim Piatu',
         'Anak Guru, Staff, dan Karyawan' => 'Anak guru/staff/karyawan',
-        'Lengkap' => 'Lengkap',
+        'Lengkap' => 'Keluarga lengkap',
     ];
     $familyRows = $stats['status_keluarga_per_kelas'];
     $familyRowsWithStudents = $familyRows->filter(fn (array $row): bool => $row['total'] > 0)->values();
@@ -241,7 +241,7 @@
                 <div>
                     <h2 class="dashboard-panel__title font-display">Status keluarga per kelas</h2>
                     <p class="dashboard-panel__description">
-                        Rekap siswa aktif berdasarkan status keluarga pada setiap kelas. Lengkap: ayah dan ibu masih hidup.
+                        Angka menunjukkan jumlah siswa aktif pada setiap kategori. Keluarga lengkap berarti ayah dan ibu masih hidup.
                     </p>
                 </div>
             </div>
@@ -250,7 +250,7 @@
                 @foreach ($familyLabels as $status)
                     <div class="dashboard-family-card" role="listitem">
                         <span>{{ $familyShortLabels[$status] }}</span>
-                        <strong class="font-display">{{ $stats['status_keluarga_summary'][$status] ?? 0 }}</strong>
+                        <strong class="font-display">{{ $stats['status_keluarga_summary'][$status] ?? 0 }} siswa</strong>
                     </div>
                 @endforeach
             </div>

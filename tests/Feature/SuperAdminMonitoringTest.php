@@ -192,12 +192,12 @@ class SuperAdminMonitoringTest extends TestCase
             ->assertOk()
             ->assertSee('Status keluarga per kelas')
             ->assertSee('Anak guru/staff/karyawan')
-            ->assertSee('Lengkap')
+            ->assertSee('Keluarga lengkap')
             ->assertDontSee('Belum diisi')
             ->assertSee('VII Keluarga');
 
         $this->assertMatchesRegularExpression(
-            '/<tr>\s*<td[^>]*>2026\/2027<\/td>\s*<td[^>]*>VII Keluarga<\/td>\s*<td[^>]*>3<\/td>\s*<td[^>]*>1<\/td>\s*<td[^>]*>1<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>1<\/td>\s*<td[^>]*>0<\/td>\s*<\/tr>/s',
+            '/<tr>\s*<td[^>]*>2026\/2027<\/td>\s*<td[^>]*>VII Keluarga<\/td>\s*<td[^>]*>3 siswa<\/td>\s*<td[^>]*>1 siswa<\/td>\s*<td[^>]*>1 siswa<\/td>\s*<td[^>]*>0 siswa<\/td>\s*<td[^>]*>1 siswa<\/td>\s*<td[^>]*>0 siswa<\/td>\s*<\/tr>/s',
             $response->getContent()
         );
     }
@@ -241,7 +241,7 @@ class SuperAdminMonitoringTest extends TestCase
             ->assertViewHas('stats', fn (array $stats) => $stats['status_keluarga_summary']['Lengkap'] === 1);
 
         $this->assertMatchesRegularExpression(
-            '/<tr>\s*<td[^>]*>SMP Keluarga A<\/td>\s*<td[^>]*>2026\/2027<\/td>\s*<td[^>]*>VII Filter A<\/td>\s*<td[^>]*>2<\/td>\s*<td[^>]*>1<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>0<\/td>\s*<td[^>]*>1<\/td>\s*<\/tr>/s',
+            '/<tr>\s*<td[^>]*>SMP Keluarga A<\/td>\s*<td[^>]*>2026\/2027<\/td>\s*<td[^>]*>VII Filter A<\/td>\s*<td[^>]*>2 siswa<\/td>\s*<td[^>]*>1 siswa<\/td>\s*<td[^>]*>0 siswa<\/td>\s*<td[^>]*>0 siswa<\/td>\s*<td[^>]*>0 siswa<\/td>\s*<td[^>]*>1 siswa<\/td>\s*<\/tr>/s',
             $response->getContent()
         );
     }
