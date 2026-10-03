@@ -85,6 +85,7 @@ final class DashboardStats
 
             return [
                 'role' => 'super_admin',
+                'warga_yayasan' => $this->foundationPopulationSummary(),
                 'selected_lembaga_id' => $selectedLembagaId,
                 'lembaga_options' => $lembagaOptions,
                 'lembaga_aktif' => $lembagaAktifQuery->count(),
@@ -139,6 +140,24 @@ final class DashboardStats
             'status_keluarga_per_kelas' => $this->familyStatusByClass(),
             'tahun_ajaran_options' => $academicYears,
             'tahun_ajaran_analysis' => $this->tahunAjaranAnalysis($academicYears, $selectedTahunAjaranId),
+        ];
+    }
+
+    /** @return array{guru: int, karyawan: int, siswa: int, total: int, aktif: int} */
+    private function foundationPopulationSummary(): array
+    {
+        $counts = [
+            'guru' => Guru::query()->count(),
+            'karyawan' => Karyawan::query()->count(),
+            'siswa' => Siswa::query()->count(),
+        ];
+
+        return [
+            ...$counts,
+            'total' => array_sum($counts),
+            'aktif' => Guru::query()->where('is_active', true)->count()
+                + Karyawan::query()->where('is_active', true)->count()
+                + Siswa::query()->where('status_siswa', SiswaStatus::AKTIF)->count(),
         ];
     }
 

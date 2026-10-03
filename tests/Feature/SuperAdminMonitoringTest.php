@@ -39,6 +39,10 @@ class SuperAdminMonitoringTest extends TestCase
             ->get(route('admin.dashboard'))
             ->assertOk()
             ->assertSee('Pusat kendali data lembaga')
+            ->assertSee('Total warga yayasan')
+            ->assertViewHas('stats', fn (array $stats) => $stats['warga_yayasan'] === [
+                'guru' => 1, 'karyawan' => 1, 'siswa' => 1, 'total' => 3, 'aktif' => 3,
+            ])
             ->assertSee('Perkembangan data')
             ->assertSee('Status siswa')
             ->assertSee('Laporan siswa')
@@ -47,6 +51,51 @@ class SuperAdminMonitoringTest extends TestCase
             ->assertSee(route('admin.monitoring.guru', ['lembaga_id' => $lembaga->id]), false)
             ->assertSee(str_replace('&', '&amp;', route('admin.laporan.siswa', ['lembaga_id' => $lembaga->id, 'status_siswa' => 'aktif'])), false)
             ->assertSee(route('admin.monitoring.karyawan', ['lembaga_id' => $lembaga->id]), false);
+    }
+
+    public function test_foundation_population_includes_all_statuses_but_excludes_deleted_records(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin', 'lembaga_id' => null]);
+        $lembaga = Lembaga::factory()->create();
+
+        Guru::factory()->for($lembaga)->create();
+        Guru::factory()->for($lembaga)->create(['is_active' => false]);
+        Karyawan::factory()->for($lembaga)->create();
+        Karyawan::factory()->for($lembaga)->create(['is_active' => false]);
+        Siswa::factory()->for($lembaga)->create();
+        Siswa::factory()->for($lembaga)->lulus()->create();
+        Siswa::factory()->for($lembaga)->calon()->create();
+        Siswa::factory()->for($lembaga)->mutasiKeluar()->create();
+
+        Guru::factory()->for($lembaga)->create()->delete();
+        Karyawan::factory()->for($lembaga)->create()->delete();
+        Siswa::factory()->for($lembaga)->create()->delete();
+
+        $this->actingAs($superAdmin)->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('3 data berstatus aktif')
+            ->assertViewHas('stats', fn (array $stats) => $stats['warga_yayasan'] === [
+                'guru' => 2, 'karyawan' => 2, 'siswa' => 4, 'total' => 8, 'aktif' => 3,
+            ]);
+    }
+
+    public function test_foundation_population_handles_empty_data_and_is_only_visible_to_super_admin(): void
+    {
+        $superAdmin = User::factory()->create(['role' => 'super_admin', 'lembaga_id' => null]);
+        $this->actingAs($superAdmin)->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertSee('Total warga yayasan')
+            ->assertSee('0 data berstatus aktif')
+            ->assertViewHas('stats', fn (array $stats) => $stats['warga_yayasan'] === [
+                'guru' => 0, 'karyawan' => 0, 'siswa' => 0, 'total' => 0, 'aktif' => 0,
+            ]);
+
+        $lembaga = Lembaga::factory()->create();
+        $admin = User::factory()->adminLembaga($lembaga->id)->create();
+        $this->actingAs($admin)->get(route('admin.dashboard'))
+            ->assertOk()
+            ->assertDontSee('Total warga yayasan')
+            ->assertViewHas('stats', fn (array $stats) => ! array_key_exists('warga_yayasan', $stats));
     }
 
     public function test_admin_dashboard_shows_selected_and_comparison_tahun_ajaran_student_history(): void
@@ -155,6 +204,10 @@ class SuperAdminMonitoringTest extends TestCase
             ->get(route('admin.dashboard', ['lembaga_id' => $lembagaA->id]))
             ->assertOk()
             ->assertSee('value="'.$lembagaA->id.'" selected', false)
+            ->assertSee('Total warga yayasan')
+            ->assertViewHas('stats', fn (array $stats) => $stats['warga_yayasan'] === [
+                'guru' => 4, 'karyawan' => 3, 'siswa' => 5, 'total' => 12, 'aktif' => 12,
+            ])
             ->assertSee('1 total data siswa tercatat.')
             ->assertSee('title="Siswa: 1"', false)
             ->assertSee('title="Guru: 1"', false)

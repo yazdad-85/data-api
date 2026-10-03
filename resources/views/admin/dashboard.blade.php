@@ -70,6 +70,29 @@
         </header>
 
         @if ($stats['role'] === 'super_admin')
+            <section class="dashboard-population" aria-labelledby="foundation-population-title">
+                <div class="dashboard-population__total">
+                    <p class="dashboard-hero__eyebrow">Seluruh lembaga yayasan</p>
+                    <h2 id="foundation-population-title" class="dashboard-panel__title font-display">Total warga yayasan</h2>
+                    <p class="dashboard-population__number">
+                        <strong class="font-display">{{ number_format($stats['warga_yayasan']['total'], 0, ',', '.') }}</strong>
+                        <span>data warga</span>
+                    </p>
+                    <p class="dashboard-population__active">{{ number_format($stats['warga_yayasan']['aktif'], 0, ',', '.') }} data berstatus aktif</p>
+                </div>
+                <div class="dashboard-population__details">
+                    <dl class="dashboard-population__breakdown">
+                        @foreach (['guru' => 'Guru', 'karyawan' => 'Karyawan', 'siswa' => 'Siswa'] as $key => $label)
+                            <div>
+                                <dt>{{ $label }}</dt>
+                                <dd class="font-display">{{ number_format($stats['warga_yayasan'][$key], 0, ',', '.') }}</dd>
+                            </div>
+                        @endforeach
+                    </dl>
+                    <p class="dashboard-panel__description">Total seluruh data guru, karyawan, dan siswa yang tercatat, mencakup semua status. Ringkasan yayasan tetap menampilkan semua lembaga saat filter digunakan.</p>
+                </div>
+            </section>
+
             <form method="GET" action="{{ route('admin.dashboard') }}" class="dashboard-filter dashboard-filter--super">
                 <select name="lembaga_id" class="field-control" aria-label="Filter lembaga dashboard">
                     <option value="" @selected($selectedLembagaId === '')>Semua lembaga</option>
