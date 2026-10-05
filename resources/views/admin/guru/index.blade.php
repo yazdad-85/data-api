@@ -84,7 +84,7 @@
                         <th>Lembaga</th>
                     @endif
                     <th>NIY</th>
-                    <th>NIK</th>
+                    <th>{{ $user->isSuperAdmin() ? 'Tempat, tanggal lahir' : 'NIK' }}</th>
                     <th>Status kepegawaian</th>
                     <th>Status</th>
                     @if ($user->isAdminLembaga())
@@ -106,7 +106,13 @@
                         <td>{{ $guru->lembaga->nama ?? '—' }}</td>
                     @endif
                     <td>{{ $guru->niy ?? '—' }}</td>
-                    <td>{{ $guru->nik ?? '—' }}</td>
+                    <td>
+                        @if ($user->isSuperAdmin())
+                            {{ collect([$guru->tempat_lahir, $guru->tanggal_lahir?->format('d/m/Y')])->filter()->implode(', ') ?: '—' }}
+                        @else
+                            {{ $guru->nik ?? '—' }}
+                        @endif
+                    </td>
                     <td>{{ $guru->status_kepegawaian ?? '—' }}</td>
                     <td>
                         @if ($guru->is_active)
