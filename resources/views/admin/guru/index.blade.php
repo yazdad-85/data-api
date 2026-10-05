@@ -85,6 +85,10 @@
                     @endif
                     <th>NIY</th>
                     <th>{{ $user->isSuperAdmin() ? 'Tempat, tanggal lahir' : 'NIK' }}</th>
+                    @if ($user->isSuperAdmin())
+                        <th>Alamat</th>
+                        <th>Nomor HP</th>
+                    @endif
                     <th>Status kepegawaian</th>
                     <th>Status</th>
                     @if ($user->isAdminLembaga())
@@ -113,6 +117,10 @@
                             {{ $guru->nik ?? '—' }}
                         @endif
                     </td>
+                    @if ($user->isSuperAdmin())
+                        <td>{{ $guru->alamat ?: '—' }}</td>
+                        <td>{{ $guru->telepon ?: '—' }}</td>
+                    @endif
                     <td>{{ $guru->status_kepegawaian ?? '—' }}</td>
                     <td>
                         @if ($guru->is_active)
